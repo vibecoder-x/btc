@@ -1,22 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --neon-blue: #00ffff;
-  --neon-orange: #ff8800;
-  --neon-green: #00ff88;
-  --space-black: #0a0a0f;
-  --dark-gray: #1a1a2e;
-  --medium-gray: #16213e;
+  --background: linear-gradient(180deg, #0A0A0A 0%, #2D3436 100%);
+  --foreground: #FFFFFF;
+  --gradient-gold: #FFD700;
+  --gradient-orange: #FF6B35;
+  --deep-blue: #1E3A8A;
+  --light-gray: #E0E0E0;
+  --shadow-dark: #2D3436;
+
+  /* Updated neon colors to match new theme */
+  --neon-blue: #1E3A8A;
+  --neon-orange: #FF6B35;
+  --neon-green: #FFD700;
+  --space-black: #0A0A0A;
+  --dark-gray: #2D3436;
+  --medium-gray: #1a1a1f;
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-background: var(--space-black);
   --color-foreground: var(--foreground);
-  --color-neon-blue: var(--neon-blue);
-  --color-neon-orange: var(--neon-orange);
-  --color-neon-green: var(--neon-green);
+  --color-neon-blue: var(--deep-blue);
+  --color-neon-orange: var(--gradient-orange);
+  --color-neon-green: var(--gradient-gold);
   --color-space-black: var(--space-black);
   --color-dark-gray: var(--dark-gray);
   --color-medium-gray: var(--medium-gray);
@@ -24,35 +31,58 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0f;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
+  background: linear-gradient(180deg, #0A0A0A 0%, #2D3436 100%);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @layer utilities {
-  .glow-blue {
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  .glow-gold {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.3);
   }
 
   .glow-orange {
-    box-shadow: 0 0 20px rgba(255, 136, 0, 0.5);
+    box-shadow: 0 0 30px rgba(255, 107, 53, 0.6), 0 0 60px rgba(255, 107, 53, 0.3);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 30px rgba(30, 58, 138, 0.6), 0 0 60px rgba(30, 58, 138, 0.3);
   }
 
   .glow-green {
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
   }
 
   .glassmorphism {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(45, 52, 54, 0.3);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .gradient-gold-orange {
+    background: linear-gradient(135deg, #FFD700 0%, #FF6B35 100%);
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FF6B35 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-gradient {
+    border-image: linear-gradient(135deg, #FFD700 0%, #FF6B35 100%) 1;
+  }
+
+  .card-3d {
+    background: rgba(10, 10, 10, 0.8);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 24px;
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.1),
+      0 10px 15px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 215, 0, 0.1);
   }
 }
