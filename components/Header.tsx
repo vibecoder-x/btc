@@ -12,7 +12,6 @@ export default function Header() {
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'Blocks', href: '/blocks' },
-    { name: 'Mempool', href: '/#mempool' },
     { name: 'Stats', href: '/stats' },
   ];
 
