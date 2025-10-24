@@ -128,15 +128,15 @@ export default function BitcoinPriceChart() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="glassmorphism rounded-lg p-6">
+        <div className="glassmorphism rounded-lg p-6 bg-neon-blue/10">
           <p className="text-sm text-foreground/70 mb-2">Market Cap</p>
-          <p className="text-3xl font-bold text-neon-blue">
+          <p className="text-2xl md:text-3xl font-bold text-neon-blue break-words">
             {formatLargeNumber(currentPrice.marketCap)}
           </p>
         </div>
-        <div className="glassmorphism rounded-lg p-6">
+        <div className="glassmorphism rounded-lg p-6 bg-neon-orange/10">
           <p className="text-sm text-foreground/70 mb-2">24h Volume</p>
-          <p className="text-3xl font-bold text-neon-orange">
+          <p className="text-2xl md:text-3xl font-bold text-neon-orange break-words">
             {formatLargeNumber(currentPrice.volume24h)}
           </p>
         </div>
