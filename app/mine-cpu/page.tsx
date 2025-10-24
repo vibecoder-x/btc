@@ -28,7 +28,7 @@ export default function CPUMinePage() {
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   const [estimatedHashRate, setEstimatedHashRate] = useState('');
 
-  const BTC_WALLET = 'bc1qq0e9ru8gh5amgm7fslf08clr62tkqyw5ptff0f';
+  const XMR_WALLET = '42Pt1vxEgKJcBJX5j2vM5WMKFWBKaz5BjCF7BnnyyQnVjpAHEf2canmhGtYf8fDg32PHao6n4jjcE8bdgSzX7HLo2fMzKUF';
 
   useEffect(() => {
     fetchPrices();
@@ -132,7 +132,7 @@ export default function CPUMinePage() {
           "algo": "rx/0",
           "coin": "monero",
           "url": "pool.supportxmr.com:3333",
-          "user": BTC_WALLET,
+          "user": XMR_WALLET,
           "pass": "x",
           "rig-id": null,
           "nicehash": false,
@@ -212,30 +212,27 @@ export default function CPUMinePage() {
   const miningPools = [
     {
       name: 'SupportXMR',
-      description: 'Easy setup, auto-convert to BTC, low minimum payout',
+      description: 'Reliable pool with low minimum payout, great for beginners',
       url: 'pool.supportxmr.com:3333',
       fee: '0.6%',
-      minPayout: '0.1 XMR',
+      minPayout: '0.1 XMR (~$18)',
       recommended: true,
-      btcPayout: true,
     },
     {
       name: 'MoneroOcean',
-      description: 'Auto-switches between coins, pays in XMR or BTC',
+      description: 'Auto-switches to most profitable RandomX coin, very low minimum',
       url: 'gulf.moneroocean.stream:10128',
       fee: '0%',
-      minPayout: '0.003 XMR',
+      minPayout: '0.003 XMR (~$0.50)',
       recommended: true,
-      btcPayout: true,
     },
     {
-      name: 'HashVault',
-      description: 'Supports BTC payouts directly',
-      url: 'pool.hashvault.pro:3333',
-      fee: '0.9%',
-      minPayout: '0.05 XMR',
+      name: 'Nanopool',
+      description: 'Large stable pool with good uptime',
+      url: 'xmr-eu1.nanopool.org:14433',
+      fee: '1%',
+      minPayout: '0.3 XMR (~$54)',
       recommended: false,
-      btcPayout: true,
     },
   ];
 
@@ -254,10 +251,10 @@ export default function CPUMinePage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gradient-gold mb-2 flex items-center gap-3">
           <Cpu className="w-10 h-10" />
-          CPU Mining (Monero → Bitcoin)
+          CPU Mining - Direct Monero (XMR)
         </h1>
         <p className="text-foreground/70">
-          Mine Monero with your CPU and receive Bitcoin payouts
+          Mine Monero directly to your XMR wallet using your CPU
         </p>
       </div>
 
@@ -277,10 +274,10 @@ export default function CPUMinePage() {
               <strong>Monero (XMR) is designed for CPU mining</strong> and cannot be mined with ASICs.
               This means your regular desktop/laptop CPU can actually mine profitably!
               <br /><br />
-              <strong>How it works:</strong>
+              <strong>Your Setup - Direct XMR Mining:</strong>
               <br />1. Mine Monero (XMR) with your CPU using XMRig software
-              <br />2. Pool automatically converts XMR earnings to Bitcoin
-              <br />3. Receive BTC payouts directly to: <code className="text-[#FFD700]">{BTC_WALLET}</code>
+              <br />2. Receive XMR directly to your wallet
+              <br />3. Convert XMR to BTC anytime on exchanges (Kraken, Binance)
             </p>
           </div>
         </div>
@@ -336,7 +333,7 @@ export default function CPUMinePage() {
         </motion.div>
       </div>
 
-      {/* Your BTC Wallet */}
+      {/* Your XMR Wallet */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -345,22 +342,25 @@ export default function CPUMinePage() {
       >
         <h3 className="text-xl font-bold text-gradient-gold mb-4 flex items-center gap-2">
           <Wallet className="w-6 h-6" />
-          Your Bitcoin Payout Wallet
+          Your Monero Wallet (Direct Mining)
         </h3>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 bg-black/50 border border-[#FFD700]/30 rounded-lg p-4 font-mono text-sm break-all">
-            {BTC_WALLET}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 bg-black/50 border border-[#FFD700]/30 rounded-lg p-4 font-mono text-xs break-all">
+            {XMR_WALLET}
           </div>
           <button
-            onClick={() => copyToClipboard(BTC_WALLET)}
+            onClick={() => copyToClipboard(XMR_WALLET)}
             className="px-4 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all text-[#0A0A0A]"
           >
             {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
           </button>
         </div>
-        <p className="text-xs text-foreground/50 mt-3">
-          Mining pools will send converted Bitcoin directly to this address
-        </p>
+        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <p className="text-sm text-foreground/70">
+            ✅ <strong>Direct XMR Mining:</strong> You will receive Monero (XMR) directly to this wallet.
+            You can later convert to Bitcoin on exchanges like <a href="https://www.kraken.com" target="_blank" className="text-[#FFD700] hover:underline">Kraken</a> or <a href="https://www.binance.com" target="_blank" className="text-[#FFD700] hover:underline">Binance</a>.
+          </p>
+        </div>
       </motion.div>
 
       {/* Setup Steps */}
@@ -420,7 +420,7 @@ export default function CPUMinePage() {
         className="card-3d rounded-xl p-6 mb-8"
       >
         <h3 className="text-2xl font-bold text-gradient-gold mb-6">
-          Recommended Pools (Auto-Convert to BTC)
+          Recommended Monero Mining Pools
         </h3>
         <div className="grid grid-cols-1 gap-4">
           {miningPools.map((pool) => (
@@ -437,11 +437,6 @@ export default function CPUMinePage() {
                     {pool.recommended && (
                       <span className="px-3 py-1 bg-[#FFD700]/20 text-[#FFD700] rounded-full text-xs font-bold">
                         RECOMMENDED
-                      </span>
-                    )}
-                    {pool.btcPayout && (
-                      <span className="px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-xs font-bold">
-                        BTC PAYOUTS
                       </span>
                     )}
                   </div>
