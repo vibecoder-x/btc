@@ -64,15 +64,34 @@ export default function BlocksPage() {
     if (blocks.length === 0) return;
 
     const currentLowest = blocks[blocks.length - 1].height;
-    const newBlocks = Array.from({ length: blocksPerPage }, (_, i) => ({
-      height: currentLowest - i - 1,
-      size: `${(Math.random() * 0.5 + 0.8).toFixed(1)} MB`,
-      txCount: Math.floor(Math.random() * 1000 + 1500),
-      miner: ['Foundry USA', 'AntPool', 'F2Pool', 'ViaBTC', 'Binance Pool'][
-        Math.floor(Math.random() * 5)
-      ],
-      time: `${Math.floor((blocks.length + i) * 10 + Math.random() * 5)} min ago`,
-    }));
+    const currentOldestTime = blocks.length * 10; // Base time in minutes for the oldest block
+
+    const newBlocks = Array.from({ length: blocksPerPage }, (_, i) => {
+      const blockIndex = blocks.length + i;
+      const minutesAgo = currentOldestTime + (i + 1) * 10 + Math.floor(Math.random() * 5);
+
+      // Format time properly
+      let timeStr;
+      if (minutesAgo < 60) {
+        timeStr = `${minutesAgo} min ago`;
+      } else if (minutesAgo < 1440) {
+        const hours = Math.floor(minutesAgo / 60);
+        timeStr = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      } else {
+        const days = Math.floor(minutesAgo / 1440);
+        timeStr = `${days} day${days > 1 ? 's' : ''} ago`;
+      }
+
+      return {
+        height: currentLowest - i - 1,
+        size: `${(Math.random() * 0.5 + 0.8).toFixed(1)} MB`,
+        txCount: Math.floor(Math.random() * 1000 + 1500),
+        miner: ['Foundry USA', 'AntPool', 'F2Pool', 'ViaBTC', 'Binance Pool'][
+          Math.floor(Math.random() * 5)
+        ],
+        time: timeStr,
+      };
+    });
 
     console.log('Loading more blocks, current lowest:', currentLowest, 'new blocks:', newBlocks.length);
     setBlocks([...blocks, ...newBlocks]);
