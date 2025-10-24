@@ -1,13 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Menu, X, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    getUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   const navItems = [
     { name: 'Home', href: '/' },
@@ -47,6 +67,32 @@ export default function Header() {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FFD700] to-[#FF6B35] group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
+
+            {/* Auth Buttons */}
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-semibold text-[#0A0A0A]"
+              >
+                <User className="w-4 h-4" />
+                Dashboard
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/login"
+                  className="text-[#E0E0E0] hover:text-[#FFD700] transition-colors duration-300 font-semibold"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 py-2 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-semibold text-[#0A0A0A]"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -76,12 +122,40 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="block py-2 text-foreground hover:text-neon-blue transition-colors duration-300"
+                  className="block py-2 text-foreground hover:text-[#FFD700] transition-colors duration-300"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}
                 </Link>
               ))}
+
+              {/* Mobile Auth Links */}
+              {user ? (
+                <Link
+                  href="/dashboard"
+                  className="block py-2 px-4 rounded-lg gradient-gold-orange hover:glow-gold transition-all text-[#0A0A0A] font-semibold text-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="block py-2 text-foreground hover:text-[#FFD700] transition-colors duration-300"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="block py-2 px-4 rounded-lg gradient-gold-orange hover:glow-gold transition-all text-[#0A0A0A] font-semibold text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
