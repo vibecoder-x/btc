@@ -45,11 +45,27 @@ export default function CPUMinePage() {
       const response = await fetch(
         'https://api.coingecko.com/api/v3/simple/price?ids=monero,bitcoin&vs_currencies=usd'
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      setXmrPrice(data.monero.usd);
-      setBtcPrice(data.bitcoin.usd);
+
+      // Check if we got valid data
+      if (data.monero && data.bitcoin) {
+        setXmrPrice(data.monero.usd);
+        setBtcPrice(data.bitcoin.usd);
+      } else {
+        // Fallback prices if API returns incomplete data
+        setXmrPrice(180); // Approximate XMR price
+        setBtcPrice(95000); // Approximate BTC price
+      }
     } catch (error) {
       console.error('Error fetching prices:', error);
+      // Set fallback prices on error
+      setXmrPrice(180);
+      setBtcPrice(95000);
     }
   };
 
