@@ -61,6 +61,8 @@ export default function BlocksPage() {
   }, [page]);
 
   const loadMore = () => {
+    if (blocks.length === 0) return;
+
     const currentLowest = blocks[blocks.length - 1].height;
     const newBlocks = Array.from({ length: blocksPerPage }, (_, i) => ({
       height: currentLowest - i - 1,
@@ -71,6 +73,8 @@ export default function BlocksPage() {
       ],
       time: `${Math.floor((blocks.length + i) * 10 + Math.random() * 5)} min ago`,
     }));
+
+    console.log('Loading more blocks, current lowest:', currentLowest, 'new blocks:', newBlocks.length);
     setBlocks([...blocks, ...newBlocks]);
     setPage(page + 1);
   };
