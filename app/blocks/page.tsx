@@ -102,7 +102,7 @@ export default function BlocksPage() {
     <div className="container mx-auto px-4 py-8">
       <Link
         href="/"
-        className="inline-flex items-center text-neon-blue hover:text-neon-orange transition-colors duration-300 mb-6"
+        className="inline-flex items-center text-[#FFD700] hover:text-[#FF6B35] transition-colors duration-300 mb-6"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Home
@@ -113,17 +113,17 @@ export default function BlocksPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-4xl font-bold text-neon-blue mb-8 flex items-center">
-          <Box className="mr-3 w-10 h-10" />
+        <h1 className="text-4xl font-bold text-gradient-gold mb-8 flex items-center">
+          <Box className="mr-3 w-10 h-10 text-[#FFD700]" />
           All Blocks
         </h1>
 
-        <div className="glassmorphism rounded-2xl p-6 md:p-8">
+        <div className="card-3d rounded-2xl p-6 md:p-8">
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-neon-blue/20">
+                <tr className="border-b border-[#FFD700]/20">
                   <th className="text-left py-4 px-4 text-foreground/70 font-semibold">Height</th>
                   <th className="text-left py-4 px-4 text-foreground/70 font-semibold">Size</th>
                   <th className="text-left py-4 px-4 text-foreground/70 font-semibold">Transactions</th>
@@ -136,15 +136,15 @@ export default function BlocksPage() {
                   {blocks.map((block) => (
                     <motion.tr
                       key={block.height}
-                      initial={block.isNew ? { backgroundColor: 'rgba(0, 255, 255, 0.2)' } : false}
+                      initial={block.isNew ? { backgroundColor: 'rgba(255, 215, 0, 0.2)' } : false}
                       animate={{ backgroundColor: 'rgba(0, 0, 0, 0)' }}
                       transition={{ duration: 0.5 }}
-                      className="border-b border-neon-blue/10 hover:bg-neon-blue/5 transition-colors duration-200"
+                      className="border-b border-[#FFD700]/10 hover:bg-[#FFD700]/5 transition-colors duration-200"
                     >
                       <td className="py-4 px-4">
                         <Link
                           href={`/blocks/${block.height}`}
-                          className="text-neon-blue hover:text-neon-orange transition-colors duration-300 font-mono font-semibold"
+                          className="text-[#FFD700] hover:text-[#FF6B35] transition-colors duration-300 font-mono font-semibold"
                         >
                           {mounted ? block.height.toLocaleString() : block.height}
                         </Link>
@@ -173,12 +173,12 @@ export default function BlocksPage() {
                   key={block.height}
                   initial={block.isNew ? { scale: 0.95, opacity: 0 } : false}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="glassmorphism rounded-xl p-4 space-y-3"
+                  className="card-3d rounded-xl p-4 space-y-3"
                 >
                   <div className="flex items-center justify-between">
                     <Link
                       href={`/blocks/${block.height}`}
-                      className="text-xl font-mono font-bold text-neon-blue"
+                      className="text-xl font-mono font-bold text-[#FFD700]"
                     >
                       {mounted ? block.height.toLocaleString() : block.height}
                     </Link>
@@ -186,18 +186,18 @@ export default function BlocksPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center">
-                      <Database className="w-4 h-4 mr-2 text-neon-orange" />
+                      <Database className="w-4 h-4 mr-2 text-[#FF6B35]" />
                       <span className="text-foreground/70">{block.size}</span>
                     </div>
                     <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-2 text-neon-green" />
+                      <Users className="w-4 h-4 mr-2 text-[#FFD700]" />
                       <span className="text-foreground/70">
                         {mounted ? block.txCount.toLocaleString() : block.txCount} txs
                       </span>
                     </div>
                   </div>
                   <div className="text-sm text-foreground/70">
-                    <span className="text-neon-blue">Miner:</span> {block.miner}
+                    <span className="text-[#FFD700]">Miner:</span> {block.miner}
                   </div>
                 </motion.div>
               ))}
@@ -208,7 +208,7 @@ export default function BlocksPage() {
           <div className="mt-8 flex justify-center">
             <button
               onClick={loadMore}
-              className="px-8 py-3 rounded-lg bg-gradient-to-r from-neon-blue to-neon-orange hover:glow-blue transition-all duration-300 font-semibold text-space-black text-lg shadow-lg hover:shadow-neon-blue/50"
+              className="px-8 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-semibold text-[#0A0A0A] text-lg shadow-lg hover:shadow-[#FFD700]/50"
             >
               Load More Blocks
             </button>
