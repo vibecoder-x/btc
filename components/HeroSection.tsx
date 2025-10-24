@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Block {
   id: number;
@@ -170,12 +171,16 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="flex flex-col sm:flex-row gap-4"
         >
-          <button className="px-8 py-4 rounded-2xl font-semibold text-lg gradient-gold-orange glow-gold hover:scale-105 transition-all duration-300 text-[#0A0A0A]">
-            Try API
-          </button>
-          <button className="px-8 py-4 rounded-2xl font-semibold text-lg border-2 border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-[#0A0A0A] hover:glow-gold transition-all duration-300">
-            View Docs
-          </button>
+          <Link href="/pricing">
+            <button className="px-8 py-4 rounded-2xl font-semibold text-lg gradient-gold-orange glow-gold hover:scale-105 transition-all duration-300 text-[#0A0A0A]">
+              Try API
+            </button>
+          </Link>
+          <Link href="/docs">
+            <button className="px-8 py-4 rounded-2xl font-semibold text-lg border-2 border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-[#0A0A0A] hover:glow-gold transition-all duration-300">
+              View Docs
+            </button>
+          </Link>
         </motion.div>
       </div>
 

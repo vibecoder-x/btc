@@ -14,6 +14,7 @@ export default function Header() {
     { name: 'Blocks', href: '/blocks' },
     { name: 'Stats', href: '/stats' },
     { name: 'API Docs', href: '/docs' },
+    { name: 'API Plans', href: '/pricing' },
   ];
 
   return (
