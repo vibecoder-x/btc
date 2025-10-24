@@ -22,6 +22,8 @@ interface UserProfile {
   id: string;
   email: string;
   plan_type: 'free' | 'premium' | 'enterprise';
+  subscription_expires_at: string | null;
+  payment_status: 'none' | 'pending' | 'confirmed' | 'expired';
 }
 
 interface ApiKey {
@@ -172,7 +174,7 @@ export default function DashboardPage() {
     if (!apiKey || !user) return;
 
     const confirmed = confirm(
-      'Are you sure you want to regenerate your API key? Your current key will be revoked and cannot be recovered.'
+      'Are you sure you want to regenerate your API key? Your current key will be revoked, usage stats will be reset, and cannot be recovered.'
     );
 
     if (!confirmed) return;
@@ -185,10 +187,44 @@ export default function DashboardPage() {
         .update({ status: 'revoked' })
         .eq('id', apiKey.id);
 
+      // Reset usage stats
+      await supabase
+        .from('usage_logs')
+        .delete()
+        .eq('user_id', user.id);
+
       // Generate new key
-      await generateApiKey();
+      const newKey = 'btc_' + Array.from({ length: 32 }, () =>
+        Math.random().toString(36).charAt(2)
+      ).join('');
+
+      const keyPrefix = newKey.substring(0, 12);
+
+      const { data, error } = await supabase
+        .from('api_keys')
+        .insert({
+          user_id: user.id,
+          key_value: newKey,
+          key_prefix: keyPrefix,
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setApiKey(data);
+        // Reset local usage stats
+        setUsageStats({
+          today: 0,
+          thisMonth: 0,
+          limit: planLimits[profile?.plan_type as keyof typeof planLimits]?.daily || 1000,
+        });
+      }
     } catch (error) {
       console.error('Error regenerating API key:', error);
+      alert('Failed to regenerate API key. Please try again.');
     } finally {
       setGenerating(false);
     }
@@ -257,14 +293,18 @@ export default function DashboardPage() {
           <p className="text-3xl font-bold text-foreground capitalize mb-2">
             {profile?.plan_type || 'Free'}
           </p>
-          {profile?.plan_type === 'free' && (
+          {profile?.plan_type === 'premium' && profile?.subscription_expires_at ? (
+            <div className="text-sm text-foreground/70">
+              Expires: {formatDate(profile.subscription_expires_at)}
+            </div>
+          ) : profile?.plan_type === 'free' ? (
             <Link
-              href="/pricing"
-              className="text-sm text-[#FFD700] hover:text-[#FF6B35] transition-colors"
+              href="/payment"
+              className="text-sm text-[#FFD700] hover:text-[#FF6B35] transition-colors inline-block"
             >
-              Upgrade Plan →
+              Upgrade to Premium →
             </Link>
-          )}
+          ) : null}
         </motion.div>
 
         <motion.div

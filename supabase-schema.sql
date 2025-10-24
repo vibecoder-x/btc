@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS public.users_profile (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   email TEXT NOT NULL,
   plan_type TEXT NOT NULL DEFAULT 'free' CHECK (plan_type IN ('free', 'premium', 'enterprise')),
+  subscription_expires_at TIMESTAMP WITH TIME ZONE, -- When premium subscription expires
+  payment_status TEXT DEFAULT 'none' CHECK (payment_status IN ('none', 'pending', 'confirmed', 'expired')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

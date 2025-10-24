@@ -26,9 +26,9 @@ export default function PricingPage() {
     {
       name: 'Premium',
       icon: Crown,
-      price: '$29',
+      price: '$10',
       period: 'per month',
-      description: 'For developers and growing applications',
+      description: 'For developers and growing applications - Pay with Bitcoin',
       features: [
         '50,000 requests per day',
         '200 requests per minute',
@@ -37,10 +37,12 @@ export default function PricingPage() {
         'Advanced analytics',
         'Custom webhooks',
         '99.9% uptime SLA',
+        'Pay monthly or multi-month',
       ],
-      cta: 'Upgrade to Premium',
+      cta: 'Pay with Bitcoin',
       highlight: true,
       color: 'from-[#FFD700] to-[#FF6B35]',
+      link: '/payment',
     },
     {
       name: 'Enterprise',
@@ -135,15 +137,40 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <button
-                className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
-                  plan.highlight
-                    ? 'gradient-gold-orange hover:glow-gold text-[#0A0A0A]'
-                    : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
-                }`}
-              >
-                {plan.cta}
-              </button>
+              {plan.name === 'Premium' ? (
+                <Link
+                  href="/payment"
+                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 block text-center ${
+                    plan.highlight
+                      ? 'gradient-gold-orange hover:glow-gold text-[#0A0A0A]'
+                      : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              ) : plan.name === 'Free' ? (
+                <Link
+                  href="/signup"
+                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 block text-center ${
+                    plan.highlight
+                      ? 'gradient-gold-orange hover:glow-gold text-[#0A0A0A]'
+                      : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              ) : (
+                <a
+                  href="mailto:contact@btcindexer.com"
+                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 block text-center ${
+                    plan.highlight
+                      ? 'gradient-gold-orange hover:glow-gold text-[#0A0A0A]'
+                      : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
+                  }`}
+                >
+                  {plan.cta}
+                </a>
+              )}
             </motion.div>
           ))}
         </div>
@@ -280,8 +307,7 @@ export default function PricingPage() {
                 What payment methods do you accept?
               </h3>
               <p className="text-foreground/70">
-                We accept all major credit cards, PayPal, and cryptocurrency payments through Coinbase
-                Commerce.
+                We accept Bitcoin (BTC) payments for Premium plans. Simply send BTC to our wallet address and your subscription will be activated after confirmation. You can pay for multiple months at once to save time.
               </p>
             </div>
           </div>
