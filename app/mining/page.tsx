@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Wallet,
   AlertCircle,
+  CheckCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -175,25 +176,53 @@ export default function MiningPage() {
         </p>
       </div>
 
+      {/* Success Banner with CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-green-500/10 border border-green-500/30 rounded-xl p-6 mb-8"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
+            <div>
+              <h3 className="text-lg font-bold text-green-500 mb-2">
+                ✅ Want to Mine Without ASIC Hardware?
+              </h3>
+              <p className="text-foreground/70 text-sm leading-relaxed">
+                <strong>You can mine Monero (XMR) with your CPU</strong> and receive Bitcoin payouts!
+                <br />• No special hardware needed - just your regular CPU
+                <br />• Auto-convert Monero earnings to Bitcoin
+                <br />• Payouts sent directly to your BTC wallet
+                <br />• Start mining in 5 minutes with our step-by-step guide
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/mine-cpu"
+            className="flex-shrink-0 px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all font-bold text-[#0A0A0A] whitespace-nowrap"
+          >
+            Start CPU Mining →
+          </Link>
+        </div>
+      </motion.div>
+
       {/* Warning Banner */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6 mb-8"
       >
         <div className="flex items-start gap-3">
           <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-1" />
           <div>
             <h3 className="text-lg font-bold text-orange-500 mb-2">
-              Important: Desktop Mining Reality Check
+              Important: Direct Bitcoin Mining Requires ASICs
             </h3>
             <p className="text-foreground/70 text-sm leading-relaxed">
-              <strong>Desktop/CPU mining Bitcoin is not profitable</strong> in 2024. Bitcoin mining now requires specialized ASIC hardware.
-              However, you can:
-              <br />• Mine altcoins (like Monero) and convert to Bitcoin
-              <br />• Join cloud mining services
-              <br />• Use mining pools with proper hardware
-              <br />• Learn about mining before investing in equipment
+              <strong>Desktop/CPU mining Bitcoin directly is not profitable</strong> in 2024. Bitcoin mining now requires specialized ASIC hardware.
+              However, you can mine altcoins (like Monero) with your CPU and convert to Bitcoin automatically!
             </p>
           </div>
         </div>
