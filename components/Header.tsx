@@ -10,23 +10,28 @@ import { createClient } from '@/lib/supabase/client';
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
+    try {
+      const supabase = createClient();
 
-    getUser();
+      const getUser = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-    });
+      getUser();
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        setUser(session?.user || null);
+      });
+
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
+    } catch (error) {
+      console.error('Supabase client error:', error);
+    }
   }, []);
 
   const navItems = [
