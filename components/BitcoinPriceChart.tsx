@@ -35,20 +35,17 @@ export default function BitcoinPriceChart() {
 
   const fetchBitcoinPrice = async () => {
     try {
-      // Using CoinGecko API as a free alternative (CMC requires API key)
-      const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true'
-      );
+      // Using our secure API route that calls CoinMarketCap
+      const response = await fetch('/api/bitcoin-price');
       const data = await response.json();
 
-      if (data.bitcoin) {
-        const newPrice = {
-          price: data.bitcoin.usd,
-          change24h: data.bitcoin.usd_24h_change || 0,
-          marketCap: data.bitcoin.usd_market_cap || 0,
-          volume24h: data.bitcoin.usd_24h_vol || 0,
-        };
-        setCurrentPrice(newPrice);
+      if (data.price) {
+        setCurrentPrice({
+          price: data.price,
+          change24h: data.change24h || 0,
+          marketCap: data.marketCap || 0,
+          volume24h: data.volume24h || 0,
+        });
         setLoading(false);
       }
     } catch (error) {
