@@ -91,21 +91,21 @@ export default function BitcoinPriceChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="glassmorphism rounded-2xl p-6 md:p-8"
+      className="card-3d p-6 md:p-8"
     >
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div className="mb-4 md:mb-0">
-          <h2 className="text-2xl font-bold text-neon-blue mb-3 flex items-center">
-            <DollarSign className="mr-2 w-7 h-7" />
+          <h2 className="text-2xl font-bold text-gradient-gold mb-3 flex items-center">
+            <DollarSign className="mr-2 w-7 h-7 text-[#FFD700]" />
             Bitcoin Price
           </h2>
           <div className="flex items-center space-x-4">
-            <span className="text-4xl md:text-5xl font-bold text-neon-green">
+            <span className="text-4xl md:text-5xl font-bold text-[#FFD700]">
               {formatPrice(currentPrice.price)}
             </span>
             <div className={`flex items-center px-3 py-1 rounded-lg ${
               currentPrice.change24h >= 0
-                ? 'bg-neon-green/20 text-neon-green'
+                ? 'bg-[#FFD700]/20 text-[#FFD700]'
                 : 'bg-red-500/20 text-red-400'
             }`}>
               {currentPrice.change24h >= 0 ? (
@@ -120,23 +120,23 @@ export default function BitcoinPriceChart() {
             </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-neon-green/10">
-          <div className="w-3 h-3 rounded-full bg-neon-green animate-pulse"></div>
-          <span className="text-sm text-foreground/70">Live</span>
+        <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30">
+          <div className="w-3 h-3 rounded-full bg-[#FFD700] animate-pulse glow-gold"></div>
+          <span className="text-sm text-[#E0E0E0]">Live</span>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="glassmorphism rounded-lg p-6 bg-neon-blue/10">
-          <p className="text-sm text-foreground/70 mb-2">Market Cap</p>
-          <p className="text-2xl md:text-3xl font-bold text-neon-blue break-words">
+        <div className="card-3d p-6 bg-[#FFD700]/5 hover:bg-[#FFD700]/10 transition-all duration-300 hover:scale-105">
+          <p className="text-sm text-[#E0E0E0] mb-2">Market Cap</p>
+          <p className="text-2xl md:text-3xl font-bold text-[#FFD700] break-words">
             {formatLargeNumber(currentPrice.marketCap)}
           </p>
         </div>
-        <div className="glassmorphism rounded-lg p-6 bg-neon-orange/10">
-          <p className="text-sm text-foreground/70 mb-2">24h Volume</p>
-          <p className="text-2xl md:text-3xl font-bold text-neon-orange break-words">
+        <div className="card-3d p-6 bg-[#FF6B35]/5 hover:bg-[#FF6B35]/10 transition-all duration-300 hover:scale-105">
+          <p className="text-sm text-[#E0E0E0] mb-2">24h Volume</p>
+          <p className="text-2xl md:text-3xl font-bold text-[#FF6B35] break-words">
             {formatLargeNumber(currentPrice.volume24h)}
           </p>
         </div>

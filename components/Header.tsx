@@ -29,8 +29,8 @@ export default function Header() {
               height={40}
               className="rounded-lg"
             />
-            <span className="text-xl font-bold text-neon-blue">
-              btcindexer<span className="text-neon-orange">.com</span>
+            <span className="text-xl font-bold text-gradient-gold">
+              btcindexer<span className="text-[#FF6B35]">.com</span>
             </span>
           </Link>
 
@@ -40,10 +40,10 @@ export default function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-foreground hover:text-neon-blue transition-colors duration-300 relative group"
+                className="text-[#E0E0E0] hover:text-[#FFD700] transition-colors duration-300 relative group font-semibold"
               >
                 {item.name}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-neon-blue group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FFD700] to-[#FF6B35] group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
           </div>

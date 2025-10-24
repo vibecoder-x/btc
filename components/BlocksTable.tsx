@@ -62,16 +62,16 @@ export default function BlocksTable() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="glassmorphism rounded-2xl p-6 md:p-8"
+      className="card-3d p-6 md:p-8"
     >
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-neon-blue flex items-center">
-          <Box className="mr-3 w-8 h-8" />
+        <h2 className="text-3xl font-bold text-gradient-gold flex items-center">
+          <Box className="mr-3 w-8 h-8 text-[#FFD700]" />
           Recent Blocks
         </h2>
         <Link
           href="/blocks"
-          className="text-neon-orange hover:text-neon-blue transition-colors duration-300"
+          className="text-[#FF6B35] hover:text-[#FFD700] transition-colors duration-300 font-semibold"
         >
           View All →
         </Link>
@@ -102,7 +102,7 @@ export default function BlocksTable() {
                   <td className="py-4 px-4">
                     <Link
                       href={`/blocks/${block.height}`}
-                      className="text-neon-blue hover:text-neon-orange transition-colors duration-300 font-mono font-semibold"
+                      className="text-[#FFD700] hover:text-[#FF6B35] transition-colors duration-300 font-mono font-semibold"
                     >
                       {mounted ? formatNumber(block.height) : block.height}
                     </Link>

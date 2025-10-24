@@ -50,18 +50,18 @@ export default function MempoolPanel() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="glassmorphism rounded-2xl p-6 md:p-8"
+      className="card-3d p-6 md:p-8"
     >
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-neon-blue mb-2">Mempool</h2>
-          <p className="text-foreground/70">
-            Unconfirmed Transactions: <span className="text-neon-green font-semibold">{mounted ? formatNumber(totalTx) : totalTx}</span>
+          <h2 className="text-3xl font-bold text-gradient-gold mb-2">Mempool</h2>
+          <p className="text-[#E0E0E0]">
+            Unconfirmed Transactions: <span className="text-[#FFD700] font-semibold">{mounted ? formatNumber(totalTx) : totalTx}</span>
           </p>
         </div>
-        <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-neon-blue/10">
-          <div className="w-3 h-3 rounded-full bg-neon-green animate-pulse"></div>
-          <span className="text-sm text-foreground/70">Live</span>
+        <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30">
+          <div className="w-3 h-3 rounded-full bg-[#FFD700] animate-pulse glow-gold"></div>
+          <span className="text-sm text-[#E0E0E0]">Live</span>
         </div>
       </div>
 
