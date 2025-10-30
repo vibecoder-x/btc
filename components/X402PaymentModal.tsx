@@ -69,14 +69,20 @@ export function X402PaymentModal({
   }, [txHash, paymentStatus, paymentData.request_id, verifyPayment, onPaymentComplete, onClose]);
 
   const handlePayment = async () => {
-    setError(null);
-    setPaymentStatus('sending');
+    try {
+      setError(null);
+      setPaymentStatus('sending');
 
-    const hash = await sendPayment(paymentData);
+      const hash = await sendPayment(paymentData);
 
-    if (hash) {
-      setPaymentStatus('confirming');
-    } else {
+      if (hash) {
+        setPaymentStatus('confirming');
+      } else {
+        setPaymentStatus('pending');
+      }
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      setError(err.message || 'Payment failed');
       setPaymentStatus('pending');
     }
   };

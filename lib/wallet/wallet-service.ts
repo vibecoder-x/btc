@@ -1,14 +1,16 @@
 /**
  * Wallet Authentication Service
- * Handles Bitcoin wallet connections (Xverse, Unisat, Hiro, Leather)
+ * Handles Web3 wallet connections (MetaMask, Phantom)
+ * Supports EVM chains (Base, Polygon) and Solana
  */
 
-export type WalletType = 'xverse' | 'unisat' | 'hiro' | 'leather';
+export type WalletType = 'metamask' | 'phantom';
 
 export interface WalletAccount {
   address: string;
-  publicKey: string;
+  publicKey?: string;
   walletType: WalletType;
+  chainType: 'evm' | 'solana';
 }
 
 export interface WalletInfo {
@@ -16,14 +18,13 @@ export interface WalletInfo {
   icon: string;
   downloadUrl: string;
   installed: boolean;
+  chainType: 'evm' | 'solana';
 }
 
 declare global {
   interface Window {
-    unisat?: any;
-    XverseProviders?: any;
-    HiroWalletProvider?: any;
-    LeatherProvider?: any;
+    ethereum?: any;
+    solana?: any;
   }
 }
 
@@ -32,15 +33,13 @@ export class WalletService {
    * Check if a wallet is installed
    */
   static isWalletInstalled(walletType: WalletType): boolean {
+    if (typeof window === 'undefined') return false;
+
     switch (walletType) {
-      case 'unisat':
-        return typeof window !== 'undefined' && typeof window.unisat !== 'undefined';
-      case 'xverse':
-        return typeof window !== 'undefined' && typeof window.XverseProviders !== 'undefined';
-      case 'hiro':
-        return typeof window !== 'undefined' && typeof window.HiroWalletProvider !== 'undefined';
-      case 'leather':
-        return typeof window !== 'undefined' && typeof window.LeatherProvider !== 'undefined';
+      case 'metamask':
+        return typeof window.ethereum !== 'undefined';
+      case 'phantom':
+        return typeof window.solana !== 'undefined' && window.solana.isPhantom;
       default:
         return false;
     }
@@ -51,29 +50,19 @@ export class WalletService {
    */
   static getAvailableWallets(): Record<WalletType, WalletInfo> {
     return {
-      xverse: {
-        name: 'Xverse',
-        icon: '🟣',
-        downloadUrl: 'https://www.xverse.app/download',
-        installed: this.isWalletInstalled('xverse'),
+      metamask: {
+        name: 'MetaMask',
+        icon: '🦊',
+        downloadUrl: 'https://metamask.io/download/',
+        installed: this.isWalletInstalled('metamask'),
+        chainType: 'evm',
       },
-      unisat: {
-        name: 'Unisat',
-        icon: '🟠',
-        downloadUrl: 'https://unisat.io/download',
-        installed: this.isWalletInstalled('unisat'),
-      },
-      hiro: {
-        name: 'Hiro',
-        icon: '🔵',
-        downloadUrl: 'https://wallet.hiro.so/',
-        installed: this.isWalletInstalled('hiro'),
-      },
-      leather: {
-        name: 'Leather',
-        icon: '🟤',
-        downloadUrl: 'https://leather.io/install-extension',
-        installed: this.isWalletInstalled('leather'),
+      phantom: {
+        name: 'Phantom',
+        icon: '👻',
+        downloadUrl: 'https://phantom.app/',
+        installed: this.isWalletInstalled('phantom'),
+        chainType: 'solana',
       },
     };
   }
@@ -87,108 +76,60 @@ export class WalletService {
     }
 
     switch (walletType) {
-      case 'unisat':
-        return await this.connectUnisat();
-      case 'xverse':
-        return await this.connectXverse();
-      case 'hiro':
-        return await this.connectHiro();
-      case 'leather':
-        return await this.connectLeather();
+      case 'metamask':
+        return await this.connectMetaMask();
+      case 'phantom':
+        return await this.connectPhantom();
       default:
         throw new Error(`Unsupported wallet type: ${walletType}`);
     }
   }
 
   /**
-   * Connect to Unisat wallet
+   * Connect to MetaMask wallet (EVM chains)
    */
-  private static async connectUnisat(): Promise<WalletAccount> {
+  private static async connectMetaMask(): Promise<WalletAccount> {
     try {
-      const accounts = await window.unisat.requestAccounts();
-      const publicKey = await window.unisat.getPublicKey();
+      if (!window.ethereum) {
+        throw new Error('MetaMask not installed');
+      }
+
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+      });
 
       return {
         address: accounts[0],
-        publicKey,
-        walletType: 'unisat',
+        walletType: 'metamask',
+        chainType: 'evm',
       };
-    } catch (error) {
-      console.error('Unisat connection error:', error);
-      throw new Error('Failed to connect to Unisat wallet');
+    } catch (error: any) {
+      console.error('MetaMask connection error:', error);
+      throw new Error(error.message || 'Failed to connect to MetaMask wallet');
     }
   }
 
   /**
-   * Connect to Xverse wallet
+   * Connect to Phantom wallet (Solana)
    */
-  private static async connectXverse(): Promise<WalletAccount> {
+  private static async connectPhantom(): Promise<WalletAccount> {
     try {
-      const getAddressOptions = {
-        payload: {
-          purposes: ['ordinals', 'payment'],
-          message: 'Connect to btcindexer.com',
-          network: {
-            type: 'Mainnet',
-          },
-        },
-        onFinish: (response: any) => response,
-        onCancel: () => {
-          throw new Error('User cancelled connection');
-        },
-      };
+      if (!window.solana || !window.solana.isPhantom) {
+        throw new Error('Phantom wallet not installed');
+      }
 
-      return new Promise((resolve, reject) => {
-        window.XverseProviders.BitcoinProvider.request('getAccounts', getAddressOptions)
-          .then((response: any) => {
-            const ordinalsAddress = response.addresses.find((addr: any) => addr.purpose === 'ordinals');
-            resolve({
-              address: ordinalsAddress.address,
-              publicKey: ordinalsAddress.publicKey,
-              walletType: 'xverse',
-            });
-          })
-          .catch(reject);
-      });
-    } catch (error) {
-      console.error('Xverse connection error:', error);
-      throw new Error('Failed to connect to Xverse wallet');
-    }
-  }
-
-  /**
-   * Connect to Hiro wallet
-   */
-  private static async connectHiro(): Promise<WalletAccount> {
-    try {
-      const response = await window.HiroWalletProvider.request('getAddresses');
+      const resp = await window.solana.connect();
+      const publicKey = resp.publicKey.toString();
 
       return {
-        address: response.addresses[0].address,
-        publicKey: response.addresses[0].publicKey,
-        walletType: 'hiro',
+        address: publicKey,
+        publicKey: publicKey,
+        walletType: 'phantom',
+        chainType: 'solana',
       };
-    } catch (error) {
-      console.error('Hiro connection error:', error);
-      throw new Error('Failed to connect to Hiro wallet');
-    }
-  }
-
-  /**
-   * Connect to Leather wallet
-   */
-  private static async connectLeather(): Promise<WalletAccount> {
-    try {
-      const response = await window.LeatherProvider.request('getAddresses');
-
-      return {
-        address: response.addresses[0].address,
-        publicKey: response.addresses[0].publicKey,
-        walletType: 'leather',
-      };
-    } catch (error) {
-      console.error('Leather connection error:', error);
-      throw new Error('Failed to connect to Leather wallet');
+    } catch (error: any) {
+      console.error('Phantom connection error:', error);
+      throw new Error(error.message || 'Failed to connect to Phantom wallet');
     }
   }
 
@@ -245,17 +186,60 @@ export class WalletService {
     }
 
     switch (walletType) {
-      case 'unisat':
-        return await window.unisat.signMessage(message);
-      case 'xverse':
-        // Xverse signing implementation
-        throw new Error('Xverse message signing not yet implemented');
-      case 'hiro':
-        return await window.HiroWalletProvider.request('signMessage', { message });
-      case 'leather':
-        return await window.LeatherProvider.request('signMessage', { message });
+      case 'metamask':
+        if (!window.ethereum) throw new Error('MetaMask not available');
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        return await window.ethereum.request({
+          method: 'personal_sign',
+          params: [message, accounts[0]],
+        });
+      case 'phantom':
+        if (!window.solana) throw new Error('Phantom not available');
+        const encodedMessage = new TextEncoder().encode(message);
+        const signedMessage = await window.solana.signMessage(encodedMessage, 'utf8');
+        return signedMessage.signature.toString();
       default:
         throw new Error(`Unsupported wallet type: ${walletType}`);
     }
+  }
+
+  /**
+   * Get the current connected wallet (if any)
+   */
+  static async getCurrentWallet(): Promise<WalletAccount | null> {
+    // Check MetaMask
+    if (this.isWalletInstalled('metamask')) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts && accounts.length > 0) {
+          return {
+            address: accounts[0],
+            walletType: 'metamask',
+            chainType: 'evm',
+          };
+        }
+      } catch (error) {
+        console.error('Error checking MetaMask:', error);
+      }
+    }
+
+    // Check Phantom
+    if (this.isWalletInstalled('phantom')) {
+      try {
+        if (window.solana.isConnected) {
+          const publicKey = window.solana.publicKey.toString();
+          return {
+            address: publicKey,
+            publicKey: publicKey,
+            walletType: 'phantom',
+            chainType: 'solana',
+          };
+        }
+      } catch (error) {
+        console.error('Error checking Phantom:', error);
+      }
+    }
+
+    return null;
   }
 }

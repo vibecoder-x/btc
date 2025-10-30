@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nImplement x402 pay-per-use payment protocol with Bitcoin inscriptions\n\nMajor features added:\n- x402 protocol infrastructure for pay-per-use API access\n- Bitcoin inscription-based authentication (no API keys required)\n- 7 protected API endpoints with transparent satoshi pricing\n- Payment modal UI with real-time status tracking\n- React hooks and middleware for seamless integration\n- Comprehensive documentation and examples\n\nNew API endpoints (with x402 protection):\n- /api/tx/[txid] - Transaction lookup (10 sats)\n- /api/address/[address] - Address info (50 sats)\n- /api/block/[height] - Block data (20 sats)\n- /api/mempool - Mempool stats (50 sats)\n- /api/fees/recommended - Fee estimates (10 sats)\n- /api/inscription/[id] - Inscription details (100 sats)\n- /api/payment/status - Payment verification (free)\n\nKey components:\n- X402PaymentModal: Beautiful payment interface\n- useX402Payment: React hook for client integration\n- createProtectedRoute: Middleware for API protection\n\nBenefits:\n- No subscriptions, no accounts, no API keys\n- Pay only what you use (10-500 sats per query)\n- Instant access after payment confirmation\n- Transparent, fair pricing\n\nReady for Bitcoin node integration and production deployment.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:x402.org)",
+      "WebFetch(domain:x402.gitbook.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.x402scan.com)",
+      "Bash(npm install:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
