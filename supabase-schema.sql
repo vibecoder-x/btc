@@ -1,106 +1,107 @@
--- BTCindexer Database Schema for Supabase
--- Run these commands in your Supabase SQL Editor
+-- =============================================
+-- BTCIndexer Unlimited Payment System
+-- Database Schema for Supabase
+-- =============================================
+-- Run this entire file in Supabase SQL Editor
+-- =============================================
 
--- Create users_profile table (extends Supabase auth.users)
-CREATE TABLE IF NOT EXISTS public.users_profile (
-  id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  email TEXT NOT NULL,
-  plan_type TEXT NOT NULL DEFAULT 'free' CHECK (plan_type IN ('free', 'premium', 'enterprise')),
-  subscription_expires_at TIMESTAMP WITH TIME ZONE, -- When premium subscription expires
-  payment_status TEXT DEFAULT 'none' CHECK (payment_status IN ('none', 'pending', 'confirmed', 'expired')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- 1. Create unlimited_users table
+-- Stores wallet addresses that have paid for unlimited access
+CREATE TABLE IF NOT EXISTS unlimited_users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  wallet_address TEXT NOT NULL UNIQUE,
+  tx_hash TEXT NOT NULL,
+  chain TEXT NOT NULL,
+  plan TEXT DEFAULT 'unlimited',
+  activated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create api_keys table
-CREATE TABLE IF NOT EXISTS public.api_keys (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  key_value TEXT NOT NULL UNIQUE,
-  key_prefix TEXT NOT NULL, -- First 8 characters for display
+-- Create index for fast wallet lookups
+CREATE INDEX IF NOT EXISTS idx_unlimited_users_wallet ON unlimited_users(wallet_address);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE unlimited_users ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policy if it exists
+DROP POLICY IF EXISTS "Service role can access unlimited_users" ON unlimited_users;
+
+-- Create policy to allow service role to access
+CREATE POLICY "Service role can access unlimited_users"
+  ON unlimited_users
+  FOR ALL
+  USING (auth.role() = 'service_role');
+
+-- 2. Create api_usage table
+-- Tracks daily API usage for free tier users
+CREATE TABLE IF NOT EXISTS api_usage (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  wallet_address TEXT NOT NULL,
+  date DATE NOT NULL,
+  request_count INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  last_used TIMESTAMP WITH TIME ZONE,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked')),
-  UNIQUE(user_id) -- One key per user for now
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(wallet_address, date)
 );
 
--- Create usage_logs table
-CREATE TABLE IF NOT EXISTS public.usage_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  date DATE NOT NULL DEFAULT CURRENT_DATE,
-  requests_count INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, date) -- One record per user per day
-);
+-- Create index for fast lookups
+CREATE INDEX IF NOT EXISTS idx_api_usage_wallet_date ON api_usage(wallet_address, date);
 
--- Enable Row Level Security
-ALTER TABLE public.users_profile ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.usage_logs ENABLE ROW LEVEL SECURITY;
+-- Enable Row Level Security (RLS)
+ALTER TABLE api_usage ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for users_profile
-CREATE POLICY "Users can view own profile" ON public.users_profile
-  FOR SELECT USING (auth.uid() = id);
+-- Drop existing policy if it exists
+DROP POLICY IF EXISTS "Service role can access api_usage" ON api_usage;
 
-CREATE POLICY "Users can update own profile" ON public.users_profile
-  FOR UPDATE USING (auth.uid() = id);
+-- Create policy to allow service role to access
+CREATE POLICY "Service role can access api_usage"
+  ON api_usage
+  FOR ALL
+  USING (auth.role() = 'service_role');
 
--- RLS Policies for api_keys
-CREATE POLICY "Users can view own API keys" ON public.api_keys
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own API keys" ON public.api_keys
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own API keys" ON public.api_keys
-  FOR DELETE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own API keys" ON public.api_keys
-  FOR UPDATE USING (auth.uid() = user_id);
-
--- RLS Policies for usage_logs
-CREATE POLICY "Users can view own usage logs" ON public.usage_logs
-  FOR SELECT USING (auth.uid() = user_id);
-
--- Function to create user profile on signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.users_profile (id, email, plan_type)
-  VALUES (NEW.id, NEW.email, 'free');
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to automatically create profile on user signup
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.handle_updated_at()
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ language 'plpgsql';
 
--- Trigger for users_profile updated_at
-DROP TRIGGER IF EXISTS set_updated_at ON public.users_profile;
-CREATE TRIGGER set_updated_at
-  BEFORE UPDATE ON public.users_profile
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS update_api_usage_updated_at ON api_usage;
 
--- Indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON public.api_keys(user_id);
-CREATE INDEX IF NOT EXISTS idx_api_keys_key_value ON public.api_keys(key_value);
-CREATE INDEX IF NOT EXISTS idx_usage_logs_user_id_date ON public.usage_logs(user_id, date);
+-- Create trigger to automatically update updated_at
+CREATE TRIGGER update_api_usage_updated_at
+  BEFORE UPDATE ON api_usage
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
 
--- Grant necessary permissions
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT ALL ON public.users_profile TO authenticated;
-GRANT ALL ON public.api_keys TO authenticated;
-GRANT ALL ON public.usage_logs TO authenticated;
+-- =============================================
+-- Verification Query
+-- =============================================
+-- This will show you if tables were created successfully
+SELECT
+  table_name,
+  table_type,
+  (SELECT COUNT(*)
+   FROM information_schema.columns
+   WHERE columns.table_name = tables.table_name
+     AND columns.table_schema = 'public') as column_count
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name IN ('unlimited_users', 'api_usage')
+ORDER BY table_name;
+
+-- =============================================
+-- View table structures
+-- =============================================
+SELECT
+  table_name,
+  column_name,
+  data_type,
+  is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name IN ('unlimited_users', 'api_usage')
+ORDER BY table_name, ordinal_position;
