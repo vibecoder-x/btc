@@ -156,16 +156,42 @@ export class X402PaymentService {
         return { isValid: false, error: 'Transaction hash required' };
       }
 
-      // TODO: Implement actual blockchain verification
-      // For each chain:
-      // - Base/Polygon: Use ethers.js to verify EVM transaction
-      // - Solana: Use @solana/web3.js to verify Solana transaction
+      // Import blockchain verifier dynamically
+      const { BlockchainVerifier } = await import('./blockchain-verifier');
 
-      // Placeholder: In production, verify the transaction on-chain
-      console.log(`Verifying payment on ${paymentRequest.chain}: ${txHash}`);
+      // Get expected amount in tokens
+      const tokenAmount = await this.convertUSDToToken(
+        paymentRequest.amount,
+        paymentRequest.chain
+      );
 
-      // For now, return pending status
-      return { isValid: false, error: 'Payment not yet detected' };
+      // Verify transaction on blockchain
+      const verification = await BlockchainVerifier.verifyTransaction(
+        txHash,
+        paymentRequest.chain,
+        tokenAmount,
+        paymentRequest.recipientAddress
+      );
+
+      if (verification.isValid) {
+        // Payment confirmed!
+        await this.updatePaymentStatus(requestId, 'CONFIRMED', {
+          txHash: verification.txHash,
+          chain: verification.chain,
+          confirmations: verification.confirmations,
+          paidAt: new Date(),
+        });
+      } else {
+        // Payment not confirmed yet or invalid
+        const status = verification.error?.includes('Waiting') ? 'CONFIRMING' : 'INVALID';
+        await this.updatePaymentStatus(requestId, status, {
+          txHash: verification.txHash,
+          chain: verification.chain,
+          confirmations: verification.confirmations,
+        });
+      }
+
+      return verification;
 
     } catch (error) {
       console.error('Error verifying payment:', error);
@@ -173,40 +199,6 @@ export class X402PaymentService {
     }
   }
 
-  /**
-   * Verify EVM transaction (Base, Polygon)
-   */
-  static async verifyEVMTransaction(
-    txHash: string,
-    chain: SupportedChain,
-    expectedAmount: string,
-    recipientAddress: string
-  ): Promise<PaymentVerification> {
-    // TODO: Implement using ethers.js
-    // 1. Connect to RPC
-    // 2. Get transaction by hash
-    // 3. Verify recipient and amount
-    // 4. Check confirmations
-
-    return { isValid: false, error: 'EVM verification not yet implemented' };
-  }
-
-  /**
-   * Verify Solana transaction
-   */
-  static async verifySolanaTransaction(
-    txHash: string,
-    expectedAmount: string,
-    recipientAddress: string
-  ): Promise<PaymentVerification> {
-    // TODO: Implement using @solana/web3.js
-    // 1. Connect to Solana RPC
-    // 2. Get transaction by signature
-    // 3. Verify recipient and amount
-    // 4. Check confirmation status
-
-    return { isValid: false, error: 'Solana verification not yet implemented' };
-  }
 
   /**
    * Store payment request (in-memory for now, should use database)
