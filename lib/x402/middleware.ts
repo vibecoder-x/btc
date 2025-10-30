@@ -95,16 +95,16 @@ export function withX402Payment(
         request.method
       );
 
-      const x402Response = X402PaymentService.generateX402Response(paymentRequest);
+      const x402Response = await X402PaymentService.generateX402Response(paymentRequest);
 
       const headers: Record<string, string> = {
         'X-Payment-Amount': paymentRequest.amount.toString(),
-        'X-Payment-Currency': 'SAT',
-        'X-Payment-Address': paymentRequest.paymentAddress,
-        'X-Payment-Method': 'inscription',
+        'X-Payment-Currency': 'USD',
+        'X-Payment-Chain': paymentRequest.chain,
+        'X-Payment-Recipient': paymentRequest.recipientAddress,
         'X-Request-ID': paymentRequest.requestId,
-        'X-Inscription-Format': JSON.stringify(paymentRequest.inscriptionData),
         'X-Payment-Timeout': '600',
+        'X-Payment-Scheme': 'exact',
         'Content-Type': 'application/json',
       };
 

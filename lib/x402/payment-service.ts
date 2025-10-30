@@ -1,6 +1,6 @@
 /**
  * x402 Payment Service
- * Handles payment generation, verification, and tracking
+ * Multi-chain payment support: Base, Solana, Polygon
  */
 
 import crypto from 'crypto';
@@ -8,15 +8,24 @@ import {
   X402PaymentRequest,
   X402Response,
   PaymentStatus,
-  InscriptionData,
   EndpointPricing,
   ENDPOINT_PRICING,
   PaymentVerification,
+  SupportedChain,
+  CHAIN_CONFIGS,
 } from './types';
 
 export class X402PaymentService {
   private static readonly PAYMENT_TIMEOUT_MINUTES = 10;
-  private static readonly SERVICE_NAME = 'btcindexer';
+  private static readonly DEFAULT_CHAIN: SupportedChain = 'base-sepolia'; // Testnet for development
+
+  // Recipient addresses for each chain (TODO: Replace with your actual addresses)
+  private static readonly RECIPIENT_ADDRESSES: Record<SupportedChain, string> = {
+    'base': '0x0000000000000000000000000000000000000000', // TODO: Replace
+    'base-sepolia': '0x0000000000000000000000000000000000000000', // TODO: Replace
+    'solana': '11111111111111111111111111111111', // TODO: Replace with Solana address
+    'polygon': '0x0000000000000000000000000000000000000000', // TODO: Replace
+  };
 
   /**
    * Generate a unique request ID
@@ -26,13 +35,10 @@ export class X402PaymentService {
   }
 
   /**
-   * Generate a payment address (in production, this would use HD wallet derivation)
+   * Get recipient address for a chain
    */
-  static async generatePaymentAddress(requestId: string): Promise<string> {
-    // TODO: In production, implement proper HD wallet address derivation
-    // For now, return a placeholder address
-    // This should be replaced with actual Bitcoin address generation
-    return `bc1q${crypto.createHash('sha256').update(requestId).digest('hex').substring(0, 39)}`;
+  static getRecipientAddress(chain: SupportedChain): string {
+    return this.RECIPIENT_ADDRESSES[chain];
   }
 
   /**
@@ -52,11 +58,33 @@ export class X402PaymentService {
   }
 
   /**
+   * Convert USD amount to token amount (approximate)
+   * In production, fetch real-time prices from price oracles
+   */
+  static async convertUSDToToken(usdAmount: number, chain: SupportedChain): Promise<string> {
+    // TODO: Implement real price oracle integration
+    // For now, using approximate prices
+    const approximatePrices: Record<SupportedChain, number> = {
+      'base': 3000, // ETH price
+      'base-sepolia': 3000,
+      'solana': 180, // SOL price
+      'polygon': 0.90, // MATIC price
+    };
+
+    const tokenPrice = approximatePrices[chain];
+    const tokenAmount = usdAmount / tokenPrice;
+
+    const decimals = CHAIN_CONFIGS[chain].nativeCurrency.decimals;
+    return tokenAmount.toFixed(decimals);
+  }
+
+  /**
    * Create a payment request for an endpoint
    */
   static async createPaymentRequest(
     endpoint: string,
-    method: string = 'GET'
+    method: string = 'GET',
+    preferredChain?: SupportedChain
   ): Promise<X402PaymentRequest> {
     const requestId = this.generateRequestId();
     const pricing = this.findEndpointPricing(endpoint, method);
@@ -65,22 +93,17 @@ export class X402PaymentService {
       throw new Error(`No pricing found for endpoint: ${method} ${endpoint}`);
     }
 
-    const paymentAddress = await this.generatePaymentAddress(requestId);
+    const chain = preferredChain || this.DEFAULT_CHAIN;
+    const recipientAddress = this.getRecipientAddress(chain);
     const now = new Date();
     const expiresAt = new Date(now.getTime() + this.PAYMENT_TIMEOUT_MINUTES * 60 * 1000);
-
-    const inscriptionData: InscriptionData = {
-      service: this.SERVICE_NAME,
-      request_id: requestId,
-      timestamp: Math.floor(now.getTime() / 1000),
-    };
 
     const paymentRequest: X402PaymentRequest = {
       requestId,
       endpoint,
-      amount: pricing.price,
-      paymentAddress,
-      inscriptionData,
+      amount: pricing.price, // USD
+      chain,
+      recipientAddress,
       expiresAt,
       createdAt: now,
     };
@@ -94,31 +117,29 @@ export class X402PaymentService {
   /**
    * Generate x402 HTTP response
    */
-  static generateX402Response(paymentRequest: X402PaymentRequest): X402Response {
+  static async generateX402Response(paymentRequest: X402PaymentRequest): Promise<X402Response> {
+    const tokenAmount = await this.convertUSDToToken(paymentRequest.amount, paymentRequest.chain);
+    const chainConfig = CHAIN_CONFIGS[paymentRequest.chain];
+
     return {
       error: 'Payment Required',
       amount: paymentRequest.amount,
-      currency: 'SAT',
-      payment_address: paymentRequest.paymentAddress,
+      amountToken: tokenAmount,
+      currency: 'USD',
+      chain: paymentRequest.chain,
+      recipient_address: paymentRequest.recipientAddress,
       request_id: paymentRequest.requestId,
-      inscription_data: paymentRequest.inscriptionData,
-      instructions: 'Create inscription with provided data and send to payment address',
+      instructions: `Send ${tokenAmount} ${chainConfig.nativeCurrency.symbol} to the recipient address on ${chainConfig.name}`,
       expires_at: paymentRequest.expiresAt.toISOString(),
+      scheme: 'exact',
     };
   }
 
   /**
-   * Verify payment by checking blockchain for inscription
+   * Verify payment by checking blockchain
    */
-  static async verifyPayment(requestId: string): Promise<PaymentVerification> {
+  static async verifyPayment(requestId: string, txHash?: string): Promise<PaymentVerification> {
     try {
-      // TODO: Implement actual blockchain verification
-      // This should:
-      // 1. Query Bitcoin node for transactions to payment address
-      // 2. Extract inscription data from transactions
-      // 3. Validate inscription data matches request
-      // 4. Check payment amount and confirmations
-
       const paymentRequest = await this.getPaymentRequest(requestId);
 
       if (!paymentRequest) {
@@ -131,7 +152,18 @@ export class X402PaymentService {
         return { isValid: false, error: 'Payment request expired' };
       }
 
-      // In production, implement actual blockchain check
+      if (!txHash) {
+        return { isValid: false, error: 'Transaction hash required' };
+      }
+
+      // TODO: Implement actual blockchain verification
+      // For each chain:
+      // - Base/Polygon: Use ethers.js to verify EVM transaction
+      // - Solana: Use @solana/web3.js to verify Solana transaction
+
+      // Placeholder: In production, verify the transaction on-chain
+      console.log(`Verifying payment on ${paymentRequest.chain}: ${txHash}`);
+
       // For now, return pending status
       return { isValid: false, error: 'Payment not yet detected' };
 
@@ -142,26 +174,38 @@ export class X402PaymentService {
   }
 
   /**
-   * Validate inscription data
+   * Verify EVM transaction (Base, Polygon)
    */
-  static validateInscriptionData(
-    inscriptionData: any,
-    expectedRequestId: string
-  ): boolean {
-    if (!inscriptionData) return false;
+  static async verifyEVMTransaction(
+    txHash: string,
+    chain: SupportedChain,
+    expectedAmount: string,
+    recipientAddress: string
+  ): Promise<PaymentVerification> {
+    // TODO: Implement using ethers.js
+    // 1. Connect to RPC
+    // 2. Get transaction by hash
+    // 3. Verify recipient and amount
+    // 4. Check confirmations
 
-    if (inscriptionData.service !== this.SERVICE_NAME) return false;
-    if (inscriptionData.request_id !== expectedRequestId) return false;
+    return { isValid: false, error: 'EVM verification not yet implemented' };
+  }
 
-    // Check timestamp is within acceptable window (10 minutes)
-    const inscriptionTime = inscriptionData.timestamp * 1000;
-    const now = Date.now();
-    const timeDiff = Math.abs(now - inscriptionTime);
-    const maxTimeDiff = this.PAYMENT_TIMEOUT_MINUTES * 60 * 1000;
+  /**
+   * Verify Solana transaction
+   */
+  static async verifySolanaTransaction(
+    txHash: string,
+    expectedAmount: string,
+    recipientAddress: string
+  ): Promise<PaymentVerification> {
+    // TODO: Implement using @solana/web3.js
+    // 1. Connect to Solana RPC
+    // 2. Get transaction by signature
+    // 3. Verify recipient and amount
+    // 4. Check confirmation status
 
-    if (timeDiff > maxTimeDiff) return false;
-
-    return true;
+    return { isValid: false, error: 'Solana verification not yet implemented' };
   }
 
   /**
@@ -214,6 +258,7 @@ export class X402PaymentService {
       return {
         requestId,
         status: 'EXPIRED',
+        chain: request.chain,
       };
     }
 
@@ -221,6 +266,7 @@ export class X402PaymentService {
     return {
       requestId,
       status: 'PENDING',
+      chain: request.chain,
     };
   }
 
@@ -255,5 +301,19 @@ export class X402PaymentService {
   static async cleanupExpiredRequests(): Promise<void> {
     // TODO: Implement database cleanup for expired requests
     console.log('Cleaning up expired payment requests');
+  }
+
+  /**
+   * Get supported chains
+   */
+  static getSupportedChains(): SupportedChain[] {
+    return Object.keys(CHAIN_CONFIGS) as SupportedChain[];
+  }
+
+  /**
+   * Get chain configuration
+   */
+  static getChainConfig(chain: SupportedChain) {
+    return CHAIN_CONFIGS[chain];
   }
 }

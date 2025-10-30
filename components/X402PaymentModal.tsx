@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Clock, Bitcoin, Zap, ExternalLink } from 'lucide-react';
-import { X402Response } from '@/lib/x402/types';
+import { X, Copy, Check, Clock, Zap, ExternalLink, Wallet } from 'lucide-react';
+import { X402Response, CHAIN_CONFIGS, SupportedChain } from '@/lib/x402/types';
 
 interface X402PaymentModalProps {
   isOpen: boolean;
@@ -21,6 +21,9 @@ export function X402PaymentModal({
   const [copied, setCopied] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'detected' | 'confirmed'>('pending');
   const [timeRemaining, setTimeRemaining] = useState<number>(600); // 10 minutes
+  const [txHash, setTxHash] = useState('');
+
+  const chainConfig = CHAIN_CONFIGS[paymentData.chain];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -38,11 +41,13 @@ export function X402PaymentModal({
 
     // Poll for payment status
     const pollInterval = setInterval(async () => {
+      if (!txHash) return; // Wait for user to provide tx hash
+
       try {
         const response = await fetch('/api/payment/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requestId: paymentData.request_id }),
+          body: JSON.stringify({ requestId: paymentData.request_id, txHash }),
         });
 
         const status = await response.json();
@@ -66,7 +71,7 @@ export function X402PaymentModal({
       clearInterval(timer);
       clearInterval(pollInterval);
     };
-  }, [isOpen, paymentData.request_id, onPaymentComplete, onClose]);
+  }, [isOpen, paymentData.request_id, txHash, onPaymentComplete, onClose]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -80,8 +85,11 @@ export function X402PaymentModal({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const satsToBTC = (sats: number) => {
-    return (sats / 100000000).toFixed(8);
+  const openExplorer = () => {
+    if (txHash && chainConfig) {
+      const url = `${chainConfig.explorerUrl}/tx/${txHash}`;
+      window.open(url, '_blank');
+    }
   };
 
   if (!isOpen) return null;
@@ -116,12 +124,12 @@ export function X402PaymentModal({
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-neon-blue/20">
-                <Bitcoin className="w-6 h-6 text-neon-blue" />
+              <div className="p-3 rounded-xl bg-neon-blue/20 text-2xl">
+                {chainConfig.icon}
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-neon-blue">Payment Required</h2>
-                <p className="text-sm text-foreground/70">x402 Pay-Per-Use Protocol</p>
+                <p className="text-sm text-foreground/70">Pay on {chainConfig.name}</p>
               </div>
             </div>
           </div>
@@ -160,11 +168,13 @@ export function X402PaymentModal({
             <div className="text-center">
               <p className="text-sm text-foreground/70 mb-1">Amount Due</p>
               <div className="flex items-center justify-center gap-2">
-                <span className="text-3xl font-bold text-neon-blue">{paymentData.amount}</span>
-                <span className="text-xl text-foreground/70">sats</span>
+                <span className="text-3xl font-bold text-neon-blue">
+                  {paymentData.amountToken}
+                </span>
+                <span className="text-xl text-foreground/70">{chainConfig.nativeCurrency.symbol}</span>
               </div>
               <p className="text-xs text-foreground/50 mt-1">
-                ≈ {satsToBTC(paymentData.amount)} BTC
+                ≈ ${paymentData.amount.toFixed(2)} USD
               </p>
             </div>
           </div>
@@ -177,20 +187,20 @@ export function X402PaymentModal({
             </span>
           </div>
 
-          {/* Payment Address */}
+          {/* Recipient Address */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-foreground/70 mb-2">
-              Payment Address
+              Send To
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 readOnly
-                value={paymentData.payment_address}
+                value={paymentData.recipient_address}
                 className="flex-1 px-4 py-3 rounded-lg bg-space-black/50 border border-neon-blue/30 text-neon-green font-mono text-sm focus:outline-none focus:border-neon-blue"
               />
               <button
-                onClick={() => copyToClipboard(paymentData.payment_address, 'address')}
+                onClick={() => copyToClipboard(paymentData.recipient_address, 'address')}
                 className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-colors"
               >
                 {copied === 'address' ? (
@@ -202,25 +212,27 @@ export function X402PaymentModal({
             </div>
           </div>
 
-          {/* Inscription Data */}
+          {/* Transaction Hash Input */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-foreground/70 mb-2">
-              Inscription Data
+              Transaction Hash (after payment)
             </label>
-            <div className="relative">
-              <pre className="px-4 py-3 rounded-lg bg-space-black/50 border border-neon-blue/30 text-neon-green text-xs font-mono overflow-x-auto">
-                {JSON.stringify(paymentData.inscription_data, null, 2)}
-              </pre>
-              <button
-                onClick={() => copyToClipboard(JSON.stringify(paymentData.inscription_data), 'inscription')}
-                className="absolute top-2 right-2 p-2 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-colors"
-              >
-                {copied === 'inscription' ? (
-                  <Check className="w-4 h-4 text-neon-green" />
-                ) : (
-                  <Copy className="w-4 h-4 text-foreground/70" />
-                )}
-              </button>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={txHash}
+                onChange={(e) => setTxHash(e.target.value)}
+                placeholder="Paste your transaction hash here..."
+                className="flex-1 px-4 py-3 rounded-lg bg-space-black/50 border border-neon-blue/30 text-foreground font-mono text-sm focus:outline-none focus:border-neon-blue"
+              />
+              {txHash && (
+                <button
+                  onClick={openExplorer}
+                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-colors"
+                >
+                  <ExternalLink className="w-5 h-5 text-neon-blue" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -230,45 +242,66 @@ export function X402PaymentModal({
             <ol className="space-y-2 text-sm text-foreground/70">
               <li className="flex items-start gap-2">
                 <span className="text-neon-orange">1.</span>
-                <span>Create an inscription with the provided data above</span>
+                <span>Open your {chainConfig.name} wallet (MetaMask, Phantom, etc.)</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-neon-orange">2.</span>
-                <span>Send the inscription to the payment address</span>
+                <span>Send {paymentData.amountToken} {chainConfig.nativeCurrency.symbol} to the address above</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-neon-orange">3.</span>
-                <span>Wait for confirmation (usually 10-30 minutes)</span>
+                <span>Paste your transaction hash in the field above</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-neon-orange">4.</span>
-                <span>Your data will be delivered automatically</span>
+                <span>Wait for confirmation (usually 1-2 minutes)</span>
               </li>
             </ol>
           </div>
 
           {/* Wallet Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => window.open('https://xverse.app', '_blank')}
-              className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Xverse Wallet
-            </button>
-            <button
-              onClick={() => window.open('https://unisat.io', '_blank')}
-              className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Unisat Wallet
-            </button>
+            {paymentData.chain === 'solana' ? (
+              <>
+                <button
+                  onClick={() => window.open('https://phantom.app', '_blank')}
+                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
+                >
+                  <Wallet className="w-4 h-4" />
+                  Phantom
+                </button>
+                <button
+                  onClick={() => window.open('https://solflare.com', '_blank')}
+                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
+                >
+                  <Wallet className="w-4 h-4" />
+                  Solflare
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => window.open('https://metamask.io', '_blank')}
+                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
+                >
+                  <Wallet className="w-4 h-4" />
+                  MetaMask
+                </button>
+                <button
+                  onClick={() => window.open(chainConfig.explorerUrl, '_blank')}
+                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Explorer
+                </button>
+              </>
+            )}
           </div>
 
           {/* Footer */}
           <div className="mt-6 pt-4 border-t border-foreground/10">
             <p className="text-xs text-center text-foreground/50">
-              No account required • Pay only what you use • Powered by Bitcoin inscriptions
+              Powered by x402 protocol • Pay-per-use on {chainConfig.name}
             </p>
           </div>
         </motion.div>
