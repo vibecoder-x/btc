@@ -1,70 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, Zap, Crown, Building2, Mail } from 'lucide-react';
+import { ArrowLeft, Zap, Coins, Globe } from 'lucide-react';
 import Link from 'next/link';
+import { ENDPOINT_PRICING } from '@/lib/x402/types';
 
 export default function PricingPage() {
-  const plans = [
-    {
-      name: 'Free',
-      icon: Zap,
-      price: '$0',
-      period: 'forever',
-      description: 'Perfect for getting started with blockchain data',
-      features: [
-        '1,000 requests per day',
-        '30 requests per minute',
-        'All API endpoints',
-        'Community support',
-        'Basic documentation',
-      ],
-      cta: 'Get Started',
-      highlight: false,
-      color: 'from-gray-600 to-gray-700',
-    },
-    {
-      name: 'Premium',
-      icon: Crown,
-      price: '$10',
-      period: 'per month',
-      description: 'For developers and growing applications - Pay with Bitcoin',
-      features: [
-        '50,000 requests per day',
-        '200 requests per minute',
-        'All API endpoints',
-        'Priority support',
-        'Advanced analytics',
-        'Custom webhooks',
-        '99.9% uptime SLA',
-        'Pay monthly or multi-month',
-      ],
-      cta: 'Pay with Bitcoin',
-      highlight: true,
-      color: 'from-[#FFD700] to-[#FF6B35]',
-      link: '/payment',
-    },
-    {
-      name: 'Enterprise',
-      icon: Building2,
-      price: 'Custom',
-      period: 'contact us',
-      description: 'Tailored solutions for large-scale operations',
-      features: [
-        'Unlimited requests',
-        'Custom rate limits',
-        'Dedicated infrastructure',
-        'White-label API',
-        '24/7 priority support',
-        'Custom SLA',
-        'Dedicated account manager',
-        'Private blockchain node',
-      ],
-      cta: 'Contact Sales',
-      highlight: false,
-      color: 'from-blue-600 to-purple-600',
-    },
-  ];
+  // Group endpoints by category
+  const categories = {
+    'Block Data': ENDPOINT_PRICING.filter(e => e.path.includes('/block')),
+    'Transactions': ENDPOINT_PRICING.filter(e => e.path.includes('/tx')),
+    'Addresses': ENDPOINT_PRICING.filter(e => e.path.includes('/address') && !e.path.includes('brc20')),
+    'Inscriptions': ENDPOINT_PRICING.filter(e => e.path.includes('/inscription') || e.path.includes('/collection')),
+    'BRC-20 Tokens': ENDPOINT_PRICING.filter(e => e.path.includes('/brc20')),
+    'Analytics': ENDPOINT_PRICING.filter(e => e.path.includes('/stats') || e.path.includes('/mempool') || e.path.includes('/fees')),
+    'Batch Operations': ENDPOINT_PRICING.filter(e => e.path.includes('/batch')),
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -83,255 +34,241 @@ export default function PricingPage() {
       >
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gradient-gold mb-4">Choose Your Plan</h1>
-          <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
-            Access real-time Bitcoin blockchain data with flexible pricing plans designed for every need
+          <h1 className="text-5xl font-bold text-gradient-gold mb-4">Pay-Per-Use API Pricing</h1>
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto mb-8">
+            No subscriptions, no API keys. Pay only for what you use with Base, Solana, or Polygon.
           </p>
+
+          {/* Payment Methods */}
+          <div className="flex justify-center gap-6 mb-8">
+            <div className="flex items-center gap-2 px-6 py-3 rounded-lg bg-[#0052FF]/10 border border-[#0052FF]/30">
+              <span className="text-2xl">🔵</span>
+              <span className="text-foreground font-semibold">Base</span>
+            </div>
+            <div className="flex items-center gap-2 px-6 py-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+              <span className="text-2xl">⚡</span>
+              <span className="text-foreground font-semibold">Solana</span>
+            </div>
+            <div className="flex items-center gap-2 px-6 py-3 rounded-lg bg-purple-600/10 border border-purple-600/30">
+              <span className="text-2xl">💜</span>
+              <span className="text-foreground font-semibold">Polygon</span>
+            </div>
+          </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className={`card-3d rounded-2xl p-8 relative ${
-                plan.highlight ? 'ring-2 ring-[#FFD700] scale-105' : ''
-              }`}
-            >
-              {plan.highlight && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="px-4 py-1 bg-gradient-to-r from-[#FFD700] to-[#FF6B35] rounded-full text-sm font-semibold text-[#0A0A0A]">
-                    MOST POPULAR
-                  </span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 mb-4">
-                <plan.icon className="w-10 h-10 text-[#FFD700]" />
-                <h3 className="text-2xl font-bold text-gradient-gold">{plan.name}</h3>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-[#FFD700]">{plan.price}</span>
-                  {plan.price !== 'Custom' && (
-                    <span className="text-foreground/50">/{plan.period}</span>
-                  )}
-                </div>
-                {plan.price === 'Custom' && (
-                  <span className="text-foreground/50">{plan.period}</span>
-                )}
-              </div>
-
-              <p className="text-foreground/70 mb-6">{plan.description}</p>
-
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#FFD700] flex-shrink-0 mt-0.5" />
-                    <span className="text-foreground/70">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {plan.name === 'Premium' ? (
-                <Link
-                  href="/payment"
-                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 block text-center ${
-                    plan.highlight
-                      ? 'gradient-gold-orange hover:glow-gold text-[#0A0A0A]'
-                      : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              ) : plan.name === 'Free' ? (
-                <Link
-                  href="/signup"
-                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 block text-center ${
-                    plan.highlight
-                      ? 'gradient-gold-orange hover:glow-gold text-[#0A0A0A]'
-                      : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              ) : (
-                <a
-                  href="mailto:contact@btcindexer.com"
-                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 block text-center ${
-                    plan.highlight
-                      ? 'gradient-gold-orange hover:glow-gold text-[#0A0A0A]'
-                      : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
-                  }`}
-                >
-                  {plan.cta}
-                </a>
-              )}
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Comparison Table */}
+        {/* How It Works */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="card-3d rounded-2xl p-8 mb-16"
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="card-3d rounded-2xl p-8 mb-12"
         >
-          <h2 className="text-3xl font-bold text-gradient-gold mb-8">Feature Comparison</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#FFD700]/20">
-                  <th className="text-left py-4 px-4 text-[#FFD700]">Feature</th>
-                  <th className="text-center py-4 px-4 text-[#FFD700]">Free</th>
-                  <th className="text-center py-4 px-4 text-[#FFD700]">Premium</th>
-                  <th className="text-center py-4 px-4 text-[#FFD700]">Enterprise</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-4 px-4 text-foreground">Requests per day</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">1,000</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">50,000</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">Unlimited</td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-4 px-4 text-foreground">Rate limit (req/min)</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">30</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">200</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">Custom</td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-4 px-4 text-foreground">All endpoints</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-4 px-4 text-foreground">Webhooks</td>
-                  <td className="py-4 px-4 text-center text-foreground/30">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-4 px-4 text-foreground">Priority support</td>
-                  <td className="py-4 px-4 text-center text-foreground/30">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-4 px-4 text-foreground">SLA guarantee</td>
-                  <td className="py-4 px-4 text-center text-foreground/30">-</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">99.9%</td>
-                  <td className="py-4 px-4 text-center text-foreground/70">Custom</td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-4 px-4 text-foreground">Dedicated node</td>
-                  <td className="py-4 px-4 text-center text-foreground/30">-</td>
-                  <td className="py-4 px-4 text-center text-foreground/30">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 text-foreground">White-label API</td>
-                  <td className="py-4 px-4 text-center text-foreground/30">-</td>
-                  <td className="py-4 px-4 text-center text-foreground/30">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="w-5 h-5 text-[#FFD700] mx-auto" />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <h2 className="text-3xl font-bold text-gradient-gold mb-6 flex items-center gap-3">
+            <Zap className="w-8 h-8" />
+            How x402 Pay-Per-Use Works
+          </h2>
+          <div className="grid md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center text-xl font-bold mb-3 mx-auto">
+                1
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Make API Call</h3>
+              <p className="text-sm text-foreground/70">Call any endpoint without authentication</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center text-xl font-bold mb-3 mx-auto">
+                2
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Receive Payment Request</h3>
+              <p className="text-sm text-foreground/70">Get 402 response with payment details</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center text-xl font-bold mb-3 mx-auto">
+                3
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Pay with Crypto</h3>
+              <p className="text-sm text-foreground/70">Send payment on your preferred chain</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center text-xl font-bold mb-3 mx-auto">
+                4
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Get Your Data</h3>
+              <p className="text-sm text-foreground/70">Instant access after confirmation</p>
+            </div>
           </div>
         </motion.div>
 
-        {/* FAQ Section */}
+        {/* Pricing Tables by Category */}
+        {Object.entries(categories).map(([category, endpoints], categoryIndex) => (
+          <motion.div
+            key={category}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 + categoryIndex * 0.1 }}
+            className="card-3d rounded-2xl p-8 mb-8"
+          >
+            <h2 className="text-2xl font-bold text-gradient-gold mb-6">{category}</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#FFD700]/20">
+                    <th className="text-left py-4 px-4 text-[#FFD700]">Endpoint</th>
+                    <th className="text-left py-4 px-4 text-[#FFD700]">Description</th>
+                    <th className="text-center py-4 px-4 text-[#FFD700]">Method</th>
+                    <th className="text-right py-4 px-4 text-[#FFD700]">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {endpoints.map((endpoint, index) => (
+                    <tr key={index} className="border-b border-[#FFD700]/10 hover:bg-[#FFD700]/5 transition-colors">
+                      <td className="py-4 px-4 font-mono text-sm text-neon-blue">{endpoint.path}</td>
+                      <td className="py-4 px-4 text-foreground/70">{endpoint.description}</td>
+                      <td className="py-4 px-4 text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          endpoint.method === 'GET' ? 'bg-green-500/20 text-green-400' :
+                          endpoint.method === 'POST' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-orange-500/20 text-orange-400'
+                        }`}>
+                          {endpoint.method}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right font-bold text-[#FFD700]">
+                        ${endpoint.price.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        ))}
+
+        {/* Benefits */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="card-3d rounded-2xl p-8 mb-16"
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="card-3d rounded-2xl p-8 mb-12"
+        >
+          <h2 className="text-3xl font-bold text-gradient-gold mb-6 flex items-center gap-3">
+            <Coins className="w-8 h-8" />
+            Why Pay-Per-Use?
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">💰 Only Pay What You Use</h3>
+              <p className="text-foreground/70">
+                No monthly subscriptions or upfront costs. Pay only for the exact API calls you make.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">🔐 No API Keys Required</h3>
+              <p className="text-foreground/70">
+                No registration, no authentication. Just make a request and pay if you need the data.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">⚡ Instant Access</h3>
+              <p className="text-foreground/70">
+                Payment confirmed in 1-2 minutes. Your data is delivered immediately after confirmation.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">🌐 Multi-Chain Support</h3>
+              <p className="text-foreground/70">
+                Pay with Base (ETH), Solana (SOL), or Polygon (MATIC). Choose your preferred chain.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">💎 Transparent Pricing</h3>
+              <p className="text-foreground/70">
+                All prices are fixed in USD and clearly displayed. No hidden fees or surprises.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">🔄 No Commitments</h3>
+              <p className="text-foreground/70">
+                Use our API once or a million times. Scale up or down instantly without contracts.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* FAQ */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="card-3d rounded-2xl p-8 mb-12"
         >
           <h2 className="text-3xl font-bold text-gradient-gold mb-8">Frequently Asked Questions</h2>
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-bold text-[#FFD700] mb-2">
-                Can I upgrade or downgrade my plan?
+                How do I get started?
               </h3>
               <p className="text-foreground/70">
-                Yes! You can change your plan at any time. Upgrades take effect immediately, and
-                downgrades take effect at the end of your current billing cycle.
+                Simply make an API request to any endpoint. You'll receive a 402 Payment Required response with payment instructions. Send the specified amount to the provided address, submit your transaction hash, and get your data after confirmation.
               </p>
             </div>
 
             <div>
               <h3 className="text-xl font-bold text-[#FFD700] mb-2">
-                What happens if I exceed my rate limit?
+                Which wallets can I use?
               </h3>
               <p className="text-foreground/70">
-                If you exceed your rate limit, you'll receive HTTP 429 responses. You can either wait
-                for the rate limit window to reset or upgrade to a higher plan for more capacity.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold text-[#FFD700] mb-2">Do you offer refunds?</h3>
-              <p className="text-foreground/70">
-                We offer a 14-day money-back guarantee for Premium plans. If you're not satisfied,
-                contact us within 14 days of your purchase for a full refund.
+                For Base and Polygon: MetaMask, Coinbase Wallet, or any EVM-compatible wallet. For Solana: Phantom, Solflare, or any Solana wallet.
               </p>
             </div>
 
             <div>
               <h3 className="text-xl font-bold text-[#FFD700] mb-2">
-                What payment methods do you accept?
+                How long does payment confirmation take?
               </h3>
               <p className="text-foreground/70">
-                We accept Bitcoin (BTC) payments for Premium plans. Simply send BTC to our wallet address and your subscription will be activated after confirmation. You can pay for multiple months at once to save time.
+                Base and Polygon transactions typically confirm in 10-30 seconds. Solana confirms in 1-2 seconds. We require at least 1 confirmation before delivering data.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-2">
+                What if I need high volume access?
+              </h3>
+              <p className="text-foreground/70">
+                For enterprise customers requiring dedicated infrastructure or bulk pricing, please contact us at contact@btcindexer.com for custom solutions.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-2">
+                Are there any rate limits?
+              </h3>
+              <p className="text-foreground/70">
+                No rate limits! Pay-per-use means you can make as many requests as you want. Each request requires payment, giving you complete flexibility.
               </p>
             </div>
           </div>
         </motion.div>
 
-        {/* Enterprise Contact */}
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
           className="card-3d rounded-2xl p-8 text-center"
         >
-          <Mail className="w-16 h-16 text-[#FFD700] mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gradient-gold mb-4">Need a Custom Solution?</h2>
+          <Globe className="w-16 h-16 text-[#FFD700] mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-gradient-gold mb-4">Ready to Get Started?</h2>
           <p className="text-foreground/70 mb-6 max-w-2xl mx-auto">
-            For enterprise customers requiring dedicated infrastructure, custom SLAs, or private
-            blockchain nodes, reach out to our team.
+            Start using the Bitcoin Indexer API right now. No signup required, no API keys needed.
           </p>
-          <a
-            href="mailto:contact@btcindexer.com"
+          <Link
+            href="/docs"
             className="inline-block px-8 py-4 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-semibold text-[#0A0A0A] text-lg"
           >
-            contact@btcindexer.com
-          </a>
+            View API Documentation
+          </Link>
         </motion.div>
       </motion.div>
     </div>
