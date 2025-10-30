@@ -21,13 +21,6 @@ export interface WalletInfo {
   chainType: 'evm' | 'solana';
 }
 
-declare global {
-  interface Window {
-    ethereum?: any;
-    solana?: any;
-  }
-}
-
 export class WalletService {
   /**
    * Check if a wallet is installed
@@ -39,7 +32,7 @@ export class WalletService {
       case 'metamask':
         return typeof window.ethereum !== 'undefined';
       case 'phantom':
-        return typeof window.solana !== 'undefined' && window.solana.isPhantom;
+        return typeof window.solana !== 'undefined' && window.solana.isPhantom === true;
       default:
         return false;
     }
@@ -208,7 +201,7 @@ export class WalletService {
    */
   static async getCurrentWallet(): Promise<WalletAccount | null> {
     // Check MetaMask
-    if (this.isWalletInstalled('metamask')) {
+    if (this.isWalletInstalled('metamask') && window.ethereum) {
       try {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         if (accounts && accounts.length > 0) {
@@ -224,9 +217,9 @@ export class WalletService {
     }
 
     // Check Phantom
-    if (this.isWalletInstalled('phantom')) {
+    if (this.isWalletInstalled('phantom') && window.solana) {
       try {
-        if (window.solana.isConnected) {
+        if (window.solana.isConnected && window.solana.publicKey) {
           const publicKey = window.solana.publicKey.toString();
           return {
             address: publicKey,

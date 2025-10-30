@@ -1,13 +1,6 @@
 import { useState } from 'react';
 import { X402Response } from '@/lib/x402/types';
 
-declare global {
-  interface Window {
-    ethereum?: any;
-    solana?: any;
-  }
-}
-
 export function useWeb3Payment() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -99,7 +92,7 @@ export function useWeb3Payment() {
 
       // Connect to Phantom
       const resp = await window.solana.connect();
-      const fromPubkey = resp.publicKey;
+      const fromPubkeyString = resp.publicKey.toString();
 
       // Convert SOL amount to lamports
       const lamports = Math.floor(parseFloat(paymentData.amountToken) * 1e9);
@@ -108,6 +101,7 @@ export function useWeb3Payment() {
       const { Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } = await import('@solana/web3.js');
 
       const connection = new Connection('https://api.mainnet-beta.solana.com');
+      const fromPubkey = new PublicKey(fromPubkeyString);
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
