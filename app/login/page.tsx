@@ -36,10 +36,16 @@ export default function LoginPage() {
       // Show success
       setSuccess(true);
 
-      // Redirect to dashboard after 1.5 seconds
+      // Redirect to dashboard immediately
       setTimeout(() => {
+        // Try Next.js router first
         router.push('/dashboard');
-      }, 1500);
+
+        // Fallback to window.location after a brief delay
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 500);
+      }, 800);
 
     } catch (err: any) {
       console.error('Connection error:', err);
