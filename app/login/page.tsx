@@ -36,9 +36,9 @@ export default function LoginPage() {
       // Show success
       setSuccess(true);
 
-      // Redirect to home after 1.5 seconds
+      // Redirect to dashboard after 1.5 seconds
       setTimeout(() => {
-        router.push('/');
+        router.push('/dashboard');
       }, 1500);
 
     } catch (err: any) {
@@ -87,7 +87,7 @@ export default function LoginPage() {
                 <Check className="w-5 h-5" />
                 <span className="font-semibold">Wallet Connected Successfully!</span>
               </div>
-              <p className="text-sm text-foreground/70 mt-1">Redirecting to home...</p>
+              <p className="text-sm text-foreground/70 mt-1">Redirecting to your dashboard...</p>
             </motion.div>
           )}
 
@@ -175,12 +175,12 @@ export default function LoginPage() {
 
           {/* Info */}
           <div className="p-4 rounded-xl bg-neon-blue/10 border border-neon-blue/20">
-            <h3 className="text-sm font-bold text-neon-blue mb-2">Why connect a wallet?</h3>
+            <h3 className="text-sm font-bold text-neon-blue mb-2">What happens next?</h3>
             <ul className="text-xs text-foreground/70 space-y-1">
-              <li>• Makes payments faster and easier</li>
-              <li>• Your wallet stays secure on your device</li>
-              <li>• No need to copy/paste addresses</li>
-              <li>• One-click payments for API access</li>
+              <li>• Access your personal dashboard</li>
+              <li>• Start with 100 free API requests per day</li>
+              <li>• View your usage statistics in real-time</li>
+              <li>• Upgrade to unlimited anytime for $50</li>
             </ul>
           </div>
         </motion.div>

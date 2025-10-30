@@ -54,8 +54,10 @@ export default function CheckoutPage() {
   const [txHash, setTxHash] = useState('');
   const [copied, setCopied] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
 
   useEffect(() => {
     // Check for connected wallet
@@ -69,12 +71,86 @@ export default function CheckoutPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleVerifyPayment = async () => {
-    if (!txHash || !walletAccount) {
-      setError('Please connect your wallet and enter transaction hash');
+  const handlePayWithWallet = async () => {
+    if (!walletAccount) {
+      setError('Please connect your wallet first');
       return;
     }
 
+    try {
+      setIsPaying(true);
+      setError(null);
+
+      const chainInfo = CHAIN_INFO[selectedChain];
+      let transactionHash = '';
+
+      // Handle payment based on chain
+      if (selectedChain === 'solana') {
+        // Solana payment via Phantom
+        if (!window.solana?.isPhantom) {
+          setError('Phantom wallet not found. Please install Phantom.');
+          return;
+        }
+
+        const transaction = await window.solana.request({
+          method: 'transfer',
+          params: {
+            to: chainInfo.address,
+            amount: parseFloat(chainInfo.amount) * 1e9, // Convert SOL to lamports
+          },
+        });
+
+        transactionHash = transaction.signature;
+
+      } else if (selectedChain === 'bitcoin') {
+        // Bitcoin requires manual entry
+        setShowManualEntry(true);
+        setIsPaying(false);
+        return;
+
+      } else {
+        // EVM chains (Base, Polygon, Ethereum) via MetaMask
+        if (!window.ethereum) {
+          setError('MetaMask not found. Please install MetaMask.');
+          return;
+        }
+
+        // Parse amount in ETH
+        const amountInEth = chainInfo.amount.split(' ')[0];
+        const amountInWei = '0x' + (parseFloat(amountInEth) * 1e18).toString(16);
+
+        const txParams = {
+          from: walletAccount.address,
+          to: chainInfo.address,
+          value: amountInWei,
+          gas: '0x5208', // 21000 gas for simple transfer
+        };
+
+        transactionHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [txParams],
+        });
+      }
+
+      // Auto-verify the payment
+      if (transactionHash) {
+        setTxHash(transactionHash);
+        await verifyTransaction(transactionHash);
+      }
+
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      if (err.code === 4001) {
+        setError('Payment cancelled by user');
+      } else {
+        setError(err.message || 'Payment failed');
+      }
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  const verifyTransaction = async (hash: string) => {
     try {
       setIsVerifying(true);
       setError(null);
@@ -85,7 +161,7 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           walletAddress: walletAccount.address,
-          txHash,
+          txHash: hash,
           chain: selectedChain,
         }),
       });
@@ -98,13 +174,22 @@ export default function CheckoutPage() {
           router.push('/dashboard');
         }, 2000);
       } else {
-        setError(data.error || 'Payment verification failed');
+        setError(data.error || 'Payment verification failed. The transaction may still be pending.');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to verify payment');
     } finally {
       setIsVerifying(false);
     }
+  };
+
+  const handleVerifyPayment = async () => {
+    if (!txHash || !walletAccount) {
+      setError('Please connect your wallet and enter transaction hash');
+      return;
+    }
+
+    await verifyTransaction(txHash);
   };
 
   return (
@@ -268,84 +353,138 @@ export default function CheckoutPage() {
                 )}
 
                 <div className="space-y-6">
-                  {/* Step 1 */}
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
-                        1
-                      </div>
-                      <h3 className="font-bold text-foreground">Send {CHAIN_INFO[selectedChain].amount}</h3>
-                    </div>
-                    <div className="ml-11">
-                      <p className="text-sm text-foreground/70 mb-2">To this address:</p>
-                      <div className="p-3 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30 font-mono text-sm break-all flex items-center justify-between gap-2">
-                        <span className="text-foreground">{CHAIN_INFO[selectedChain].address}</span>
-                        <button
-                          onClick={handleCopyAddress}
-                          className="p-2 hover:bg-[#FFD700]/20 rounded transition-colors"
-                        >
-                          {copied ? (
-                            <Check className="w-4 h-4 text-[#4CAF50]" />
-                          ) : (
-                            <Copy className="w-4 h-4 text-[#FFD700]" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
-                        2
-                      </div>
-                      <h3 className="font-bold text-foreground">Enter Transaction Hash</h3>
-                    </div>
-                    <div className="ml-11">
-                      <input
-                        type="text"
-                        placeholder="Paste your transaction hash here..."
-                        value={txHash}
-                        onChange={(e) => setTxHash(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-[#0A0A0A] border border-[#FFD700]/30 focus:border-[#FFD700] outline-none text-foreground font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
-                        3
-                      </div>
-                      <h3 className="font-bold text-foreground">Verify Payment</h3>
-                    </div>
-                    <div className="ml-11">
+                  {/* Primary Payment Button */}
+                  {!showManualEntry && !success && (
+                    <div>
                       <button
-                        onClick={handleVerifyPayment}
-                        disabled={!txHash || !walletAccount || isVerifying || success}
-                        className="w-full px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        onClick={handlePayWithWallet}
+                        disabled={!walletAccount || isPaying || isVerifying}
+                        className="w-full px-6 py-4 rounded-xl gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                       >
-                        {isVerifying ? (
+                        {isPaying ? (
                           <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            Verifying...
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            Processing Payment...
                           </>
-                        ) : success ? (
+                        ) : isVerifying ? (
                           <>
-                            <Check className="w-5 h-5" />
-                            Payment Confirmed
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            Verifying Transaction...
                           </>
                         ) : (
                           <>
-                            <Check className="w-5 h-5" />
-                            Verify Payment
+                            <Wallet className="w-6 h-6" />
+                            Pay {CHAIN_INFO[selectedChain].amount} with {CHAIN_INFO[selectedChain].name}
                           </>
                         )}
                       </button>
+                      <p className="text-xs text-center text-foreground/50 mt-3">
+                        Your wallet will open to confirm the payment
+                      </p>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Manual Entry Option */}
+                  {!showManualEntry && !success && (
+                    <div className="text-center">
+                      <button
+                        onClick={() => setShowManualEntry(true)}
+                        className="text-sm text-[#FFD700] hover:text-[#FF6B35] transition-colors underline"
+                      >
+                        Or enter transaction hash manually
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Manual Entry Form */}
+                  {showManualEntry && !success && (
+                    <>
+                      {/* Step 1 */}
+                      <div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
+                            1
+                          </div>
+                          <h3 className="font-bold text-foreground">Send {CHAIN_INFO[selectedChain].amount}</h3>
+                        </div>
+                        <div className="ml-11">
+                          <p className="text-sm text-foreground/70 mb-2">To this address:</p>
+                          <div className="p-3 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30 font-mono text-sm break-all flex items-center justify-between gap-2">
+                            <span className="text-foreground">{CHAIN_INFO[selectedChain].address}</span>
+                            <button
+                              onClick={handleCopyAddress}
+                              className="p-2 hover:bg-[#FFD700]/20 rounded transition-colors"
+                            >
+                              {copied ? (
+                                <Check className="w-4 h-4 text-[#4CAF50]" />
+                              ) : (
+                                <Copy className="w-4 h-4 text-[#FFD700]" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
+                            2
+                          </div>
+                          <h3 className="font-bold text-foreground">Enter Transaction Hash</h3>
+                        </div>
+                        <div className="ml-11">
+                          <input
+                            type="text"
+                            placeholder="Paste your transaction hash here..."
+                            value={txHash}
+                            onChange={(e) => setTxHash(e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg bg-[#0A0A0A] border border-[#FFD700]/30 focus:border-[#FFD700] outline-none text-foreground font-mono text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
+                            3
+                          </div>
+                          <h3 className="font-bold text-foreground">Verify Payment</h3>
+                        </div>
+                        <div className="ml-11">
+                          <button
+                            onClick={handleVerifyPayment}
+                            disabled={!txHash || !walletAccount || isVerifying || success}
+                            className="w-full px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {isVerifying ? (
+                              <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                Verifying...
+                              </>
+                            ) : (
+                              <>
+                                <Check className="w-5 h-5" />
+                                Verify Payment
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Success State */}
+                  {success && (
+                    <div className="text-center py-8">
+                      <div className="w-20 h-20 rounded-full bg-[#4CAF50]/20 flex items-center justify-center mx-auto mb-4">
+                        <Check className="w-10 h-10 text-[#4CAF50]" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-[#4CAF50] mb-2">Payment Confirmed!</h3>
+                      <p className="text-foreground/70">Upgrading your account...</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-[#FFD700]/20">

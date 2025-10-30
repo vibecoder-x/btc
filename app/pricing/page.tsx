@@ -17,8 +17,11 @@ export default function PricingPage() {
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             <span className="text-gradient-gold">Simple Pricing</span>
           </h1>
-          <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
+          <p className="text-xl text-foreground/70 max-w-2xl mx-auto mb-4">
             Choose the plan that works for you. No hidden fees, no surprises.
+          </p>
+          <p className="text-foreground/70 max-w-2xl mx-auto">
+            Pay directly with your crypto wallet - no manual transactions needed!
           </p>
         </motion.div>
       </div>
