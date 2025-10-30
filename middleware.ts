@@ -36,16 +36,10 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Protected routes
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/login';
-    redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
+  // We're using wallet-based authentication, not Supabase auth
+  // The wallet connection is stored in localStorage (client-side)
+  // So we don't need to check authentication in middleware
+  // The dashboard page itself will handle the redirect if no wallet is connected
 
   return supabaseResponse;
 }
