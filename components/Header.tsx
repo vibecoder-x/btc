@@ -80,8 +80,8 @@ export default function Header() {
               height={40}
               className="rounded-lg"
             />
-            <span className="text-xl font-bold text-neon-blue">
-              btcindexer<span className="text-neon-orange">.com</span>
+            <span className="text-xl font-bold text-gradient-gold">
+              btcindexer.com
             </span>
           </Link>
 
