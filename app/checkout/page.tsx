@@ -317,10 +317,17 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Right Column - Payment Instructions */}
+            {/* Right Column - Payment */}
             <div>
               <div className="card-3d rounded-2xl p-8">
-                <h2 className="text-2xl font-bold text-[#FFD700] mb-6">Payment Instructions</h2>
+                <h2 className="text-2xl font-bold text-[#FFD700] mb-2">
+                  {showManualEntry ? 'Manual Payment' : 'Complete Your Payment'}
+                </h2>
+                <p className="text-sm text-foreground/70 mb-6">
+                  {showManualEntry
+                    ? 'Send payment and enter your transaction hash'
+                    : 'Click the button below to pay with your wallet'}
+                </p>
 
                 {!walletAccount && (
                   <div className="mb-6 p-4 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
@@ -329,7 +336,7 @@ export default function CheckoutPage() {
                       <span className="font-semibold">Wallet Not Connected</span>
                     </div>
                     <p className="text-sm text-foreground/70 mb-3">
-                      Connect your wallet to track your payment
+                      Connect your wallet first to continue
                     </p>
                     <Link
                       href="/login"

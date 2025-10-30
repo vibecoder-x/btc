@@ -44,13 +44,28 @@ export default function Header() {
     }
   };
 
-  const navItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Blocks', href: '/blocks' },
-    { name: 'Stats', href: '/stats' },
-    { name: 'API', href: '/api' },
-    { name: 'Docs', href: '/docs' },
-  ];
+  const getNavItems = () => {
+    const baseItems = [
+      { name: 'Home', href: '/' },
+      { name: 'Blocks', href: '/blocks' },
+      { name: 'Stats', href: '/stats' },
+      { name: 'API', href: '/api' },
+      { name: 'Docs', href: '/docs' },
+    ];
+
+    // Add Dashboard link if wallet is connected
+    if (walletAccount) {
+      return [
+        ...baseItems.slice(0, 1), // Home
+        { name: 'Dashboard', href: '/dashboard' },
+        ...baseItems.slice(1), // Rest of items
+      ];
+    }
+
+    return baseItems;
+  };
+
+  const navItems = getNavItems();
 
   return (
     <header className="sticky top-0 z-50 glassmorphism border-b border-neon-blue/20">
