@@ -15,30 +15,31 @@ export default function DocsPage() {
   };
 
   const codeExamples = {
-    curl: `# No authentication needed - just call the API
-curl https://btcindexer.com/api/block/latest`,
-    javascript: `// No API keys required
-fetch('https://btcindexer.com/api/block/latest')
-  .then(response => {
-    if (response.status === 402) {
-      // Payment required - get payment details
-      return response.json();
-    }
-    return response.json();
-  })
+    curl: `# Include your wallet address in the header
+curl https://btcindexer.com/api/block/latest \\
+  -H "X-Wallet-Address: 0x1234...5678"`,
+    javascript: `// Include wallet address in request
+const walletAddress = '0x1234...5678'; // Your connected wallet
+
+fetch('https://btcindexer.com/api/block/latest', {
+  headers: {
+    'X-Wallet-Address': walletAddress
+  }
+})
+  .then(response => response.json())
   .then(data => console.log(data));`,
     python: `import requests
 
-# No authentication needed
-response = requests.get('https://btcindexer.com/api/block/latest')
+# Include wallet address in headers
+wallet_address = "0x1234...5678"  # Your connected wallet
 
-if response.status_code == 402:
-    # Payment required
-    payment_info = response.json()
-    print(payment_info)
-else:
-    data = response.json()
-    print(data)`,
+response = requests.get(
+    'https://btcindexer.com/api/block/latest',
+    headers={'X-Wallet-Address': wallet_address}
+)
+
+data = response.json()
+print(data)`,
   };
 
   return (
@@ -60,7 +61,7 @@ else:
         <div className="mb-12">
           <h1 className="text-5xl font-bold text-gradient-gold mb-4">Documentation</h1>
           <p className="text-xl text-foreground/70">
-            Everything you need to know about using the x402 Bitcoin Indexer API
+            Everything you need to know about using the Bitcoin Indexer API with wallet authentication
           </p>
         </div>
 
@@ -73,8 +74,8 @@ else:
             className="card-3d rounded-xl p-6"
           >
             <Book className="w-8 h-8 text-[#FFD700] mb-3" />
-            <h3 className="text-xl font-bold text-[#FFD700] mb-2">No Registration</h3>
-            <p className="text-foreground/70">Start using the API immediately without signing up</p>
+            <h3 className="text-xl font-bold text-[#FFD700] mb-2">Wallet Authentication</h3>
+            <p className="text-foreground/70">Your wallet is your login - no passwords or API keys</p>
           </motion.div>
 
           <motion.div
@@ -84,8 +85,8 @@ else:
             className="card-3d rounded-xl p-6"
           >
             <Zap className="w-8 h-8 text-[#FF6B35] mb-3" />
-            <h3 className="text-xl font-bold text-[#FF6B35] mb-2">Pay Per Use</h3>
-            <p className="text-foreground/70">Only pay for the exact data you request</p>
+            <h3 className="text-xl font-bold text-[#FF6B35] mb-2">Free & Unlimited Tiers</h3>
+            <p className="text-foreground/70">Start free with 100/day or go unlimited for $50 once</p>
           </motion.div>
 
           <motion.div
@@ -95,8 +96,8 @@ else:
             className="card-3d rounded-xl p-6"
           >
             <Shield className="w-8 h-8 text-[#FFD700] mb-3" />
-            <h3 className="text-xl font-bold text-[#FFD700] mb-2">Multi-Chain</h3>
-            <p className="text-foreground/70">Pay with Base, Solana, or Polygon</p>
+            <h3 className="text-xl font-bold text-[#FFD700] mb-2">Usage Dashboard</h3>
+            <p className="text-foreground/70">Track your API usage and plan in real-time</p>
           </motion.div>
         </div>
 
@@ -109,14 +110,37 @@ else:
         >
           <h2 className="text-3xl font-bold text-gradient-gold mb-6">Getting Started</h2>
           <p className="text-foreground/70 mb-6">
-            With x402, there's no registration or API keys needed. Just make requests and pay when you need data.
+            Connect your wallet and start making API calls with simple authentication using your wallet address.
           </p>
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-bold text-[#FFD700] mb-3">1. Make Your First Request</h3>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">1. Connect Your Wallet</h3>
               <p className="text-foreground/70 mb-3">
-                Call any endpoint directly - no authentication required:
+                Visit our{' '}
+                <Link href="/login" className="text-[#FFD700] hover:text-[#FF6B35] underline">
+                  login page
+                </Link>{' '}
+                and connect your MetaMask or Phantom wallet. No email or password needed.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">2. Access Your Dashboard</h3>
+              <p className="text-foreground/70 mb-3">
+                Once connected, you'll see your personal dashboard with:
+              </p>
+              <ul className="list-disc list-inside text-foreground/70 space-y-2 ml-4">
+                <li>Current plan (Free or Unlimited)</li>
+                <li>Daily API usage (100 requests/day on Free tier)</li>
+                <li>Upgrade option to Unlimited for $50 one-time payment</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">3. Make API Requests</h3>
+              <p className="text-foreground/70 mb-3">
+                Include your wallet address in the request header:
               </p>
               <div className="bg-black/50 rounded-lg p-4 font-mono text-sm relative">
                 <code className="text-[#FFD700]">{codeExamples.curl}</code>
@@ -130,53 +154,20 @@ else:
             </div>
 
             <div>
-              <h3 className="text-xl font-bold text-[#FFD700] mb-3">2. Handle 402 Payment Response</h3>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">4. Track Your Usage</h3>
               <p className="text-foreground/70 mb-3">
-                When data requires payment, you'll receive a 402 status with payment details:
-              </p>
-              <div className="bg-black/50 rounded-lg p-4">
-                <pre className="text-sm overflow-x-auto text-[#FFD700]">
-{`{
-  "error": "Payment Required",
-  "amount": 0.02,
-  "amountToken": "0.000006",
-  "currency": "USD",
-  "chain": "base-sepolia",
-  "recipient_address": "0x0000...",
-  "request_id": "abc123...",
-  "expires_at": "2025-10-30T19:00:00Z"
-}`}
-                </pre>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold text-[#FFD700] mb-3">3. Send Payment</h3>
-              <p className="text-foreground/70 mb-3">
-                Use MetaMask, Phantom, or any compatible wallet to send payment to the provided address.
+                Free tier users can make 100 requests per day. Your dashboard shows real-time usage stats.
               </p>
             </div>
 
             <div>
-              <h3 className="text-xl font-bold text-[#FFD700] mb-3">4. Submit Transaction Hash</h3>
+              <h3 className="text-xl font-bold text-[#FFD700] mb-3">5. Upgrade to Unlimited (Optional)</h3>
               <p className="text-foreground/70 mb-3">
-                After sending payment, submit your transaction hash for verification:
-              </p>
-              <div className="bg-black/50 rounded-lg p-4">
-                <pre className="text-sm overflow-x-auto text-[#FFD700]">
-{`POST /api/payment/status
-{
-  "requestId": "abc123...",
-  "txHash": "0x1234..."
-}`}
-                </pre>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold text-[#FFD700] mb-3">5. Receive Your Data</h3>
-              <p className="text-foreground/70 mb-3">
-                Once payment is confirmed on-chain, you'll receive the requested data automatically.
+                Need more? Pay $50 once on the{' '}
+                <Link href="/pricing" className="text-[#FFD700] hover:text-[#FF6B35] underline">
+                  pricing page
+                </Link>{' '}
+                for lifetime unlimited API access. Payment accepted via Base, Polygon, Ethereum, Bitcoin, or Solana.
               </p>
             </div>
           </div>
@@ -201,52 +192,69 @@ else:
           </div>
         </motion.div>
 
-        {/* Supported Chains */}
+        {/* Pricing Tiers */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           className="card-3d rounded-2xl p-8 mb-8"
         >
-          <h2 className="text-3xl font-bold text-gradient-gold mb-6">Supported Payment Chains</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-xl bg-[#0052FF]/10 border border-[#0052FF]/20">
-              <span className="text-3xl block mb-3">🔵</span>
-              <h3 className="text-xl font-bold text-foreground mb-2">Base</h3>
-              <p className="text-sm text-foreground/70 mb-3">
-                Ethereum L2 network with low fees and fast confirmation
-              </p>
-              <div className="text-xs text-foreground/50">
-                <div>Currency: ETH</div>
-                <div>Confirmation: 10-30 seconds</div>
-                <div>Wallets: MetaMask, Coinbase</div>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-xl bg-purple-500/10 border border-purple-500/20">
+          <h2 className="text-3xl font-bold text-gradient-gold mb-6">Pricing Tiers</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-xl bg-[#FFD700]/10 border-2 border-[#FFD700]/30">
               <span className="text-3xl block mb-3">⚡</span>
-              <h3 className="text-xl font-bold text-foreground mb-2">Solana</h3>
-              <p className="text-sm text-foreground/70 mb-3">
-                Ultra-fast blockchain with instant finality
+              <h3 className="text-2xl font-bold text-[#FFD700] mb-2">Free Tier</h3>
+              <p className="text-3xl font-bold text-foreground mb-3">100 requests/day</p>
+              <p className="text-sm text-foreground/70 mb-4">
+                Perfect for testing, small projects, and development
               </p>
-              <div className="text-xs text-foreground/50">
-                <div>Currency: SOL</div>
-                <div>Confirmation: 1-2 seconds</div>
-                <div>Wallets: Phantom, Solflare</div>
-              </div>
+              <ul className="space-y-2 text-sm text-foreground/70">
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  All API endpoints
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Personal dashboard
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Usage tracking
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  No credit card required
+                </li>
+              </ul>
             </div>
 
-            <div className="p-6 rounded-xl bg-purple-600/10 border border-purple-600/20">
-              <span className="text-3xl block mb-3">💜</span>
-              <h3 className="text-xl font-bold text-foreground mb-2">Polygon</h3>
-              <p className="text-sm text-foreground/70 mb-3">
-                Popular Ethereum sidechain with minimal fees
+            <div className="p-6 rounded-xl bg-[#FF6B35]/10 border-2 border-[#FF6B35]">
+              <span className="text-3xl block mb-3">👑</span>
+              <h3 className="text-2xl font-bold text-gradient-gold mb-2">Unlimited Tier</h3>
+              <p className="text-3xl font-bold text-foreground mb-1">
+                $50 <span className="text-base font-normal text-foreground/50">one-time</span>
               </p>
-              <div className="text-xs text-foreground/50">
-                <div>Currency: MATIC</div>
-                <div>Confirmation: 10-30 seconds</div>
-                <div>Wallets: MetaMask, Trust</div>
-              </div>
+              <p className="text-sm text-foreground/70 mb-4">
+                Lifetime unlimited access - pay once, use forever
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/70">
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Unlimited API requests
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Priority support
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Advanced analytics
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Multi-chain payment (Base, ETH, BTC, SOL, Polygon)
+                </li>
+              </ul>
             </div>
           </div>
         </motion.div>
@@ -293,72 +301,11 @@ else:
           </div>
         </motion.div>
 
-        {/* Pricing */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="card-3d rounded-2xl p-8 mb-8"
-        >
-          <h2 className="text-3xl font-bold text-gradient-gold mb-6">Pricing</h2>
-          <p className="text-foreground/70 mb-6">
-            All prices are in USD and automatically converted to the native token of your chosen chain.
-          </p>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#FFD700]/20">
-                  <th className="text-left py-3 px-4 text-[#FFD700]">Category</th>
-                  <th className="text-left py-3 px-4 text-[#FFD700]">Price Range</th>
-                  <th className="text-left py-3 px-4 text-[#FFD700]">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-3 px-4 text-foreground">Blocks</td>
-                  <td className="py-3 px-4 text-foreground/70">$0.01 - $0.05</td>
-                  <td className="py-3 px-4 text-foreground/70">Block data and lists</td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-3 px-4 text-foreground">Transactions</td>
-                  <td className="py-3 px-4 text-foreground/70">$0.01 - $0.10</td>
-                  <td className="py-3 px-4 text-foreground/70">Transaction details and broadcasting</td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-3 px-4 text-foreground">Addresses</td>
-                  <td className="py-3 px-4 text-foreground/70">$0.03 - $0.10</td>
-                  <td className="py-3 px-4 text-foreground/70">Balance and transaction history</td>
-                </tr>
-                <tr className="border-b border-[#FFD700]/10">
-                  <td className="py-3 px-4 text-foreground">Inscriptions</td>
-                  <td className="py-3 px-4 text-foreground/70">$0.05 - $0.50</td>
-                  <td className="py-3 px-4 text-foreground/70">Ordinals and collections</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 text-foreground">Analytics</td>
-                  <td className="py-3 px-4 text-foreground/70">$0.01 - $0.20</td>
-                  <td className="py-3 px-4 text-foreground/70">Network stats and mempool</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-6">
-            <Link
-              href="/pricing"
-              className="inline-block px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-semibold text-[#0A0A0A]"
-            >
-              View Full Pricing
-            </Link>
-          </div>
-        </motion.div>
-
         {/* HTTP Status Codes */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
           className="card-3d rounded-2xl p-8 mb-8"
         >
           <h2 className="text-3xl font-bold text-gradient-gold mb-6">HTTP Status Codes</h2>
@@ -372,23 +319,23 @@ else:
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[#FFD700] font-mono">202 Accepted</span>
-              </div>
-              <p className="text-foreground/70 text-sm">Payment detected, waiting for blockchain confirmation</p>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[#FFD700] font-mono">402 Payment Required</span>
-              </div>
-              <p className="text-foreground/70 text-sm">Payment needed to access this endpoint</p>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-2">
                 <span className="text-[#FFD700] font-mono">400 Bad Request</span>
               </div>
               <p className="text-foreground/70 text-sm">Invalid request parameters</p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[#FFD700] font-mono">401 Unauthorized</span>
+              </div>
+              <p className="text-foreground/70 text-sm">Missing or invalid wallet address in header</p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[#FFD700] font-mono">429 Too Many Requests</span>
+              </div>
+              <p className="text-foreground/70 text-sm">Rate limit exceeded (Free tier: 100/day). Upgrade to unlimited.</p>
             </div>
 
             <div>
@@ -411,27 +358,27 @@ else:
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
           className="card-3d rounded-2xl p-8 text-center"
         >
           <Code className="w-16 h-16 text-[#FFD700] mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gradient-gold mb-4">Need Help?</h2>
+          <h2 className="text-3xl font-bold text-gradient-gold mb-4">Ready to Get Started?</h2>
           <p className="text-foreground/70 mb-6">
-            Check out our API examples or contact support for assistance.
+            Connect your wallet and start using the Bitcoin Indexer API today
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              href="/api"
-              className="px-8 py-4 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-semibold text-[#0A0A0A] text-lg"
+              href="/login"
+              className="px-8 py-4 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-semibold text-white text-lg"
             >
-              API Examples
+              Connect Wallet
             </Link>
-            <a
-              href="mailto:support@btcindexer.com"
+            <Link
+              href="/api"
               className="px-8 py-4 rounded-lg border-2 border-[#FFD700]/30 text-foreground hover:border-[#FFD700] transition-colors font-semibold text-lg"
             >
-              Contact Support
-            </a>
+              API Reference
+            </Link>
           </div>
         </motion.div>
       </motion.div>

@@ -1,16 +1,19 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, Zap, Code, Globe } from 'lucide-react';
+import { ArrowLeft, Zap, Wallet, Crown } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
+  const router = useRouter();
+
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="inline-flex items-center text-neon-blue hover:text-neon-orange transition-colors duration-300 mb-8"
+          className="inline-flex items-center text-[#FFD700] hover:text-[#FF6B35] transition-colors duration-300 mb-8"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
@@ -20,139 +23,133 @@ export default function SignupPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="glassmorphism rounded-2xl p-8 border border-neon-blue/30"
+          className="glassmorphism rounded-2xl p-8 border border-[#FFD700]/30"
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-neon-blue to-neon-orange mb-4">
-              <Globe className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FFD700] to-[#FF6B35] mb-4">
+              <Wallet className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-neon-blue mb-2">Get Started</h1>
+            <h1 className="text-4xl font-bold text-gradient-gold mb-2">Get Started</h1>
             <p className="text-foreground/70 mb-4">
-              Start using our Bitcoin indexer API in seconds
+              Connect your wallet and access the Bitcoin indexer API
             </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neon-green/20 border border-neon-green/30">
-              <Zap className="w-4 h-4 text-neon-green" />
-              <span className="text-sm font-semibold text-neon-green">No signup required</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#4CAF50]/20 border border-[#4CAF50]/30">
+              <Zap className="w-4 h-4 text-[#4CAF50]" />
+              <span className="text-sm font-semibold text-[#4CAF50]">No email or password needed</span>
             </div>
           </div>
 
-          {/* Features */}
-          <div className="mb-8 space-y-3">
-            <div className="p-4 rounded-xl bg-neon-blue/10 border border-neon-blue/20">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🚀</span>
-                <div>
-                  <h3 className="font-bold text-neon-blue mb-1">Start Immediately</h3>
-                  <p className="text-sm text-foreground/70">
-                    No registration forms, no email verification. Just call the API and go.
-                  </p>
-                </div>
+          {/* Pricing Tiers */}
+          <div className="mb-8 space-y-4">
+            <div className="p-5 rounded-xl bg-[#FFD700]/10 border-2 border-[#FFD700]/30">
+              <div className="flex items-center gap-3 mb-3">
+                <Zap className="w-6 h-6 text-[#FFD700]" />
+                <h3 className="font-bold text-[#FFD700] text-lg">Free Tier</h3>
               </div>
+              <p className="text-2xl font-bold text-foreground mb-2">100 requests/day</p>
+              <p className="text-sm text-foreground/70 mb-4">
+                Perfect for testing and small projects
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/70 mb-4">
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  All API endpoints
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Personal dashboard
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Usage tracking
+                </li>
+              </ul>
             </div>
 
-            <div className="p-4 rounded-xl bg-neon-orange/10 border border-neon-orange/20">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">💰</span>
-                <div>
-                  <h3 className="font-bold text-neon-orange mb-1">Pay Per Use</h3>
-                  <p className="text-sm text-foreground/70">
-                    Only pay for what you use. Prices start at $0.01 per request.
-                  </p>
-                </div>
+            <div className="p-5 rounded-xl bg-[#FF6B35]/10 border-2 border-[#FF6B35]">
+              <div className="flex items-center gap-3 mb-3">
+                <Crown className="w-6 h-6 text-[#FF6B35]" />
+                <h3 className="font-bold text-gradient-gold text-lg">Unlimited Tier</h3>
               </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-neon-green/10 border border-neon-green/20">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🔐</span>
-                <div>
-                  <h3 className="font-bold text-neon-green mb-1">No Credentials Needed</h3>
-                  <p className="text-sm text-foreground/70">
-                    No API keys, no passwords. Pay with crypto and access data.
-                  </p>
-                </div>
-              </div>
+              <p className="text-2xl font-bold text-foreground mb-2">
+                $50 <span className="text-base font-normal text-foreground/50">one-time payment</span>
+              </p>
+              <p className="text-sm text-foreground/70 mb-4">
+                Lifetime unlimited access
+              </p>
+              <ul className="space-y-2 text-sm text-foreground/70 mb-4">
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Unlimited API requests
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Priority support
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#4CAF50]">✓</span>
+                  Advanced analytics
+                </li>
+              </ul>
             </div>
           </div>
 
           {/* How it works */}
-          <div className="mb-8 p-6 rounded-xl bg-space-black/50 border border-neon-blue/20">
-            <h3 className="text-lg font-bold text-neon-blue mb-4 text-center">
-              How x402 Works
+          <div className="mb-8 p-6 rounded-xl bg-space-black/50 border border-[#FFD700]/20">
+            <h3 className="text-lg font-bold text-[#FFD700] mb-4 text-center">
+              How It Works
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-neon-blue/20 flex items-center justify-center text-neon-blue font-bold text-xs">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FFD700]/20 flex items-center justify-center text-[#FFD700] font-bold text-xs">
                   1
                 </div>
                 <p className="text-foreground/70 flex-1">
-                  Make an API request to any endpoint
+                  Connect your MetaMask or Phantom wallet
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-neon-orange/20 flex items-center justify-center text-neon-orange font-bold text-xs">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF6B35]/20 flex items-center justify-center text-[#FF6B35] font-bold text-xs">
                   2
                 </div>
                 <p className="text-foreground/70 flex-1">
-                  Receive 402 Payment Required response
+                  Access your personal dashboard with usage stats
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-neon-purple/20 flex items-center justify-center text-neon-purple font-bold text-xs">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#4CAF50]/20 flex items-center justify-center text-[#4CAF50] font-bold text-xs">
                   3
                 </div>
                 <p className="text-foreground/70 flex-1">
-                  Pay with Base, Solana, or Polygon
+                  Start with 100 free requests per day
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-neon-green/20 flex items-center justify-center text-neon-green font-bold text-xs">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xs">
                   4
                 </div>
                 <p className="text-foreground/70 flex-1">
-                  Get your data instantly after confirmation
+                  Upgrade to unlimited anytime for just $50
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Supported Chains */}
-          <div className="mb-8">
-            <p className="text-sm text-foreground/70 text-center mb-3">Pay with:</p>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-3 rounded-xl bg-[#0052FF]/10 border border-[#0052FF]/20">
-                <span className="block text-2xl mb-1">🔵</span>
-                <p className="text-xs font-semibold text-foreground">Base</p>
-                <p className="text-xs text-foreground/50">ETH</p>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <span className="block text-2xl mb-1">⚡</span>
-                <p className="text-xs font-semibold text-foreground">Solana</p>
-                <p className="text-xs text-foreground/50">SOL</p>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-purple-600/10 border border-purple-600/20">
-                <span className="block text-2xl mb-1">💜</span>
-                <p className="text-xs font-semibold text-foreground">Polygon</p>
-                <p className="text-xs text-foreground/50">MATIC</p>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Buttons */}
+          {/* CTA Button */}
           <div className="space-y-3">
-            <Link
-              href="/docs"
-              className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-neon-blue to-neon-orange hover:glow-blue transition-all duration-300 font-bold text-white flex items-center justify-center gap-2"
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full px-6 py-4 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white flex items-center justify-center gap-2"
             >
-              <Code className="w-5 h-5" />
-              Read API Documentation
-            </Link>
+              <Wallet className="w-5 h-5" />
+              Connect Wallet to Get Started
+            </button>
             <Link
-              href="/pricing"
-              className="w-full px-6 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 font-semibold text-foreground text-center block"
+              href="/api"
+              className="w-full px-6 py-3 rounded-lg glassmorphism hover:bg-[#FFD700]/10 transition-all duration-300 font-semibold text-foreground text-center block"
             >
-              View Pricing
+              View API Documentation
             </Link>
           </div>
         </motion.div>

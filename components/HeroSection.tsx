@@ -154,15 +154,33 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-xl md:text-2xl text-center max-w-3xl mb-8"
+          className="text-xl md:text-2xl text-center max-w-3xl mb-4"
           style={{
             color: '#E0E0E0',
             letterSpacing: '0.03em',
             lineHeight: '1.6'
           }}
         >
-          Professional Bitcoin blockchain indexing and real-time analytics platform
+          Professional Bitcoin blockchain API with wallet authentication
         </motion.p>
+
+        {/* Feature Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="flex flex-wrap items-center justify-center gap-4 mb-8 text-sm"
+        >
+          <div className="px-4 py-2 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30">
+            <span className="text-[#FFD700] font-semibold">✨ No API Keys</span>
+          </div>
+          <div className="px-4 py-2 rounded-full bg-[#4CAF50]/10 border border-[#4CAF50]/30">
+            <span className="text-[#4CAF50] font-semibold">🎯 100 Free Requests/Day</span>
+          </div>
+          <div className="px-4 py-2 rounded-full bg-[#FF6B35]/10 border border-[#FF6B35]/30">
+            <span className="text-[#FF6B35] font-semibold">👑 $50 Unlimited Forever</span>
+          </div>
+        </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
@@ -171,14 +189,14 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="flex flex-col sm:flex-row gap-4"
         >
-          <Link href="/pricing">
-            <button className="px-8 py-4 rounded-2xl font-semibold text-lg gradient-gold-orange glow-gold hover:scale-105 transition-all duration-300 text-[#0A0A0A]">
-              Try API
+          <Link href="/login">
+            <button className="px-8 py-4 rounded-2xl font-semibold text-lg gradient-gold-orange glow-gold hover:scale-105 transition-all duration-300 text-white">
+              Connect Wallet & Start
             </button>
           </Link>
-          <Link href="/docs">
+          <Link href="/api">
             <button className="px-8 py-4 rounded-2xl font-semibold text-lg border-2 border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-[#0A0A0A] hover:glow-gold transition-all duration-300">
-              View Docs
+              View API Docs
             </button>
           </Link>
         </motion.div>
