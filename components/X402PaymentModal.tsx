@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Clock, Zap, ExternalLink, Wallet } from 'lucide-react';
-import { X402Response, CHAIN_CONFIGS, SupportedChain } from '@/lib/x402/types';
+import { X, Check, Clock, Zap, Loader2, Wallet, AlertCircle } from 'lucide-react';
+import { X402Response, CHAIN_CONFIGS } from '@/lib/x402/types';
+import { useWeb3Payment } from '@/hooks/useWeb3Payment';
 
 interface X402PaymentModalProps {
   isOpen: boolean;
@@ -18,11 +19,10 @@ export function X402PaymentModal({
   paymentData,
   onPaymentComplete,
 }: X402PaymentModalProps) {
-  const [copied, setCopied] = useState<string | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'detected' | 'confirmed'>('pending');
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'sending' | 'confirming' | 'confirmed'>('pending');
   const [timeRemaining, setTimeRemaining] = useState<number>(600); // 10 minutes
-  const [txHash, setTxHash] = useState('');
 
+  const { sendPayment, verifyPayment, isSending, txHash, error, setError } = useWeb3Payment();
   const chainConfig = CHAIN_CONFIGS[paymentData.chain];
 
   useEffect(() => {
@@ -39,18 +39,16 @@ export function X402PaymentModal({
       });
     }, 1000);
 
-    // Poll for payment status
+    return () => clearInterval(timer);
+  }, [isOpen]);
+
+  // Auto-verify when tx hash is available
+  useEffect(() => {
+    if (!txHash || paymentStatus === 'confirmed') return;
+
     const pollInterval = setInterval(async () => {
-      if (!txHash) return; // Wait for user to provide tx hash
-
       try {
-        const response = await fetch('/api/payment/status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requestId: paymentData.request_id, txHash }),
-        });
-
-        const status = await response.json();
+        const status = await verifyPayment(paymentData.request_id, txHash);
 
         if (status.status === 'CONFIRMED') {
           setPaymentStatus('confirmed');
@@ -59,24 +57,28 @@ export function X402PaymentModal({
             onPaymentComplete?.(status.responseData);
             onClose();
           }, 2000);
-        } else if (status.status === 'DETECTED' || status.status === 'CONFIRMING') {
-          setPaymentStatus('detected');
+        } else if (status.status === 'CONFIRMING') {
+          setPaymentStatus('confirming');
         }
       } catch (error) {
-        console.error('Error polling payment status:', error);
+        console.error('Error verifying payment:', error);
       }
-    }, 5000); // Poll every 5 seconds
+    }, 5000);
 
-    return () => {
-      clearInterval(timer);
-      clearInterval(pollInterval);
-    };
-  }, [isOpen, paymentData.request_id, txHash, onPaymentComplete, onClose]);
+    return () => clearInterval(pollInterval);
+  }, [txHash, paymentStatus, paymentData.request_id, verifyPayment, onPaymentComplete, onClose]);
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(label);
-    setTimeout(() => setCopied(null), 2000);
+  const handlePayment = async () => {
+    setError(null);
+    setPaymentStatus('sending');
+
+    const hash = await sendPayment(paymentData);
+
+    if (hash) {
+      setPaymentStatus('confirming');
+    } else {
+      setPaymentStatus('pending');
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -85,11 +87,14 @@ export function X402PaymentModal({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const openExplorer = () => {
-    if (txHash && chainConfig) {
-      const url = `${chainConfig.explorerUrl}/tx/${txHash}`;
-      window.open(url, '_blank');
-    }
+  const getWalletName = () => {
+    if (paymentData.chain === 'solana') return 'Phantom';
+    return 'MetaMask';
+  };
+
+  const getWalletInstallUrl = () => {
+    if (paymentData.chain === 'solana') return 'https://phantom.app';
+    return 'https://metamask.io';
   };
 
   if (!isOpen) return null;
@@ -149,17 +154,31 @@ export function X402PaymentModal({
             </motion.div>
           )}
 
-          {paymentStatus === 'detected' && (
+          {paymentStatus === 'confirming' && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 rounded-xl bg-neon-orange/20 border border-neon-orange/30"
             >
               <div className="flex items-center gap-2 text-neon-orange">
-                <Zap className="w-5 h-5 animate-pulse" />
-                <span className="font-semibold">Payment Detected!</span>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="font-semibold">Waiting for Confirmation...</span>
               </div>
-              <p className="text-sm text-foreground/70 mt-1">Waiting for confirmations...</p>
+              <p className="text-sm text-foreground/70 mt-1">Your transaction is being verified on-chain</p>
+            </motion.div>
+          )}
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/30"
+            >
+              <div className="flex items-center gap-2 text-red-400">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-semibold">Error</span>
+              </div>
+              <p className="text-sm text-foreground/70 mt-1">{error}</p>
             </motion.div>
           )}
 
@@ -187,121 +206,83 @@ export function X402PaymentModal({
             </span>
           </div>
 
-          {/* Recipient Address */}
+          {/* Payment Button */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-foreground/70 mb-2">
-              Send To
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={paymentData.recipient_address}
-                className="flex-1 px-4 py-3 rounded-lg bg-space-black/50 border border-neon-blue/30 text-neon-green font-mono text-sm focus:outline-none focus:border-neon-blue"
-              />
-              <button
-                onClick={() => copyToClipboard(paymentData.recipient_address, 'address')}
-                className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-colors"
-              >
-                {copied === 'address' ? (
-                  <Check className="w-5 h-5 text-neon-green" />
-                ) : (
-                  <Copy className="w-5 h-5 text-foreground/70" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Transaction Hash Input */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-foreground/70 mb-2">
-              Transaction Hash (after payment)
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={txHash}
-                onChange={(e) => setTxHash(e.target.value)}
-                placeholder="Paste your transaction hash here..."
-                className="flex-1 px-4 py-3 rounded-lg bg-space-black/50 border border-neon-blue/30 text-foreground font-mono text-sm focus:outline-none focus:border-neon-blue"
-              />
-              {txHash && (
-                <button
-                  onClick={openExplorer}
-                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-colors"
-                >
-                  <ExternalLink className="w-5 h-5 text-neon-blue" />
-                </button>
+            <button
+              onClick={handlePayment}
+              disabled={isSending || paymentStatus === 'confirming' || paymentStatus === 'confirmed'}
+              className="w-full px-6 py-4 rounded-lg bg-gradient-to-r from-neon-blue to-neon-orange hover:glow-blue transition-all duration-300 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isSending ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Opening {getWalletName()}...
+                </>
+              ) : paymentStatus === 'confirming' ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Confirming Payment...
+                </>
+              ) : paymentStatus === 'confirmed' ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  Payment Confirmed
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-5 h-5" />
+                  Pay with {getWalletName()}
+                </>
               )}
-            </div>
+            </button>
           </div>
 
           {/* Instructions */}
-          <div className="mb-6 p-4 rounded-xl bg-neon-blue/10 border border-neon-blue/20">
-            <h3 className="text-sm font-semibold text-neon-blue mb-2">How to Pay:</h3>
+          <div className="p-4 rounded-xl bg-neon-blue/10 border border-neon-blue/20">
+            <h3 className="text-sm font-semibold text-neon-blue mb-2">How it works:</h3>
             <ol className="space-y-2 text-sm text-foreground/70">
               <li className="flex items-start gap-2">
-                <span className="text-neon-orange">1.</span>
-                <span>Open your {chainConfig.name} wallet (MetaMask, Phantom, etc.)</span>
+                <span className="text-neon-orange font-bold">1.</span>
+                <span>Click "Pay with {getWalletName()}" button</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-neon-orange">2.</span>
-                <span>Send {paymentData.amountToken} {chainConfig.nativeCurrency.symbol} to the address above</span>
+                <span className="text-neon-orange font-bold">2.</span>
+                <span>Your wallet will open automatically</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-neon-orange">3.</span>
-                <span>Paste your transaction hash in the field above</span>
+                <span className="text-neon-orange font-bold">3.</span>
+                <span>Approve the transaction in your wallet</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-neon-orange">4.</span>
-                <span>Wait for confirmation (usually 1-2 minutes)</span>
+                <span className="text-neon-orange font-bold">4.</span>
+                <span>Wait for confirmation (usually 10-30 seconds)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-neon-orange font-bold">5.</span>
+                <span>Your data will load automatically!</span>
               </li>
             </ol>
           </div>
 
-          {/* Wallet Buttons */}
-          <div className="grid grid-cols-2 gap-3">
-            {paymentData.chain === 'solana' ? (
-              <>
-                <button
-                  onClick={() => window.open('https://phantom.app', '_blank')}
-                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
-                >
-                  <Wallet className="w-4 h-4" />
-                  Phantom
-                </button>
-                <button
-                  onClick={() => window.open('https://solflare.com', '_blank')}
-                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
-                >
-                  <Wallet className="w-4 h-4" />
-                  Solflare
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => window.open('https://metamask.io', '_blank')}
-                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
-                >
-                  <Wallet className="w-4 h-4" />
-                  MetaMask
-                </button>
-                <button
-                  onClick={() => window.open(chainConfig.explorerUrl, '_blank')}
-                  className="px-4 py-3 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm font-semibold"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Explorer
-                </button>
-              </>
-            )}
+          {/* Wallet Not Installed */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-foreground/50">
+              Don't have {getWalletName()}?{' '}
+              <a
+                href={getWalletInstallUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neon-blue hover:text-neon-orange font-semibold"
+              >
+                Install it here
+              </a>
+            </p>
           </div>
 
           {/* Footer */}
           <div className="mt-6 pt-4 border-t border-foreground/10">
             <p className="text-xs text-center text-foreground/50">
-              Powered by x402 protocol • Pay-per-use on {chainConfig.name}
+              Powered by x402 protocol • Secure on-chain payment
             </p>
           </div>
         </motion.div>

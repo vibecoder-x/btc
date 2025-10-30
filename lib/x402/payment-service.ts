@@ -19,12 +19,12 @@ export class X402PaymentService {
   private static readonly PAYMENT_TIMEOUT_MINUTES = 10;
   private static readonly DEFAULT_CHAIN: SupportedChain = 'base-sepolia'; // Testnet for development
 
-  // Recipient addresses for each chain (TODO: Replace with your actual addresses)
+  // Recipient addresses for each chain
   private static readonly RECIPIENT_ADDRESSES: Record<SupportedChain, string> = {
-    'base': '0x0000000000000000000000000000000000000000', // TODO: Replace
-    'base-sepolia': '0x0000000000000000000000000000000000000000', // TODO: Replace
-    'solana': '11111111111111111111111111111111', // TODO: Replace with Solana address
-    'polygon': '0x0000000000000000000000000000000000000000', // TODO: Replace
+    'base': '0x840820c866fA17eAa7A44f46A3F1849C7860B245',
+    'base-sepolia': '0x840820c866fA17eAa7A44f46A3F1849C7860B245',
+    'solana': 'FdhXPvUqCjKVmatszBszzYKUcCBmf8zwqsgPcPKFm9Mw',
+    'polygon': '0x840820c866fA17eAa7A44f46A3F1849C7860B245',
   };
 
   /**
