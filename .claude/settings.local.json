@@ -11,7 +11,8 @@
       "WebFetch(domain:x402.gitbook.io)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:www.x402scan.com)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
