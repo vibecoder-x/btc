@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Wallet, Loader2, Check, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -14,6 +14,15 @@ export default function LoginPage() {
   const [success, setSuccess] = useState(false);
 
   const wallets = WalletService.getAvailableWallets();
+
+  // Check if wallet is already connected on mount
+  useEffect(() => {
+    const savedAccount = WalletService.getSavedAccount();
+    if (savedAccount) {
+      // Wallet already connected, redirect to dashboard
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   const handleConnect = async (walletType: WalletType) => {
     try {

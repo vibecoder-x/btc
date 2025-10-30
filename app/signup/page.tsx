@@ -4,9 +4,20 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Zap, Wallet, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { WalletService } from '@/lib/wallet/wallet-service';
 
 export default function SignupPage() {
   const router = useRouter();
+
+  // Check if wallet is already connected on mount
+  useEffect(() => {
+    const savedAccount = WalletService.getSavedAccount();
+    if (savedAccount) {
+      // Wallet already connected, redirect to dashboard
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
