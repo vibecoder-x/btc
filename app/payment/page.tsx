@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Bitcoin, Copy, Check, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
@@ -284,5 +284,17 @@ export default function PaymentPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-[#FFD700] text-xl">Loading payment details...</div>
+      </div>
+    }>
+      <PaymentPageContent />
+    </Suspense>
   );
 }
