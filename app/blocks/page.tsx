@@ -18,84 +18,121 @@ export default function BlocksPage() {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [page, setPage] = useState(1);
   const [mounted, setMounted] = useState(false);
-  const blocksPerPage = 20;
-  const startHeight = 820450;
+  const [loading, setLoading] = useState(true);
+  const [tipHeight, setTipHeight] = useState(0);
+  const blocksPerPage = 10;
+
+  // Fetch blocks from API
+  const fetchBlocks = async (startHeight?: number) => {
+    try {
+      const url = startHeight
+        ? `/api/blocks?startHeight=${startHeight}`
+        : '/api/blocks';
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch blocks');
+      }
+
+      const data = await response.json();
+
+      // Transform blocks data
+      const transformedBlocks = data.blocks.map((block: any) => {
+        const now = Date.now();
+        const blockTime = block.timestamp * 1000;
+        const diffMinutes = Math.floor((now - blockTime) / 60000);
+
+        let timeStr;
+        if (diffMinutes < 60) {
+          timeStr = `${diffMinutes} min ago`;
+        } else if (diffMinutes < 1440) {
+          const hours = Math.floor(diffMinutes / 60);
+          timeStr = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        } else {
+          const days = Math.floor(diffMinutes / 1440);
+          timeStr = `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        return {
+          height: block.height,
+          size: `${(block.size / 1024 / 1024).toFixed(2)} MB`,
+          txCount: block.tx_count,
+          miner: 'Unknown', // Blockstream API doesn't provide miner info
+          time: timeStr,
+        };
+      });
+
+      return {
+        blocks: transformedBlocks,
+        tipHeight: data.tipHeight,
+      };
+    } catch (error) {
+      console.error('Error fetching blocks:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
-    // Initialize blocks
-    const initialBlocks = Array.from({ length: blocksPerPage }, (_, i) => ({
-      height: startHeight - i,
-      size: `${(Math.random() * 0.5 + 0.8).toFixed(1)} MB`,
-      txCount: Math.floor(Math.random() * 1000 + 1500),
-      miner: ['Foundry USA', 'AntPool', 'F2Pool', 'ViaBTC', 'Binance Pool'][
-        Math.floor(Math.random() * 5)
-      ],
-      time: `${Math.floor(i * 10 + Math.random() * 5)} min ago`,
-    }));
-    setBlocks(initialBlocks);
+    // Initial fetch
+    const loadInitialBlocks = async () => {
+      setLoading(true);
+      const data = await fetchBlocks();
+      if (data) {
+        setBlocks(data.blocks);
+        setTipHeight(data.tipHeight);
+      }
+      setLoading(false);
+    };
 
-    // Simulate new blocks arriving
-    const interval = setInterval(() => {
-      setBlocks((prev) => {
-        const newBlock: Block = {
-          height: prev[0].height + 1,
-          size: `${(Math.random() * 0.5 + 0.8).toFixed(1)} MB`,
-          txCount: Math.floor(Math.random() * 1000 + 1500),
-          miner: ['Foundry USA', 'AntPool', 'F2Pool', 'ViaBTC', 'Binance Pool'][
-            Math.floor(Math.random() * 5)
-          ],
-          time: 'Just now',
-          isNew: true,
-        };
-        return [newBlock, ...prev.slice(0, blocksPerPage * page - 1)];
-      });
+    loadInitialBlocks();
 
-      // Remove isNew flag after animation
-      setTimeout(() => {
-        setBlocks((prev) => prev.map((b) => ({ ...b, isNew: false })));
-      }, 500);
-    }, 15000);
+    // Refresh blocks every 60 seconds
+    const interval = setInterval(async () => {
+      const data = await fetchBlocks();
+      if (data) {
+        setBlocks(prevBlocks => {
+          // Check if there are new blocks
+          const latestHeight = prevBlocks.length > 0 ? prevBlocks[0].height : 0;
+          const newBlocks = data.blocks.filter((b: Block) => b.height > latestHeight);
+
+          if (newBlocks.length > 0) {
+            // Mark new blocks with isNew flag
+            const markedNewBlocks = newBlocks.map((b: Block) => ({ ...b, isNew: true }));
+            const updated = [...markedNewBlocks, ...prevBlocks].slice(0, blocksPerPage * page);
+
+            // Remove isNew flag after animation
+            setTimeout(() => {
+              setBlocks(prev => prev.map(b => ({ ...b, isNew: false })));
+            }, 500);
+
+            return updated;
+          }
+          return prevBlocks;
+        });
+        setTipHeight(data.tipHeight);
+      }
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [page]);
 
-  const loadMore = () => {
-    if (blocks.length === 0) return;
+  const loadMore = async () => {
+    if (blocks.length === 0 || loading) return;
 
+    setLoading(true);
     const currentLowest = blocks[blocks.length - 1].height;
-    const currentOldestTime = blocks.length * 10; // Base time in minutes for the oldest block
 
-    const newBlocks = Array.from({ length: blocksPerPage }, (_, i) => {
-      const blockIndex = blocks.length + i;
-      const minutesAgo = currentOldestTime + (i + 1) * 10 + Math.floor(Math.random() * 5);
+    // Fetch more blocks starting from the lowest block height - 1
+    const data = await fetchBlocks(currentLowest - 1);
 
-      // Format time properly
-      let timeStr;
-      if (minutesAgo < 60) {
-        timeStr = `${minutesAgo} min ago`;
-      } else if (minutesAgo < 1440) {
-        const hours = Math.floor(minutesAgo / 60);
-        timeStr = `${hours} hour${hours > 1 ? 's' : ''} ago`;
-      } else {
-        const days = Math.floor(minutesAgo / 1440);
-        timeStr = `${days} day${days > 1 ? 's' : ''} ago`;
-      }
+    if (data) {
+      setBlocks([...blocks, ...data.blocks]);
+      setPage(page + 1);
+    }
 
-      return {
-        height: currentLowest - i - 1,
-        size: `${(Math.random() * 0.5 + 0.8).toFixed(1)} MB`,
-        txCount: Math.floor(Math.random() * 1000 + 1500),
-        miner: ['Foundry USA', 'AntPool', 'F2Pool', 'ViaBTC', 'Binance Pool'][
-          Math.floor(Math.random() * 5)
-        ],
-        time: timeStr,
-      };
-    });
-
-    console.log('Loading more blocks, current lowest:', currentLowest, 'new blocks:', newBlocks.length);
-    setBlocks([...blocks, ...newBlocks]);
-    setPage(page + 1);
+    setLoading(false);
   };
 
   return (

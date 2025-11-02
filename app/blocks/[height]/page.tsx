@@ -2,59 +2,113 @@
 
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Box, Clock, Database, Hash, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Box, Clock, Database, Hash, TrendingUp, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function BlockDetailPage() {
   const params = useParams();
   const height = params.height as string;
+  const [blockData, setBlockData] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulated block data
-  const blockData = {
-    height: parseInt(height),
-    hash: '00000000000000000003a1f7c62e2ef5a1bce35d2e7f5a3c1b8e9d3a2c5f8b1a',
-    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    size: 1234567,
-    weight: 3987654,
-    version: 536870912,
-    merkleRoot: '8a7b9c3d4e5f6a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5',
-    nonce: 2573456789,
-    bits: '170d21b9',
-    difficulty: '58.47 T',
-    txCount: 2456,
-    totalFees: 0.12345678,
-    reward: 6.25,
-    miner: 'Foundry USA',
-  };
+  // Fetch block data from API
+  useEffect(() => {
+    const fetchBlockData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // Generate random transaction IDs
-  const generateTxId = () => {
-    const chars = '0123456789abcdef';
-    let txid = '';
-    for (let i = 0; i < 64; i++) {
-      txid += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return txid;
-  };
+        const response = await fetch(`/api/block/${height}`);
 
-  const [transactions, setTransactions] = useState(
-    Array.from({ length: 10 }, (_, i) => ({
-      txid: generateTxId(),
-      fee: (Math.random() * 0.001).toFixed(8),
-      size: Math.floor(Math.random() * 1000 + 200),
-    }))
-  );
-  const [showingAll, setShowingAll] = useState(false);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch block data');
+        }
 
-  const loadMoreTransactions = () => {
-    const newTxs = Array.from({ length: 10 }, (_, i) => ({
-      txid: generateTxId(),
-      fee: (Math.random() * 0.001).toFixed(8),
-      size: Math.floor(Math.random() * 1000 + 200),
-    }));
-    setTransactions([...transactions, ...newTxs]);
-  };
+        const data = await response.json();
+
+        // Calculate total fees from transactions
+        const totalFees = data.transactions?.reduce((sum: number, tx: any) => {
+          return sum + ((tx.fee || 0) / 100000000);
+        }, 0) || 0;
+
+        // Transform data to match expected format
+        const transformedData = {
+          height: data.height,
+          hash: data.id,
+          timestamp: new Date(data.timestamp * 1000).toISOString(),
+          size: data.size,
+          weight: data.weight,
+          version: data.version,
+          merkleRoot: data.merkle_root,
+          nonce: data.nonce,
+          bits: data.bits,
+          difficulty: (data.difficulty / 1000000000000).toFixed(2) + ' T',
+          txCount: data.tx_count,
+          totalFees,
+          reward: 6.25, // Current Bitcoin block reward
+          previousHash: data.previousblockhash,
+          nextHash: data.nextblockhash,
+        };
+
+        setBlockData(transformedData);
+
+        // Process transactions
+        if (data.transactions) {
+          const processedTxs = data.transactions.map((tx: any) => ({
+            txid: tx.txid,
+            fee: ((tx.fee || 0) / 100000000).toFixed(8),
+            size: tx.size || 0,
+            weight: tx.weight || 0,
+          }));
+          setTransactions(processedTxs);
+        }
+
+      } catch (err: any) {
+        console.error('Error fetching block:', err);
+        setError(err.message || 'Failed to load block data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlockData();
+  }, [height]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#FFD700] text-xl">Loading block...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !blockData) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center glassmorphism p-12 max-w-lg">
+          <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-red-400 mb-2">Error Loading Block</h2>
+          <p className="text-foreground/70 mb-6">{error || 'Block data not available'}</p>
+          <Link
+            href="/"
+            className="inline-flex items-center px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold text-white font-semibold transition-all"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -177,14 +231,25 @@ export default function BlockDetailPage() {
                 </Link>
               </motion.div>
             ))}
-            <div className="text-center py-4">
-              <button
-                onClick={loadMoreTransactions}
-                className="px-8 py-3 rounded-lg bg-gradient-to-r from-neon-blue to-neon-orange hover:glow-blue transition-all duration-300 font-semibold text-space-black text-lg shadow-lg hover:shadow-neon-blue/50"
-              >
-                Load More Transactions
-              </button>
-            </div>
+            {blockData.txCount > transactions.length && (
+              <div className="text-center py-6 glassmorphism rounded-lg">
+                <p className="text-foreground/70 mb-2">
+                  Showing {transactions.length} of {blockData.txCount} transactions
+                </p>
+                <p className="text-sm text-foreground/50">
+                  Visit{' '}
+                  <a
+                    href={`https://blockstream.info/block/${blockData.hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#FFD700] hover:text-[#FF6B35] transition-colors underline"
+                  >
+                    Blockstream
+                  </a>
+                  {' '}to view all transactions
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
