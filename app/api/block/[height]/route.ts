@@ -8,10 +8,10 @@ import { createProtectedRoute } from '@/lib/x402/middleware';
 
 async function handler(
   request: NextRequest,
-  { params }: { params: { height: string } }
+  { params }: { params: Promise<{ height: string }> }
 ) {
   try {
-    const { height } = params;
+    const { height } = await params;
 
     // Determine if it's a height number or block hash
     const isHeight = /^\d+$/.test(height);
@@ -61,5 +61,6 @@ async function handler(
 
 // Export the protected route with x402 payment
 export const GET = createProtectedRoute(handler, {
+  skipPayment: process.env.NODE_ENV === 'development', // Skip payment in development
   rateLimit: { requests: 100, windowMs: 60000 },
 });

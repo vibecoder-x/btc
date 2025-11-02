@@ -108,10 +108,10 @@ export default function AddressPage() {
     volume: Math.random() * 2,
   }));
 
-  const pieData = [
+  const pieData = addressData ? [
     { name: 'Received', value: addressData.totalReceived, color: '#FFD700' },
     { name: 'Sent', value: addressData.totalSent, color: '#FF6B35' },
-  ];
+  ] : [];
 
   // UTXO data
   const utxoSet = [

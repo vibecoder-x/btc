@@ -61,5 +61,6 @@ async function handler(request: NextRequest) {
 
 // Export the protected route with x402 payment
 export const GET = createProtectedRoute(handler, {
+  skipPayment: process.env.NODE_ENV === 'development', // Skip payment in development
   rateLimit: { requests: 120, windowMs: 60000 },
 });
