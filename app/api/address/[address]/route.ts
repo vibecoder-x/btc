@@ -21,32 +21,41 @@ async function handler(
       );
     }
 
-    // TODO: Implement actual address lookup from Bitcoin node/indexer
+    // Fetch real data from Blockstream API
+    const response = await fetch(
+      `https://blockstream.info/api/address/${address}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+        next: { revalidate: 60 }, // Cache for 60 seconds
+      }
+    );
 
-    // Mock response
+    if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json(
+          { error: 'Address not found or has no transactions' },
+          { status: 404 }
+        );
+      }
+      throw new Error(`Blockstream API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Calculate balance from chain stats
+    const balance = (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum);
+    const totalReceived = data.chain_stats.funded_txo_sum;
+    const totalSent = data.chain_stats.spent_txo_sum;
+
+    // Format response with additional computed fields
     const addressData = {
-      address: address,
-      chain_stats: {
-        funded_txo_count: 127,
-        funded_txo_sum: 15000000,
-        spent_txo_count: 125,
-        spent_txo_sum: 14500000,
-        tx_count: 127,
-      },
-      mempool_stats: {
-        funded_txo_count: 0,
-        funded_txo_sum: 0,
-        spent_txo_count: 0,
-        spent_txo_sum: 0,
-        tx_count: 0,
-      },
-      balance: 500000, // 0.005 BTC
-      total_received: 15000000, // 0.15 BTC
-      total_sent: 14500000, // 0.145 BTC
-      unconfirmed_balance: 0,
-      unconfirmed_tx_count: 0,
-      first_seen: '2020-01-15T10:30:00Z',
-      last_seen: '2024-01-20T14:45:00Z',
+      ...data,
+      balance,
+      total_received: totalReceived,
+      total_sent: totalSent,
+      tx_count: data.chain_stats.tx_count,
     };
 
     return NextResponse.json(addressData, { status: 200 });
@@ -54,7 +63,7 @@ async function handler(
   } catch (error) {
     console.error('Error fetching address:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch address data' },
+      { error: 'Failed to fetch address data. Please try again.' },
       { status: 500 }
     );
   }

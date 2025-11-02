@@ -16,55 +16,71 @@ export default function TransactionPage() {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [showTechnical, setShowTechnical] = useState(false);
-  const [btcPrice] = useState(45000); // In production, fetch from API
+  const [btcPrice] = useState(45000);
+  const [txData, setTxData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simulated transaction data
-  const txData = {
-    txid: txid,
-    status: 'Confirmed',
-    confirmations: 6,
-    blockHeight: 820450,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    size: 256,
-    vsize: 178,
-    weight: 712,
-    fee: 0.00004567,
-    feeRate: 25.65,
-    lockTime: 0,
-    version: 2,
-    rbfEnabled: false,
-    inputs: [
-      {
-        address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-        amount: 0.5,
-        prevTx: 'abc123...def456',
-        scriptType: 'P2WPKH',
-      },
-      {
-        address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-        amount: 0.25,
-        prevTx: 'xyz789...uvw012',
-        scriptType: 'P2PKH',
-      },
-    ],
-    outputs: [
-      {
-        address: '3FZbgi29cpjq2GjdwV8eyHuJJnkLtktZc5',
-        amount: 0.4,
-        scriptType: 'P2SH',
-      },
-      {
-        address: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq',
-        amount: 0.34995433,
-        scriptType: 'P2WPKH',
-      },
-    ],
-    rawHex: '0200000001f5d8ee39f87dc24a3f9b85e8b6c0d8f32a1c4e5f6a7b8c9d0e1f2a3b4c5d6e7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2u3v4w5x6y7z8...',
-  };
+  // Fetch transaction data from API
+  useEffect(() => {
+    const fetchTransactionData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const totalInput = txData.inputs.reduce((sum, input) => sum + input.amount, 0);
-  const totalOutput = txData.outputs.reduce((sum, output) => sum + output.amount, 0);
-  const isHighFee = txData.feeRate > 50; // Warning if fee rate > 50 sat/vB
+        const response = await fetch(`/api/tx/${txid}`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch transaction data');
+        }
+
+        const data = await response.json();
+
+        // Transform API response to match our UI format
+        const transformedData = {
+          txid: data.txid,
+          status: data.status?.confirmed ? 'Confirmed' : 'Unconfirmed',
+          confirmations: data.status?.block_height ? 1 : 0,
+          blockHeight: data.status?.block_height || 0,
+          timestamp: data.status?.block_time ? new Date(data.status.block_time * 1000).toISOString() : new Date().toISOString(),
+          size: data.size || 0,
+          vsize: data.weight ? Math.ceil(data.weight / 4) : 0,
+          weight: data.weight || 0,
+          fee: (data.fee || 0) / 100000000, // Convert satoshis to BTC
+          feeRate: data.fee && data.weight ? ((data.fee / (data.weight / 4))).toFixed(2) : 0,
+          lockTime: data.locktime || 0,
+          version: data.version || 2,
+          rbfEnabled: data.vin?.some((input: any) => input.sequence < 0xfffffffe) || false,
+          inputs: data.vin?.map((input: any) => ({
+            address: input.prevout?.scriptpubkey_address || 'Unknown',
+            amount: (input.prevout?.value || 0) / 100000000,
+            prevTx: input.txid ? `${input.txid.slice(0, 8)}...${input.txid.slice(-8)}` : 'Unknown',
+            scriptType: input.prevout?.scriptpubkey_type?.toUpperCase() || 'Unknown',
+          })) || [],
+          outputs: data.vout?.map((output: any) => ({
+            address: output.scriptpubkey_address || 'OP_RETURN',
+            amount: (output.value || 0) / 100000000,
+            scriptType: output.scriptpubkey_type?.toUpperCase() || 'Unknown',
+          })) || [],
+          rawHex: '0200000001...' // Raw hex not provided by API
+        };
+
+        setTxData(transformedData);
+      } catch (err: any) {
+        console.error('Error fetching transaction:', err);
+        setError(err.message || 'Failed to load transaction data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactionData();
+  }, [txid]);
+
+  const totalInput = txData?.inputs?.reduce((sum: number, input: any) => sum + input.amount, 0) || 0;
+  const totalOutput = txData?.outputs?.reduce((sum: number, output: any) => sum + output.amount, 0) || 0;
+  const isHighFee = (txData?.feeRate || 0) > 50;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -76,6 +92,38 @@ export default function TransactionPage() {
     const url = `https://twitter.com/intent/tweet?text=Bitcoin Transaction ${txid.slice(0, 10)}...&url=${window.location.href}`;
     window.open(url, '_blank');
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#FFD700] text-xl">Loading transaction...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !txData) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center card-3d p-12 max-w-lg">
+          <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-red-400 mb-2">Error Loading Transaction</h2>
+          <p className="text-foreground/70 mb-6">{error || 'Transaction data not available'}</p>
+          <Link
+            href="/"
+            className="inline-flex items-center px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold text-white font-semibold transition-all"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -293,7 +341,7 @@ export default function TransactionPage() {
                 <span className="text-sm text-foreground/50">From</span>
               </div>
               <div className="space-y-3">
-                {txData.inputs.map((input, index) => (
+                {txData.inputs.map((input: any, index: number) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, x: -20 }}
@@ -347,7 +395,7 @@ export default function TransactionPage() {
                 <span className="text-sm text-foreground/50">To</span>
               </div>
               <div className="space-y-3">
-                {txData.outputs.map((output, index) => (
+                {txData.outputs.map((output: any, index: number) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, x: 20 }}
@@ -429,7 +477,7 @@ export default function TransactionPage() {
                   </div>
                 </div>
 
-                {txData.inputs.some(i => i.scriptType.includes('W')) && (
+                {txData.inputs.some((i: any) => i.scriptType.includes('W')) && (
                   <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                     <p className="text-sm font-semibold text-blue-400 mb-1">SegWit Transaction</p>
                     <p className="text-xs text-foreground/70">

@@ -13,58 +13,43 @@ async function handler(
   try {
     const { txid } = params;
 
-    // TODO: Implement actual Bitcoin transaction lookup
-    // This should query your Bitcoin node or indexer
+    // Validate txid format (64 hex characters)
+    if (!/^[a-fA-F0-9]{64}$/.test(txid)) {
+      return NextResponse.json(
+        { error: 'Invalid transaction ID format' },
+        { status: 400 }
+      );
+    }
 
-    // Mock response for now
-    const transaction = {
-      txid: txid,
-      version: 2,
-      locktime: 0,
-      size: 225,
-      weight: 900,
-      fee: 4567,
-      status: {
-        confirmed: true,
-        block_height: 820450,
-        block_hash: '00000000000000000003a1b2c3d4e5f6...',
-        block_time: 1705320600,
-      },
-      vin: [
-        {
-          txid: 'prev_txid_example',
-          vout: 0,
-          prevout: {
-            scriptpubkey: '0014abcd...',
-            scriptpubkey_asm: 'OP_0 OP_PUSHBYTES_20 abcd...',
-            scriptpubkey_type: 'v0_p2wpkh',
-            scriptpubkey_address: 'bc1q...',
-            value: 100000,
-          },
-          scriptsig: '',
-          scriptsig_asm: '',
-          witness: ['304402...', '03abc...'],
-          is_coinbase: false,
-          sequence: 4294967293,
+    // Fetch real data from Blockstream API
+    const response = await fetch(
+      `https://blockstream.info/api/tx/${txid}`,
+      {
+        headers: {
+          'Accept': 'application/json',
         },
-      ],
-      vout: [
-        {
-          scriptpubkey: '0014efgh...',
-          scriptpubkey_asm: 'OP_0 OP_PUSHBYTES_20 efgh...',
-          scriptpubkey_type: 'v0_p2wpkh',
-          scriptpubkey_address: 'bc1q...',
-          value: 95433,
-        },
-      ],
-    };
+        next: { revalidate: 60 }, // Cache for 60 seconds
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json(
+          { error: 'Transaction not found' },
+          { status: 404 }
+        );
+      }
+      throw new Error(`Blockstream API error: ${response.status}`);
+    }
+
+    const transaction = await response.json();
 
     return NextResponse.json(transaction, { status: 200 });
 
   } catch (error) {
     console.error('Error fetching transaction:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch transaction' },
+      { error: 'Failed to fetch transaction. Please try again.' },
       { status: 500 }
     );
   }

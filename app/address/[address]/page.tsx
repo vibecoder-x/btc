@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Wallet, ArrowDownCircle, ArrowUpCircle, Hash, Copy, Check,
@@ -24,6 +24,49 @@ export default function AddressPage() {
   const [filter, setFilter] = useState('all');
   const [bookmarked, setBookmarked] = useState(false);
   const [btcPrice] = useState(45000);
+  const [addressData, setAddressData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch address data from API
+  useEffect(() => {
+    const fetchAddressData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/address/${address}`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch address data');
+        }
+
+        const data = await response.json();
+
+        // Transform data to match expected format
+        const transformedData = {
+          address: data.address,
+          balance: data.balance / 100000000, // Convert satoshis to BTC
+          totalReceived: data.total_received / 100000000,
+          totalSent: data.total_sent / 100000000,
+          txCount: data.tx_count || 0,
+          firstSeen: new Date().toISOString(), // Blockstream doesn't provide this
+          lastActivity: new Date().toISOString(), // Blockstream doesn't provide this
+          isReused: data.tx_count > 1,
+        };
+
+        setAddressData(transformedData);
+      } catch (err: any) {
+        console.error('Error fetching address:', err);
+        setError(err.message || 'Failed to load address data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAddressData();
+  }, [address]);
 
   // Detect address type
   const getAddressType = (addr: string) => {
@@ -35,18 +78,6 @@ export default function AddressPage() {
   };
 
   const addressType = getAddressType(address);
-
-  // Simulated address data
-  const addressData = {
-    address: address,
-    balance: 1.23456789,
-    totalReceived: 15.6789,
-    totalSent: 14.44433211,
-    txCount: 127,
-    firstSeen: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365).toISOString(),
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    isReused: true,
-  };
 
   // Generate random transaction IDs
   const generateTxId = () => {
@@ -123,6 +154,38 @@ export default function AddressPage() {
     if (filter === 'received') return tx.amount > 0;
     return true;
   });
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#FFD700] text-xl">Loading address data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !addressData) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center card-3d p-12 max-w-lg">
+          <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-red-400 mb-2">Error Loading Address</h2>
+          <p className="text-foreground/70 mb-6">{error || 'Address data not available'}</p>
+          <Link
+            href="/"
+            className="inline-flex items-center px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold text-white font-semibold transition-all"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
