@@ -8,10 +8,10 @@ import { createProtectedRoute } from '@/lib/x402/middleware';
 
 async function handler(
   request: NextRequest,
-  { params }: { params: { txid: string } }
+  { params }: { params: Promise<{ txid: string }> }
 ) {
   try {
-    const { txid } = params;
+    const { txid } = await params;
 
     // Validate txid format (64 hex characters)
     if (!/^[a-fA-F0-9]{64}$/.test(txid)) {

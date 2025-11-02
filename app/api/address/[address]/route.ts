@@ -8,10 +8,10 @@ import { createProtectedRoute } from '@/lib/x402/middleware';
 
 async function handler(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = params;
+    const { address } = await params;
 
     // Validate address format
     if (!isValidBitcoinAddress(address)) {
