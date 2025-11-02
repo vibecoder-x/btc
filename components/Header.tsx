@@ -48,9 +48,13 @@ export default function Header() {
     const baseItems = [
       { name: 'Home', href: '/' },
       { name: 'Blocks', href: '/blocks' },
+      { name: 'Mempool', href: '/mempool' },
+      { name: 'Mining', href: '/mining' },
       { name: 'Stats', href: '/stats' },
       { name: 'API', href: '/api' },
       { name: 'Docs', href: '/docs' },
+      { name: 'About', href: '/about' },
+      { name: 'Status', href: '/status' },
     ];
 
     // Add Dashboard link if wallet is connected
