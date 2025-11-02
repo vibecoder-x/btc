@@ -25,6 +25,8 @@ export default function AddressPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const [btcPrice] = useState(45000);
   const [addressData, setAddressData] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [utxos, setUtxos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +59,53 @@ export default function AddressPage() {
         };
 
         setAddressData(transformedData);
+
+        // Process transactions
+        if (data.transactions && data.transactions.length > 0) {
+          const processedTxs = data.transactions.map((tx: any) => {
+            // Calculate amount for this address (received - sent)
+            let amount = 0;
+
+            // Calculate total output to this address
+            const received = tx.vout?.reduce((sum: number, output: any) => {
+              if (output.scriptpubkey_address === address) {
+                return sum + (output.value || 0);
+              }
+              return sum;
+            }, 0) || 0;
+
+            // Calculate total input from this address
+            const sent = tx.vin?.reduce((sum: number, input: any) => {
+              if (input.prevout?.scriptpubkey_address === address) {
+                return sum + (input.prevout?.value || 0);
+              }
+              return sum;
+            }, 0) || 0;
+
+            amount = (received - sent) / 100000000; // Convert to BTC
+
+            return {
+              txid: tx.txid,
+              time: new Date(tx.status?.block_time ? tx.status.block_time * 1000 : Date.now()).toISOString(),
+              amount,
+              confirmations: tx.status?.confirmed ? tx.status.block_height : 0,
+              type: amount > 0 ? 'received' : 'sent',
+            };
+          });
+          setTransactions(processedTxs);
+        }
+
+        // Process UTXOs
+        if (data.utxos && data.utxos.length > 0) {
+          const processedUtxos = data.utxos.map((utxo: any) => ({
+            txid: utxo.txid,
+            outputIndex: utxo.vout,
+            amount: utxo.value / 100000000, // Convert to BTC
+            confirmations: utxo.status?.confirmed ? utxo.status.block_height : 0,
+          }));
+          setUtxos(processedUtxos);
+        }
+
       } catch (err: any) {
         console.error('Error fetching address:', err);
         setError(err.message || 'Failed to load address data');
@@ -79,46 +128,60 @@ export default function AddressPage() {
 
   const addressType = getAddressType(address);
 
-  // Generate random transaction IDs
-  const generateTxId = () => {
-    const chars = '0123456789abcdef';
-    let txid = '';
-    for (let i = 0; i < 64; i++) {
-      txid += chars[Math.floor(Math.random() * chars.length)];
+  // Generate chart data from real transactions
+  const generateBalanceHistory = () => {
+    if (!transactions || transactions.length === 0) {
+      return [];
     }
-    return txid;
+
+    // Sort transactions by time (oldest first)
+    const sortedTxs = [...transactions].sort((a, b) =>
+      new Date(a.time).getTime() - new Date(b.time).getTime()
+    );
+
+    // Calculate running balance
+    let runningBalance = 0;
+    const history = sortedTxs.map(tx => {
+      runningBalance += tx.amount;
+      return {
+        date: new Date(tx.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        balance: Math.abs(runningBalance),
+      };
+    });
+
+    // Return last 30 points
+    return history.slice(-30);
   };
 
-  const transactions = Array.from({ length: 20 }, (_, i) => ({
-    txid: generateTxId(),
-    time: new Date(Date.now() - 1000 * 60 * 60 * i).toISOString(),
-    amount: (Math.random() * 0.5 - 0.25),
-    confirmations: Math.floor(Math.random() * 100) + 1,
-    type: Math.random() > 0.5 ? 'received' : 'sent',
-  }));
+  const generateVolumeData = () => {
+    if (!transactions || transactions.length === 0) {
+      return [];
+    }
 
-  // Chart data
-  const balanceHistory = Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * (29 - i)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    balance: 1 + Math.random() * 0.5,
-  }));
+    // Group transactions by month
+    const monthlyVolume: { [key: string]: number } = {};
 
-  const volumeData = Array.from({ length: 12 }, (_, i) => ({
-    month: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 * (11 - i)).toLocaleDateString('en-US', { month: 'short' }),
-    volume: Math.random() * 2,
-  }));
+    transactions.forEach(tx => {
+      const month = new Date(tx.time).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      if (!monthlyVolume[month]) {
+        monthlyVolume[month] = 0;
+      }
+      monthlyVolume[month] += Math.abs(tx.amount);
+    });
+
+    // Convert to array and sort by date
+    return Object.entries(monthlyVolume)
+      .map(([month, volume]) => ({ month, volume }))
+      .slice(-12); // Last 12 months
+  };
+
+  const balanceHistory = generateBalanceHistory();
+  const volumeData = generateVolumeData();
 
   const pieData = addressData ? [
     { name: 'Received', value: addressData.totalReceived, color: '#FFD700' },
     { name: 'Sent', value: addressData.totalSent, color: '#FF6B35' },
   ] : [];
-
-  // UTXO data
-  const utxoSet = [
-    { txid: generateTxId(), outputIndex: 0, amount: 0.5, confirmations: 45 },
-    { txid: generateTxId(), outputIndex: 1, amount: 0.3, confirmations: 23 },
-    { txid: generateTxId(), outputIndex: 0, amount: 0.43456789, confirmations: 67 },
-  ];
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -451,7 +514,7 @@ export default function AddressPage() {
                 Unspent Outputs (UTXO)
               </h2>
               <p className="text-sm text-foreground/60 mt-1">
-                {utxoSet.length} UTXOs • Total: {utxoSet.reduce((sum, u) => sum + u.amount, 0).toFixed(8)} BTC
+                {utxos.length} UTXOs • Total: {utxos.reduce((sum, u) => sum + u.amount, 0).toFixed(8)} BTC
               </p>
             </div>
             <div className="p-2 rounded-lg bg-[#FFD700]/10 group-hover:bg-[#FFD700]/20 transition-colors">
@@ -468,7 +531,7 @@ export default function AddressPage() {
                 className="mt-6 overflow-hidden"
               >
                 <div className="space-y-3">
-                  {utxoSet.map((utxo, index) => (
+                  {utxos.map((utxo, index) => (
                     <div key={index} className="p-4 glassmorphism rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <code className="text-xs text-[#FFD700] font-mono">

@@ -44,6 +44,34 @@ async function handler(
 
     const data = await response.json();
 
+    // Fetch transaction history (last 50 transactions)
+    const txResponse = await fetch(
+      `https://blockstream.info/api/address/${address}/txs`,
+      {
+        headers: { 'Accept': 'application/json' },
+        next: { revalidate: 60 },
+      }
+    );
+
+    let transactions = [];
+    if (txResponse.ok) {
+      transactions = await txResponse.json();
+    }
+
+    // Fetch UTXO set
+    const utxoResponse = await fetch(
+      `https://blockstream.info/api/address/${address}/utxo`,
+      {
+        headers: { 'Accept': 'application/json' },
+        next: { revalidate: 60 },
+      }
+    );
+
+    let utxos = [];
+    if (utxoResponse.ok) {
+      utxos = await utxoResponse.json();
+    }
+
     // Calculate balance from chain stats
     const balance = (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum);
     const totalReceived = data.chain_stats.funded_txo_sum;
@@ -56,6 +84,8 @@ async function handler(
       total_received: totalReceived,
       total_sent: totalSent,
       tx_count: data.chain_stats.tx_count,
+      transactions: transactions.slice(0, 50), // Return last 50 transactions
+      utxos,
     };
 
     return NextResponse.json(addressData, { status: 200 });
