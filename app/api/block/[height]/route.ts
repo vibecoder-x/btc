@@ -167,8 +167,8 @@ async function handler(
   }
 }
 
-// Export the protected route with x402 payment
+// Export the protected route with x402 payment disabled for free access
 export const GET = createProtectedRoute(handler, {
-  skipPayment: process.env.NODE_ENV === 'development', // Skip payment in development
+  skipPayment: true, // Free access to block data
   rateLimit: { requests: 100, windowMs: 60000 },
 });

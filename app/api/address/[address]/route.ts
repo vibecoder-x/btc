@@ -111,8 +111,8 @@ function isValidBitcoinAddress(address: string): boolean {
   return patterns.some((pattern) => pattern.test(address));
 }
 
-// Export the protected route with x402 payment
+// Export the protected route with x402 payment disabled for free access
 export const GET = createProtectedRoute(handler, {
-  skipPayment: process.env.NODE_ENV === 'development', // Skip payment in development
+  skipPayment: true, // Free access to address data
   rateLimit: { requests: 100, windowMs: 60000 },
 });
