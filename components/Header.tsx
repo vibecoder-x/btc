@@ -6,6 +6,7 @@ import { Menu, X, Wallet, LogOut, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { WalletService, WalletAccount } from '@/lib/wallet/wallet-service';
+import GlobalSearch from './GlobalSearch';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -101,6 +102,9 @@ export default function Header() {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-neon-blue to-neon-orange group-hover:w-full transition-all duration-300"></span>
               </Link>
             ))}
+
+            {/* Global Search */}
+            <GlobalSearch />
 
             {/* Wallet Status */}
             {walletAccount ? (
