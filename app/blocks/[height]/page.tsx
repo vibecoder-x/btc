@@ -38,6 +38,19 @@ export default function BlockDetailPage() {
           return sum + ((tx.fee || 0) / 100000000);
         }, 0) || 0;
 
+        // Calculate block reward based on halving schedule
+        const calculateBlockReward = (height: number): number => {
+          const halvingInterval = 210000;
+          const halvings = Math.floor(height / halvingInterval);
+
+          // Initial reward was 50 BTC
+          const initialReward = 50;
+
+          // Each halving divides reward by 2
+          // After 4 halvings (block 840,000+): 3.125 BTC
+          return initialReward / Math.pow(2, halvings);
+        };
+
         // Transform data to match expected format
         const transformedData = {
           height: data.height,
@@ -52,7 +65,7 @@ export default function BlockDetailPage() {
           difficulty: (data.difficulty / 1000000000000).toFixed(2) + ' T',
           txCount: data.tx_count,
           totalFees,
-          reward: 6.25, // Current Bitcoin block reward
+          reward: calculateBlockReward(data.height),
           miner: data.miner || 'Unknown',
           previousHash: data.previousblockhash,
           nextHash: data.nextblockhash,

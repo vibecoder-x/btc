@@ -50,6 +50,7 @@ export default function Header() {
       { name: 'Home', href: '/' },
       { name: 'Blocks', href: '/blocks' },
       { name: 'Mempool', href: '/mempool' },
+      { name: 'Halving', href: '/halving' },
       { name: 'Mining', href: '/mining' },
       { name: 'Stats', href: '/stats' },
       { name: 'API', href: '/api' },

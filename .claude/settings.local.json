@@ -18,7 +18,8 @@
       "Bash(nul)",
       "Bash(if exist .nextdev rmdir /s /q .nextdev)",
       "Bash(git reset:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
