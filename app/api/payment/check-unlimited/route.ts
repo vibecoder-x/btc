@@ -1,70 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase only if keys are available
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
 
-const supabase = (supabaseUrl && supabaseKey)
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
-
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { walletAddress } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const address = searchParams.get('address');
 
-    if (!walletAddress) {
+    if (!address) {
       return NextResponse.json(
-        { success: false, error: 'Wallet address required' },
+        { error: 'Wallet address is required' },
         { status: 400 }
       );
     }
 
-    // If Supabase is not configured, return free tier
-    if (!supabase) {
-      return NextResponse.json({
-        hasUnlimited: false,
-        usage: {
-          today: 0,
-          thisMonth: 0,
-        },
-      });
-    }
-
-    // Check if wallet has unlimited access
+    // Check if user has unlimited access
     const { data, error } = await supabase
-      .from('unlimited_users')
+      .from('unlimited_access')
       .select('*')
-      .eq('wallet_address', walletAddress.toLowerCase())
+      .eq('wallet_address', address.toLowerCase())
       .single();
 
-    if (error || !data) {
-      // User doesn't have unlimited access
-      return NextResponse.json({
-        hasUnlimited: false,
-        usage: {
-          today: 0,
-          thisMonth: 0,
-        },
-      });
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to check access' },
+        { status: 500 }
+      );
     }
 
-    // User has unlimited access
     return NextResponse.json({
-      hasUnlimited: true,
-      activatedAt: data.activated_at,
-      txHash: data.tx_hash,
-      chain: data.chain,
-      usage: {
-        today: 0, // Unlimited users don't track usage
-        thisMonth: 0,
-      },
+      hasUnlimitedAccess: !!data,
+      activatedAt: data?.activated_at || null,
+      chainName: data?.chain_name || null,
     });
 
   } catch (error: any) {
     console.error('Check unlimited error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Check failed' },
+      { error: error.message || 'Failed to check unlimited access' },
       { status: 500 }
     );
   }

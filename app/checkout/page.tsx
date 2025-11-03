@@ -2,167 +2,71 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Wallet, Check, Loader2, AlertCircle, Copy, Crown } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, AlertCircle, Crown, Wallet as WalletIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { WalletService } from '@/lib/wallet/wallet-service';
-
-type Chain = 'base' | 'polygon' | 'ethereum' | 'bitcoin' | 'solana';
-
-const CHAIN_INFO = {
-  base: {
-    name: 'Base',
-    icon: '🔵',
-    address: '0x840820c866fA17eAa7A44f46A3F1849C7860B245',
-    amount: '0.015 ETH',
-    explorer: 'https://basescan.org/tx/',
-  },
-  polygon: {
-    name: 'Polygon',
-    icon: '💜',
-    address: '0x840820c866fA17eAa7A44f46A3F1849C7860B245',
-    amount: '50 MATIC',
-    explorer: 'https://polygonscan.com/tx/',
-  },
-  ethereum: {
-    name: 'Ethereum',
-    icon: '💎',
-    address: '0x840820c866fA17eAa7A44f46A3F1849C7860B245',
-    amount: '0.015 ETH',
-    explorer: 'https://etherscan.io/tx/',
-  },
-  bitcoin: {
-    name: 'Bitcoin',
-    icon: '₿',
-    address: 'bc1qszqgzwx04mlmxuhe3aymhkvpv9ge0q2p37gny5',
-    amount: '0.0005 BTC',
-    explorer: 'https://mempool.space/tx/',
-  },
-  solana: {
-    name: 'Solana',
-    icon: '⚡',
-    address: 'FdhXPvUqCjKVmatszBszzYKUcCBmf8zwqsgPcPKFm9Mw',
-    amount: '0.25 SOL',
-    explorer: 'https://solscan.io/tx/',
-  },
-};
+import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useAccount, useSignMessage } from 'wagmi';
+import { formatAddress, getChainIcon } from '@/hooks/useMultiChainPayment';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const [selectedChain, setSelectedChain] = useState<Chain>('base');
-  const [walletAccount, setWalletAccount] = useState<any>(null);
-  const [txHash, setTxHash] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
+  const { open } = useWeb3Modal();
+  const { address, isConnected, chain } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [showManualEntry, setShowManualEntry] = useState(false);
 
+  // Check if user already has unlimited access
   useEffect(() => {
-    // Check for connected wallet
-    const savedAccount = WalletService.getSavedAccount();
-    setWalletAccount(savedAccount);
-  }, []);
+    const checkUnlimitedAccess = async () => {
+      if (!address) return;
 
-  const handleCopyAddress = () => {
-    navigator.clipboard.writeText(CHAIN_INFO[selectedChain].address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+      try {
+        const response = await fetch(`/api/payment/check-unlimited?address=${address}`);
+        const data = await response.json();
 
-  const handlePayWithWallet = async () => {
-    if (!walletAccount) {
+        if (data.hasUnlimitedAccess) {
+          router.push('/dashboard');
+        }
+      } catch (err) {
+        console.error('Error checking unlimited access:', err);
+      }
+    };
+
+    checkUnlimitedAccess();
+  }, [address, router]);
+
+  const handlePayment = async () => {
+    if (!isConnected || !address || !chain) {
       setError('Please connect your wallet first');
       return;
     }
 
     try {
-      setIsPaying(true);
+      setIsProcessing(true);
       setError(null);
 
-      const chainInfo = CHAIN_INFO[selectedChain];
-      let transactionHash = '';
+      // Create payment message to sign
+      const timestamp = Date.now();
+      const message = `Upgrade to Unlimited Access\n\nAmount: $50 USD\nWallet: ${address}\nChain: ${chain.name}\nTimestamp: ${timestamp}\n\nBy signing this message, you authorize the payment for unlimited API access.`;
 
-      // Handle payment based on chain
-      if (selectedChain === 'solana') {
-        // Solana payment via Phantom
-        if (!window.solana?.isPhantom) {
-          setError('Phantom wallet not found. Please install Phantom.');
-          return;
-        }
+      // Request signature from user's wallet
+      const signature = await signMessageAsync({ message });
 
-        const transaction = await window.solana.request({
-          method: 'transfer',
-          params: {
-            to: chainInfo.address,
-            amount: parseFloat(chainInfo.amount) * 1e9, // Convert SOL to lamports
-          },
-        });
-
-        transactionHash = transaction.signature;
-
-      } else if (selectedChain === 'bitcoin') {
-        // Bitcoin requires manual entry
-        setShowManualEntry(true);
-        setIsPaying(false);
-        return;
-
-      } else {
-        // EVM chains (Base, Polygon, Ethereum) via MetaMask
-        if (!window.ethereum) {
-          setError('MetaMask not found. Please install MetaMask.');
-          return;
-        }
-
-        // Parse amount in ETH
-        const amountInEth = chainInfo.amount.split(' ')[0];
-        const amountInWei = '0x' + (parseFloat(amountInEth) * 1e18).toString(16);
-
-        const txParams = {
-          from: walletAccount.address,
-          to: chainInfo.address,
-          value: amountInWei,
-          gas: '0x5208', // 21000 gas for simple transfer
-        };
-
-        transactionHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txParams],
-        });
-      }
-
-      // Auto-verify the payment
-      if (transactionHash) {
-        setTxHash(transactionHash);
-        await verifyTransaction(transactionHash);
-      }
-
-    } catch (err: any) {
-      console.error('Payment error:', err);
-      if (err.code === 4001) {
-        setError('Payment cancelled by user');
-      } else {
-        setError(err.message || 'Payment failed');
-      }
-    } finally {
-      setIsPaying(false);
-    }
-  };
-
-  const verifyTransaction = async (hash: string) => {
-    try {
-      setIsVerifying(true);
-      setError(null);
-
-      // Call API to verify payment
-      const response = await fetch('/api/payment/verify-unlimited', {
+      // Send signature to backend for verification and payment processing
+      const response = await fetch('/api/payment/process-unlimited', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          walletAddress: walletAccount.address,
-          txHash: hash,
-          chain: selectedChain,
+          address,
+          chainId: chain.id,
+          chainName: chain.name,
+          message,
+          signature,
+          timestamp,
         }),
       });
 
@@ -174,22 +78,18 @@ export default function CheckoutPage() {
           router.push('/dashboard');
         }, 2000);
       } else {
-        setError(data.error || 'Payment verification failed. The transaction may still be pending.');
+        setError(data.error || 'Payment processing failed. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to verify payment');
+      console.error('Payment error:', err);
+      if (err.message?.includes('User rejected')) {
+        setError('Payment cancelled. Please try again when ready.');
+      } else {
+        setError(err.message || 'Payment failed. Please try again.');
+      }
     } finally {
-      setIsVerifying(false);
+      setIsProcessing(false);
     }
-  };
-
-  const handleVerifyPayment = async () => {
-    if (!txHash || !walletAccount) {
-      setError('Please connect your wallet and enter transaction hash');
-      return;
-    }
-
-    await verifyTransaction(txHash);
   };
 
   return (
@@ -217,7 +117,7 @@ export default function CheckoutPage() {
               Upgrade to Unlimited
             </h1>
             <p className="text-xl text-foreground/70">
-              Pay once, enjoy lifetime unlimited API access
+              Pay once with crypto, enjoy lifetime unlimited API access
             </p>
           </div>
 
@@ -256,63 +156,55 @@ export default function CheckoutPage() {
           )}
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Left Column - Payment Details */}
+            {/* Left Column - What You Get */}
             <div>
               <div className="card-3d rounded-2xl p-8 mb-6">
-                <h2 className="text-2xl font-bold text-[#FFD700] mb-6">Select Payment Method</h2>
-
-                <div className="space-y-3">
-                  {Object.entries(CHAIN_INFO).map(([chain, info]) => (
-                    <button
-                      key={chain}
-                      onClick={() => setSelectedChain(chain as Chain)}
-                      className={`w-full p-4 rounded-xl border-2 transition-all duration-300 ${
-                        selectedChain === chain
-                          ? 'border-[#FFD700] bg-[#FFD700]/10'
-                          : 'border-[#FFD700]/20 hover:border-[#FFD700]/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-3xl">{info.icon}</span>
-                          <div className="text-left">
-                            <p className="font-bold text-foreground">{info.name}</p>
-                            <p className="text-sm text-foreground/70">{info.amount} ≈ $50</p>
-                          </div>
-                        </div>
-                        {selectedChain === chain && (
-                          <Check className="w-5 h-5 text-[#FFD700]" />
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                <h2 className="text-2xl font-bold text-[#FFD700] mb-6">What You Get</h2>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
+                    <div>
+                      <p className="text-foreground font-semibold">Unlimited API Requests</p>
+                      <p className="text-sm text-foreground/60">No limits, no throttling, forever</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
+                    <div>
+                      <p className="text-foreground font-semibold">All API Endpoints</p>
+                      <p className="text-sm text-foreground/60">Full access to our entire API suite</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
+                    <div>
+                      <p className="text-foreground font-semibold">Personal Dashboard</p>
+                      <p className="text-sm text-foreground/60">Track your usage and analytics</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
+                    <div>
+                      <p className="text-foreground font-semibold">Priority Support</p>
+                      <p className="text-sm text-foreground/60">Get help when you need it</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
+                    <div>
+                      <p className="text-foreground font-semibold">Lifetime Updates</p>
+                      <p className="text-sm text-foreground/60">All future features included</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* What You Get */}
+              {/* Pricing */}
               <div className="card-3d rounded-2xl p-8">
-                <h3 className="text-xl font-bold text-[#FFD700] mb-4">What You Get</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
-                    <span className="text-foreground/80">Unlimited API requests forever</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
-                    <span className="text-foreground/80">No rate limits</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
-                    <span className="text-foreground/80">Personal dashboard</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
-                    <span className="text-foreground/80">Priority support</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#4CAF50] mt-0.5" />
-                    <span className="text-foreground/80">Lifetime updates</span>
-                  </div>
+                <h3 className="text-xl font-bold text-[#FFD700] mb-4">One-Time Payment</h3>
+                <div className="text-center py-6">
+                  <div className="text-6xl font-bold text-gradient-gold mb-2">$50</div>
+                  <p className="text-foreground/60">Pay once, use forever</p>
                 </div>
               </div>
             </div>
@@ -321,183 +213,143 @@ export default function CheckoutPage() {
             <div>
               <div className="card-3d rounded-2xl p-8">
                 <h2 className="text-2xl font-bold text-[#FFD700] mb-2">
-                  {showManualEntry ? 'Manual Payment' : 'Complete Your Payment'}
+                  Complete Your Payment
                 </h2>
                 <p className="text-sm text-foreground/70 mb-6">
-                  {showManualEntry
-                    ? 'Send payment and enter your transaction hash'
-                    : 'Click the button below to pay with your wallet'}
+                  Connect your wallet and authorize payment with a signature
                 </p>
 
-                {!walletAccount && (
-                  <div className="mb-6 p-4 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
-                    <div className="flex items-center gap-2 text-yellow-500 mb-2">
-                      <Wallet className="w-5 h-5" />
-                      <span className="font-semibold">Wallet Not Connected</span>
-                    </div>
-                    <p className="text-sm text-foreground/70 mb-3">
-                      Connect your wallet first to continue
+                {/* Wallet Connection Status */}
+                {!isConnected ? (
+                  <div className="mb-6 p-6 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 text-center">
+                    <WalletIcon className="w-12 h-12 text-[#FFD700] mx-auto mb-3" />
+                    <h3 className="font-bold text-foreground mb-2">Connect Your Wallet</h3>
+                    <p className="text-sm text-foreground/70 mb-4">
+                      Connect your crypto wallet to continue with payment
                     </p>
-                    <Link
-                      href="/login"
-                      className="inline-block px-4 py-2 rounded-lg gradient-gold-orange text-white font-semibold text-sm"
+                    <button
+                      onClick={() => open()}
+                      className="px-6 py-3 rounded-xl gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white"
                     >
                       Connect Wallet
-                    </Link>
+                    </button>
                   </div>
-                )}
-
-                {walletAccount && (
+                ) : (
                   <div className="mb-6 p-4 rounded-xl bg-[#4CAF50]/20 border border-[#4CAF50]/30">
                     <div className="flex items-center gap-2 text-[#4CAF50] mb-2">
                       <Check className="w-5 h-5" />
                       <span className="font-semibold">Wallet Connected</span>
                     </div>
-                    <p className="text-xs font-mono text-foreground/70 break-all">
-                      {walletAccount.address}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-mono text-foreground/70">
+                          {formatAddress(address || '')}
+                        </p>
+                        {chain && (
+                          <p className="text-xs text-foreground/50 mt-1">
+                            {getChainIcon(chain.id)} {chain.name}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => open()}
+                        className="text-sm text-[#FFD700] hover:text-[#FF6B35] transition-colors"
+                      >
+                        Change
+                      </button>
+                    </div>
                   </div>
                 )}
 
-                <div className="space-y-6">
-                  {/* Primary Payment Button */}
-                  {!showManualEntry && !success && (
-                    <div>
+                {/* Payment Info */}
+                {isConnected && (
+                  <>
+                    <div className="mb-6 p-4 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30">
+                      <h4 className="font-semibold text-foreground mb-3">How it works:</h4>
+                      <ol className="space-y-2 text-sm text-foreground/70">
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-bold">1.</span>
+                          <span>Click the payment button below</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-bold">2.</span>
+                          <span>Your wallet will open to sign a message</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-bold">3.</span>
+                          <span>Approve the signature (no gas fees required)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-bold">4.</span>
+                          <span>Get instant unlimited access</span>
+                        </li>
+                      </ol>
+                    </div>
+
+                    {/* Payment Button */}
+                    {!success && (
                       <button
-                        onClick={handlePayWithWallet}
-                        disabled={!walletAccount || isPaying || isVerifying}
+                        onClick={handlePayment}
+                        disabled={isProcessing}
                         className="w-full px-6 py-4 rounded-xl gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                       >
-                        {isPaying ? (
+                        {isProcessing ? (
                           <>
                             <Loader2 className="w-6 h-6 animate-spin" />
                             Processing Payment...
                           </>
-                        ) : isVerifying ? (
-                          <>
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                            Verifying Transaction...
-                          </>
                         ) : (
                           <>
-                            <Wallet className="w-6 h-6" />
-                            Pay {CHAIN_INFO[selectedChain].amount} with {CHAIN_INFO[selectedChain].name}
+                            <WalletIcon className="w-6 h-6" />
+                            Pay $50 - Upgrade Now
                           </>
                         )}
                       </button>
-                      <p className="text-xs text-center text-foreground/50 mt-3">
-                        Your wallet will open to confirm the payment
-                      </p>
+                    )}
+                  </>
+                )}
+
+                {/* Success State */}
+                {success && (
+                  <div className="text-center py-8">
+                    <div className="w-20 h-20 rounded-full bg-[#4CAF50]/20 flex items-center justify-center mx-auto mb-4">
+                      <Check className="w-10 h-10 text-[#4CAF50]" />
                     </div>
-                  )}
+                    <h3 className="text-2xl font-bold text-[#4CAF50] mb-2">Payment Confirmed!</h3>
+                    <p className="text-foreground/70">Upgrading your account...</p>
+                  </div>
+                )}
 
-                  {/* Manual Entry Option */}
-                  {!showManualEntry && !success && (
-                    <div className="text-center">
-                      <button
-                        onClick={() => setShowManualEntry(true)}
-                        className="text-sm text-[#FFD700] hover:text-[#FF6B35] transition-colors underline"
-                      >
-                        Or enter transaction hash manually
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Manual Entry Form */}
-                  {showManualEntry && !success && (
-                    <>
-                      {/* Step 1 */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
-                            1
-                          </div>
-                          <h3 className="font-bold text-foreground">Send {CHAIN_INFO[selectedChain].amount}</h3>
-                        </div>
-                        <div className="ml-11">
-                          <p className="text-sm text-foreground/70 mb-2">To this address:</p>
-                          <div className="p-3 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30 font-mono text-sm break-all flex items-center justify-between gap-2">
-                            <span className="text-foreground">{CHAIN_INFO[selectedChain].address}</span>
-                            <button
-                              onClick={handleCopyAddress}
-                              className="p-2 hover:bg-[#FFD700]/20 rounded transition-colors"
-                            >
-                              {copied ? (
-                                <Check className="w-4 h-4 text-[#4CAF50]" />
-                              ) : (
-                                <Copy className="w-4 h-4 text-[#FFD700]" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Step 2 */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
-                            2
-                          </div>
-                          <h3 className="font-bold text-foreground">Enter Transaction Hash</h3>
-                        </div>
-                        <div className="ml-11">
-                          <input
-                            type="text"
-                            placeholder="Paste your transaction hash here..."
-                            value={txHash}
-                            onChange={(e) => setTxHash(e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg bg-[#0A0A0A] border border-[#FFD700]/30 focus:border-[#FFD700] outline-none text-foreground font-mono text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Step 3 */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 text-[#FFD700] flex items-center justify-center font-bold">
-                            3
-                          </div>
-                          <h3 className="font-bold text-foreground">Verify Payment</h3>
-                        </div>
-                        <div className="ml-11">
-                          <button
-                            onClick={handleVerifyPayment}
-                            disabled={!txHash || !walletAccount || isVerifying || success}
-                            className="w-full px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                          >
-                            {isVerifying ? (
-                              <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Verifying...
-                              </>
-                            ) : (
-                              <>
-                                <Check className="w-5 h-5" />
-                                Verify Payment
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Success State */}
-                  {success && (
-                    <div className="text-center py-8">
-                      <div className="w-20 h-20 rounded-full bg-[#4CAF50]/20 flex items-center justify-center mx-auto mb-4">
-                        <Check className="w-10 h-10 text-[#4CAF50]" />
-                      </div>
-                      <h3 className="text-2xl font-bold text-[#4CAF50] mb-2">Payment Confirmed!</h3>
-                      <p className="text-foreground/70">Upgrading your account...</p>
-                    </div>
-                  )}
+                <div className="mt-6 pt-6 border-t border-[#FFD700]/20">
+                  <div className="space-y-2 text-xs text-foreground/50">
+                    <p className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-[#4CAF50]" />
+                      Secure payment via wallet signature
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-[#4CAF50]" />
+                      No gas fees required
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-[#4CAF50]" />
+                      Instant activation
+                    </p>
+                  </div>
                 </div>
+              </div>
 
-                <div className="mt-8 pt-6 border-t border-[#FFD700]/20">
-                  <p className="text-xs text-foreground/50 text-center">
-                    Payment confirmation usually takes 1-5 minutes
-                  </p>
+              {/* Supported Chains */}
+              <div className="card-3d rounded-2xl p-6 mt-6">
+                <h4 className="font-semibold text-foreground mb-3 text-sm">Supported Networks:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Ethereum', 'Polygon', 'Base', 'Arbitrum', 'Optimism', 'BNB Chain', 'Avalanche'].map((network) => (
+                    <span
+                      key={network}
+                      className="px-3 py-1 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 text-xs text-foreground/70"
+                    >
+                      {network}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
