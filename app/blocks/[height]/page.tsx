@@ -157,7 +157,7 @@ export default function BlockDetailPage() {
     <div className="container mx-auto px-4 py-8">
       <Link
         href="/"
-        className="inline-flex items-center text-neon-blue hover:text-neon-orange transition-colors duration-300 mb-6"
+        className="inline-flex items-center text-[#FFD700] hover:text-[#FF6B35] transition-colors duration-300 mb-6"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Home
@@ -169,11 +169,11 @@ export default function BlockDetailPage() {
         transition={{ duration: 0.6 }}
       >
         <div className="flex items-center mb-8">
-          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-neon-blue to-neon-orange flex items-center justify-center glow-blue mr-4">
-            <Box className="w-8 h-8 text-space-black" />
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#FFD700] to-[#FF6B35] flex items-center justify-center glow-gold mr-4">
+            <Box className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-neon-blue">Block {blockData.height.toLocaleString()}</h1>
+            <h1 className="text-4xl font-bold text-gradient-gold">Block {blockData.height.toLocaleString()}</h1>
             <p className="text-foreground/70">Confirmed block on the Bitcoin blockchain</p>
           </div>
         </div>
@@ -182,21 +182,21 @@ export default function BlockDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="glassmorphism rounded-xl p-6">
             <div className="flex items-center mb-2">
-              <Clock className="w-5 h-5 text-neon-blue mr-2" />
+              <Clock className="w-5 h-5 text-[#FFD700] mr-2" />
               <span className="text-foreground/70">Timestamp</span>
             </div>
             <p className="text-xl font-semibold">{new Date(blockData.timestamp).toLocaleString()}</p>
           </div>
           <div className="glassmorphism rounded-xl p-6">
             <div className="flex items-center mb-2">
-              <Database className="w-5 h-5 text-neon-orange mr-2" />
+              <Database className="w-5 h-5 text-[#FF6B35] mr-2" />
               <span className="text-foreground/70">Size</span>
             </div>
             <p className="text-xl font-semibold">{(blockData.size / 1024 / 1024).toFixed(2)} MB</p>
           </div>
           <div className="glassmorphism rounded-xl p-6">
             <div className="flex items-center mb-2">
-              <TrendingUp className="w-5 h-5 text-neon-green mr-2" />
+              <TrendingUp className="w-5 h-5 text-[#4CAF50] mr-2" />
               <span className="text-foreground/70">Transactions</span>
             </div>
             <p className="text-xl font-semibold">{blockData.txCount.toLocaleString()}</p>
@@ -205,50 +205,50 @@ export default function BlockDetailPage() {
 
         {/* Block Details */}
         <div className="glassmorphism rounded-2xl p-8 mb-8">
-          <h2 className="text-2xl font-bold text-neon-blue mb-6">Block Details</h2>
+          <h2 className="text-2xl font-bold text-gradient-gold mb-6">Block Details</h2>
           <div className="space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Block Hash</span>
-              <code className="text-neon-blue font-mono text-sm break-all">{blockData.hash}</code>
+              <code className="text-[#FFD700] font-mono text-sm break-all">{blockData.hash}</code>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Merkle Root</span>
-              <code className="text-neon-blue font-mono text-sm break-all">{blockData.merkleRoot}</code>
+              <code className="text-[#FFD700] font-mono text-sm break-all">{blockData.merkleRoot}</code>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Difficulty</span>
               <span className="text-foreground">{blockData.difficulty}</span>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Nonce</span>
               <span className="text-foreground font-mono">{blockData.nonce.toLocaleString()}</span>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Bits</span>
               <span className="text-foreground font-mono">{blockData.bits}</span>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Weight</span>
               <span className="text-foreground">{blockData.weight.toLocaleString()} WU</span>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Miner</span>
-              <span className="text-neon-orange font-semibold">{blockData.miner}</span>
+              <span className="text-[#FF6B35] font-semibold">{blockData.miner}</span>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center border-b border-neon-blue/10 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center border-b border-[#FFD700]/10 pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Block Reward</span>
-              <span className="text-neon-green font-semibold">{blockData.reward} BTC</span>
+              <span className="text-[#4CAF50] font-semibold">{blockData.reward} BTC</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-center pb-4">
               <span className="text-foreground/70 w-48 mb-2 md:mb-0">Total Fees</span>
-              <span className="text-neon-green font-semibold">{blockData.totalFees} BTC</span>
+              <span className="text-[#4CAF50] font-semibold">{blockData.totalFees} BTC</span>
             </div>
           </div>
         </div>
 
         {/* Transactions */}
         <div className="glassmorphism rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-neon-blue mb-6 flex items-center">
+          <h2 className="text-2xl font-bold text-gradient-gold mb-6 flex items-center">
             <Hash className="w-6 h-6 mr-2" />
             Transactions ({blockData.txCount})
           </h2>
@@ -259,16 +259,16 @@ export default function BlockDetailPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="glassmorphism rounded-lg p-4 hover:bg-neon-blue/5 transition-colors duration-200"
+                className="glassmorphism rounded-lg p-4 hover:bg-[#FFD700]/5 transition-colors duration-200"
               >
                 <Link href={`/tx/${tx.txid}`} className="block">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <code className="text-neon-blue font-mono text-sm mb-2 md:mb-0 break-all">
+                    <code className="text-[#FFD700] font-mono text-sm mb-2 md:mb-0 break-all">
                       {tx.txid}
                     </code>
                     <div className="flex items-center space-x-4 text-sm">
                       <span className="text-foreground/70">{tx.size} bytes</span>
-                      <span className="text-neon-green">{tx.fee} BTC</span>
+                      <span className="text-[#4CAF50]">{tx.fee} BTC</span>
                     </div>
                   </div>
                 </Link>

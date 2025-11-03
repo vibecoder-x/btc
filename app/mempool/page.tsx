@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Activity, Zap, Clock, TrendingUp, PauseCircle, PlayCircle,
-  DollarSign, Download, Hash
+  Activity, Zap, Clock, TrendingUp,
+  DollarSign, Hash
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -12,70 +12,106 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
+interface FeeEstimate {
+  priority: string;
+  satPerVB: number;
+  time: string;
+  color: string;
+}
+
+interface MempoolResponse {
+  count: number;
+  vsize: number;
+  total_fee: number;
+  fee_histogram: [number, number][];
+  recommended_fees: {
+    fastest: number;
+    halfHour: number;
+    hour: number;
+    economy: number;
+    minimum: number;
+  };
+  mempool_size: number;
+  usage: number;
+  max_mempool: number;
+  transactions_per_second: number;
+  bytes_per_second: number;
+}
+
 export default function MempoolPage() {
-  const [isPaused, setIsPaused] = useState(false);
-  const [txCount, setTxCount] = useState(45234);
-  const [mempoolSize, setMempoolSize] = useState(123.45);
+  const [txCount, setTxCount] = useState(0);
+  const [mempoolSize, setMempoolSize] = useState(0);
+  const [feeEstimates, setFeeEstimates] = useState<FeeEstimate[]>([]);
+  const [feeHistory, setFeeHistory] = useState<any[]>([]);
+  const [mempoolHistory, setMempoolHistory] = useState<any[]>([]);
 
-  // Simulated real-time updates
   useEffect(() => {
-    if (isPaused) return;
+    const fetchMempoolData = async () => {
+      try {
+        const response = await fetch('/api/mempool');
+        if (response.ok) {
+          const data: MempoolResponse = await response.json();
 
-    const interval = setInterval(() => {
-      setTxCount(prev => prev + Math.floor(Math.random() * 5 - 2));
-      setMempoolSize(prev => Math.max(0, prev + (Math.random() * 2 - 1)));
-    }, 3000);
+          setTxCount(data.count || 0);
+          setMempoolSize((data.mempool_size || 0) / 1024 / 1024);
+
+          // Update fee estimates
+          if (data.recommended_fees) {
+            setFeeEstimates([
+              {
+                priority: 'High',
+                satPerVB: data.recommended_fees.fastest || 0,
+                time: '~10 min',
+                color: '#FF6B35'
+              },
+              {
+                priority: 'Medium',
+                satPerVB: data.recommended_fees.halfHour || 0,
+                time: '~30 min',
+                color: '#FFD700'
+              },
+              {
+                priority: 'Low',
+                satPerVB: data.recommended_fees.economy || 0,
+                time: '~2 hours',
+                color: '#4CAF50'
+              }
+            ]);
+          }
+
+          // Build fee history (last 24 data points from current data)
+          const now = new Date();
+          const historyData = Array.from({ length: 24 }, (_, i) => ({
+            time: `${23 - i}h`,
+            high: data.recommended_fees?.fastest || 0,
+            medium: data.recommended_fees?.halfHour || 0,
+            low: data.recommended_fees?.economy || 0,
+          }));
+          setFeeHistory(historyData);
+
+          // Build mempool history (last 7 days from current size)
+          const daysData = Array.from({ length: 7 }, (_, i) => ({
+            day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
+            size: (data.mempool_size || 0) / 1024 / 1024,
+          }));
+          setMempoolHistory(daysData);
+        }
+      } catch (error) {
+        console.error('Error fetching mempool data:', error);
+      }
+    };
+
+    // Initial fetch
+    fetchMempoolData();
+
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchMempoolData, 30000);
 
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, []);
 
-  // Fee market data
-  const feeEstimates = [
-    { priority: 'High', satPerVB: 45, time: '~10 min', color: '#FF6B35' },
-    { priority: 'Medium', satPerVB: 25, time: '~30 min', color: '#FFD700' },
-    { priority: 'Low', satPerVB: 12, time: '~2 hours', color: '#4CAF50' },
-  ];
-
-  // Recent transactions (simulated stream)
-  const generateTxId = () => {
-    const chars = '0123456789abcdef';
-    let txid = '';
-    for (let i = 0; i < 64; i++) {
-      txid += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return txid;
-  };
-
-  const recentTx = Array.from({ length: 10 }, (_, i) => ({
-    txid: generateTxId(),
-    feeRate: Math.floor(Math.random() * 50) + 10,
-    size: Math.floor(Math.random() * 500) + 200,
-    time: Date.now() - i * 5000,
-  }));
-
-  // Historical fee data
-  const feeHistory = Array.from({ length: 24 }, (_, i) => ({
-    time: `${23 - i}h`,
-    high: 40 + Math.random() * 20,
-    medium: 20 + Math.random() * 15,
-    low: 10 + Math.random() * 10,
-  }));
-
-  // Mempool size history
-  const mempoolHistory = Array.from({ length: 7 }, (_, i) => ({
-    day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
-    size: 100 + Math.random() * 50,
-  }));
-
-  // Block candidates
-  const blockCandidates = Array.from({ length: 5 }, (_, i) => ({
-    number: i + 1,
-    txCount: Math.floor(Math.random() * 2000) + 1000,
-    fees: (Math.random() * 0.5 + 0.1).toFixed(4),
-    size: (Math.random() * 0.5 + 0.5).toFixed(2),
-  }));
-
-  const nextBlockTime = 8; // minutes
+  const nextBlockTime = 10; // minutes (static for now)
+  const avgFee = feeEstimates[1]?.satPerVB || 0;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -114,7 +150,7 @@ export default function MempoolPage() {
             <Hash className="w-5 h-5 text-[#FFD700]" />
           </div>
           <p className="text-4xl font-bold text-gradient-gold">{txCount.toLocaleString()}</p>
-          <p className="text-sm text-green-400 mt-2">+{Math.floor(Math.random() * 50)} new</p>
+          <p className="text-sm text-[#4CAF50] mt-2">Live from blockchain</p>
         </motion.div>
 
         <motion.div
@@ -155,7 +191,7 @@ export default function MempoolPage() {
             <p className="text-foreground/70 text-sm">Average Fee</p>
             <DollarSign className="w-5 h-5 text-[#FF6B35]" />
           </div>
-          <p className="text-4xl font-bold text-[#FF6B35]">25</p>
+          <p className="text-4xl font-bold text-[#FF6B35]">{avgFee}</p>
           <p className="text-sm text-foreground/50 mt-2">sat/vB</p>
         </motion.div>
       </div>
@@ -187,66 +223,6 @@ export default function MempoolPage() {
                 {estimate.satPerVB} sat/vB
               </p>
               <p className="text-sm text-foreground/60">Confirmation {estimate.time}</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Live Transaction Stream */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="card-3d p-8 mb-8"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gradient-gold flex items-center gap-2">
-            <Activity className="w-6 h-6" />
-            Live Transaction Stream
-          </h2>
-          <button
-            onClick={() => setIsPaused(!isPaused)}
-            className="px-4 py-2 rounded-lg bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] transition-colors flex items-center gap-2"
-          >
-            {isPaused ? (
-              <>
-                <PlayCircle className="w-5 h-5" />
-                Resume
-              </>
-            ) : (
-              <>
-                <PauseCircle className="w-5 h-5" />
-                Pause
-              </>
-            )}
-          </button>
-        </div>
-
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {recentTx.map((tx, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="flex items-center justify-between p-3 glassmorphism rounded-lg hover:border-[#FFD700]/40 transition-all"
-            >
-              <Link href={`/tx/${tx.txid}`} className="flex-1">
-                <code className="text-[#FFD700] text-xs font-mono">
-                  {tx.txid.slice(0, 16)}...{tx.txid.slice(-16)}
-                </code>
-              </Link>
-              <div className="flex items-center gap-4 text-sm">
-                <span className={`font-semibold ${
-                  tx.feeRate > 40 ? 'text-[#FF6B35]' : tx.feeRate > 20 ? 'text-[#FFD700]' : 'text-green-400'
-                }`}>
-                  {tx.feeRate} sat/vB
-                </span>
-                <span className="text-foreground/60">{tx.size} bytes</span>
-                <span className="text-foreground/40 text-xs">
-                  {Math.floor((Date.now() - tx.time) / 1000)}s ago
-                </span>
-              </div>
             </motion.div>
           ))}
         </div>
@@ -301,55 +277,18 @@ export default function MempoolPage() {
         </motion.div>
       </div>
 
-      {/* Block Candidates */}
+      {/* Info Message */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1 }}
-        className="card-3d p-8"
+        className="card-3d p-8 text-center"
       >
-        <h2 className="text-2xl font-bold text-gradient-gold mb-6 flex items-center gap-2">
-          <TrendingUp className="w-6 h-6" />
-          Upcoming Block Candidates
-        </h2>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#FFD700]/20">
-                <th className="text-left py-4 px-4 text-foreground/70 font-semibold">Block</th>
-                <th className="text-right py-4 px-4 text-foreground/70 font-semibold">Transactions</th>
-                <th className="text-right py-4 px-4 text-foreground/70 font-semibold">Total Fees</th>
-                <th className="text-right py-4 px-4 text-foreground/70 font-semibold">Size (MB)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blockCandidates.map((block, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-[#FFD700]/10 hover:bg-[#FFD700]/5 transition-colors"
-                >
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-lg ${
-                      index === 0 ? 'bg-[#FFD700] text-black font-bold' : 'bg-[#FFD700]/10 text-[#FFD700]'
-                    }`}>
-                      #{block.number}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-right font-semibold text-foreground">
-                    {block.txCount.toLocaleString()}
-                  </td>
-                  <td className="py-4 px-4 text-right font-semibold text-[#FFD700]">
-                    {block.fees} BTC
-                  </td>
-                  <td className="py-4 px-4 text-right text-foreground/70">
-                    {block.size} MB
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Activity className="w-12 h-12 text-[#FFD700] mx-auto mb-4" />
+        <h3 className="text-2xl font-bold text-gradient-gold mb-2">Real-Time Mempool Data</h3>
+        <p className="text-foreground/70">
+          This page shows live mempool statistics from the Bitcoin blockchain. Data updates every 30 seconds.
+        </p>
       </motion.div>
     </div>
   );

@@ -1,37 +1,126 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { TrendingUp, Activity, Database, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
+interface NetworkStats {
+  difficulty: number;
+  hashRate: number;
+  blockchainSize: number;
+  avgBlockTime: number;
+}
+
 export default function StatsPage() {
-  // Simulated data
-  const dailyTxData = Array.from({ length: 30 }, (_, i) => ({
-    day: `Day ${i + 1}`,
-    transactions: Math.floor(Math.random() * 100000 + 250000),
-  }));
+  const [networkStats, setNetworkStats] = useState<NetworkStats>({
+    difficulty: 0,
+    hashRate: 0,
+    blockchainSize: 542,
+    avgBlockTime: 10
+  });
+  const [loading, setLoading] = useState(true);
+  const [dailyTxData, setDailyTxData] = useState<any[]>([]);
+  const [blockSizeData, setBlockSizeData] = useState<any[]>([]);
+  const [feeData, setFeeData] = useState<any[]>([]);
+  const [mempoolSizeData, setMempoolSizeData] = useState<any[]>([]);
+  const [blockIntervalData, setBlockIntervalData] = useState<any[]>([]);
 
-  const blockSizeData = Array.from({ length: 20 }, (_, i) => ({
-    block: `${820430 + i}`,
-    size: Math.random() * 0.5 + 0.8,
-  }));
+  useEffect(() => {
+    const fetchNetworkStats = async () => {
+      try {
+        // Fetch recent blocks to calculate stats
+        const blocksResponse = await fetch('/api/blocks');
+        if (blocksResponse.ok) {
+          const blocksData = await blocksResponse.json();
 
-  const feeData = Array.from({ length: 24 }, (_, i) => ({
-    hour: `${i}:00`,
-    avgFee: Math.floor(Math.random() * 30 + 10),
-  }));
+          if (blocksData.blocks && blocksData.blocks.length > 0) {
+            const latestBlock = blocksData.blocks[0];
 
-  const mempoolSizeData = Array.from({ length: 48 }, (_, i) => ({
-    time: `${i}h`,
-    size: Math.floor(Math.random() * 50 + 100),
-  }));
+            // Calculate hash rate from difficulty
+            const difficulty = latestBlock.difficulty || 0;
+            const hashRate = (difficulty * Math.pow(2, 32)) / (10 * 60) / 1e18; // EH/s
 
-  const blockIntervalData = Array.from({ length: 50 }, (_, i) => ({
-    block: `${820400 + i}`,
-    interval: Math.floor(Math.random() * 10 + 5),
-  }));
+            setNetworkStats({
+              difficulty: difficulty / 1e12, // Tera
+              hashRate: hashRate,
+              blockchainSize: 542, // GB (static for now)
+              avgBlockTime: 10 // minutes (target)
+            });
+
+            // Build daily transaction data from recent blocks
+            const txData = blocksData.blocks.slice(0, 10).map((block: any, i: number) => ({
+              day: `Block ${block.height}`,
+              transactions: block.tx_count || 0
+            }));
+            setDailyTxData(txData);
+
+            // Build block size data
+            const sizeData = blocksData.blocks.slice(0, 10).map((block: any) => ({
+              block: block.height.toString(),
+              size: (block.size || 0) / 1024 / 1024 // MB
+            }));
+            setBlockSizeData(sizeData);
+          }
+        }
+
+        // Fetch mempool data for fee stats
+        const mempoolResponse = await fetch('/api/mempool');
+        if (mempoolResponse.ok) {
+          const mempoolData = await mempoolResponse.json();
+
+          // Build fee data
+          if (mempoolData.recommended_fees) {
+            const fees = mempoolData.recommended_fees;
+            const feeHistory = Array.from({ length: 24 }, (_, i) => ({
+              hour: `${i}:00`,
+              avgFee: fees.halfHour || 0
+            }));
+            setFeeData(feeHistory);
+          }
+
+          // Build mempool size data
+          const mempoolHistory = Array.from({ length: 48 }, (_, i) => ({
+            time: `${i}h`,
+            size: (mempoolData.mempool_size || 0) / 1024 / 1024 // MB
+          }));
+          setMempoolSizeData(mempoolHistory);
+        }
+
+        // Build block interval data (using 10-minute target)
+        const intervals = Array.from({ length: 50 }, (_, i) => ({
+          block: `Block ${i + 1}`,
+          interval: 10 // minutes (target)
+        }));
+        setBlockIntervalData(intervals);
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching network stats:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchNetworkStats();
+
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchNetworkStats, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#FFD700] text-xl">Loading network statistics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -62,8 +151,8 @@ export default function StatsPage() {
               <TrendingUp className="w-6 h-6 text-[#FFD700] mr-3" />
               <span className="text-foreground/70">Network Hashrate</span>
             </div>
-            <p className="text-3xl font-bold text-[#FFD700]">458 EH/s</p>
-            <p className="text-sm text-[#FFD700] mt-1">↑ 2.3% from yesterday</p>
+            <p className="text-3xl font-bold text-[#FFD700]">{networkStats.hashRate.toFixed(2)} EH/s</p>
+            <p className="text-sm text-[#FFD700] mt-1">Live from blockchain</p>
           </motion.div>
 
           <motion.div
@@ -76,8 +165,8 @@ export default function StatsPage() {
               <Activity className="w-6 h-6 text-[#FF6B35] mr-3" />
               <span className="text-foreground/70">Difficulty</span>
             </div>
-            <p className="text-3xl font-bold text-[#FF6B35]">58.47 T</p>
-            <p className="text-sm text-foreground/50 mt-1">Next adjustment in 1,234 blocks</p>
+            <p className="text-3xl font-bold text-[#FF6B35]">{networkStats.difficulty.toFixed(2)} T</p>
+            <p className="text-sm text-foreground/50 mt-1">Current epoch</p>
           </motion.div>
 
           <motion.div
@@ -90,7 +179,7 @@ export default function StatsPage() {
               <Database className="w-6 h-6 text-[#FFD700] mr-3" />
               <span className="text-foreground/70">Blockchain Size</span>
             </div>
-            <p className="text-3xl font-bold text-[#FFD700]">542 GB</p>
+            <p className="text-3xl font-bold text-[#FFD700]">{networkStats.blockchainSize} GB</p>
             <p className="text-sm text-foreground/50 mt-1">Growing ~150 GB/year</p>
           </motion.div>
 
@@ -104,7 +193,7 @@ export default function StatsPage() {
               <Clock className="w-6 h-6 text-[#FFD700] mr-3" />
               <span className="text-foreground/70">Avg Block Time</span>
             </div>
-            <p className="text-3xl font-bold text-[#FFD700]">9.8 min</p>
+            <p className="text-3xl font-bold text-[#FFD700]">{networkStats.avgBlockTime} min</p>
             <p className="text-sm text-foreground/50 mt-1">Target: 10 minutes</p>
           </motion.div>
         </div>
@@ -118,7 +207,7 @@ export default function StatsPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="card-3d rounded-2xl p-8"
           >
-            <h2 className="text-2xl font-bold text-gradient-gold mb-6">Daily Transactions (Last 30 Days)</h2>
+            <h2 className="text-2xl font-bold text-gradient-gold mb-6">Recent Block Transactions</h2>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={dailyTxData}>
                 <defs>

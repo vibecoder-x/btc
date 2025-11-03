@@ -10,34 +10,93 @@ interface MempoolData {
   color: string;
 }
 
+interface MempoolStats {
+  count: number;
+  vsize: number;
+  totalFee: number;
+  avgFee: number;
+  nextBlock: string;
+  mempoolSize: string;
+}
+
 export default function MempoolPanel() {
   const [mounted, setMounted] = useState(false);
   const [mempoolData, setMempoolData] = useState<MempoolData[]>([
-    { feeRange: '1-5', count: 1200, color: '#00ff88' },
-    { feeRange: '5-10', count: 2500, color: '#00ffff' },
-    { feeRange: '10-20', count: 3200, color: '#00aaff' },
-    { feeRange: '20-50', count: 1800, color: '#ff8800' },
-    { feeRange: '50-100', count: 900, color: '#ff6600' },
-    { feeRange: '100+', count: 400, color: '#ff0000' },
+    { feeRange: '1-5', count: 0, color: '#4CAF50' },
+    { feeRange: '5-10', count: 0, color: '#8BC34A' },
+    { feeRange: '10-20', count: 0, color: '#FFD700' },
+    { feeRange: '20-50', count: 0, color: '#FF9800' },
+    { feeRange: '50-100', count: 0, color: '#FF6B35' },
+    { feeRange: '100+', count: 0, color: '#F44336' },
   ]);
+  const [stats, setStats] = useState<MempoolStats>({
+    count: 0,
+    vsize: 0,
+    totalFee: 0,
+    avgFee: 0,
+    nextBlock: '~10 min',
+    mempoolSize: '0 MB'
+  });
 
   useEffect(() => {
     setMounted(true);
 
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      setMempoolData((prev) =>
-        prev.map((item) => ({
-          ...item,
-          count: Math.max(100, item.count + Math.floor(Math.random() * 200 - 100)),
-        }))
-      );
-    }, 3000);
+    const fetchMempoolData = async () => {
+      try {
+        const response = await fetch('/api/mempool');
+        if (response.ok) {
+          const data = await response.json();
+
+          // Process fee histogram into our format
+          if (data.fee_histogram && data.fee_histogram.length > 0) {
+            // Group transactions by fee ranges
+            const ranges = [
+              { range: '1-5', min: 1, max: 5 },
+              { range: '5-10', min: 5, max: 10 },
+              { range: '10-20', min: 10, max: 20 },
+              { range: '20-50', min: 20, max: 50 },
+              { range: '50-100', min: 50, max: 100 },
+              { range: '100+', min: 100, max: Infinity }
+            ];
+
+            const colors = ['#4CAF50', '#8BC34A', '#FFD700', '#FF9800', '#FF6B35', '#F44336'];
+
+            const grouped = ranges.map((r, idx) => ({
+              feeRange: r.range,
+              count: data.fee_histogram
+                .filter(([fee]: [number, number]) => fee >= r.min && fee < r.max)
+                .reduce((sum: number, [_, vsize]: [number, number]) => sum + Math.floor(vsize / 250), 0),
+              color: colors[idx]
+            }));
+
+            setMempoolData(grouped);
+          }
+
+          // Update stats
+          setStats({
+            count: data.count || 0,
+            vsize: data.vsize || 0,
+            totalFee: data.total_fee || 0,
+            avgFee: data.recommended_fees?.medium || 0,
+            nextBlock: '~10 min',
+            mempoolSize: `${((data.mempool_size || 0) / 1024 / 1024).toFixed(2)} MB`
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching mempool data:', error);
+      }
+    };
+
+    // Initial fetch
+    fetchMempoolData();
+
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchMempoolData, 30000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const totalTx = mempoolData.reduce((sum, item) => sum + item.count, 0);
+  const totalTx = stats.count;
 
   // Format number consistently for server and client
   const formatNumber = (num: number) => {
@@ -93,15 +152,15 @@ export default function MempoolPanel() {
       <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="glassmorphism rounded-lg p-4">
           <p className="text-sm text-foreground/70 mb-1">Next Block</p>
-          <p className="text-2xl font-bold text-neon-blue">~10 min</p>
+          <p className="text-2xl font-bold text-[#FFD700]">{stats.nextBlock}</p>
         </div>
         <div className="glassmorphism rounded-lg p-4">
           <p className="text-sm text-foreground/70 mb-1">Avg Fee</p>
-          <p className="text-2xl font-bold text-neon-orange">24 sat/vB</p>
+          <p className="text-2xl font-bold text-[#FF6B35]">{stats.avgFee} sat/vB</p>
         </div>
         <div className="glassmorphism rounded-lg p-4 col-span-2 md:col-span-1">
           <p className="text-sm text-foreground/70 mb-1">Mempool Size</p>
-          <p className="text-2xl font-bold text-neon-green">142 MB</p>
+          <p className="text-2xl font-bold text-[#4CAF50]">{stats.mempoolSize}</p>
         </div>
       </div>
     </motion.div>
