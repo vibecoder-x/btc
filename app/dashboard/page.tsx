@@ -15,7 +15,9 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { WalletService } from '@/lib/wallet/wallet-service';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useAccount, useDisconnect } from 'wagmi';
+import { formatAddress, getChainIcon } from '@/hooks/useMultiChainPayment';
 
 interface UnlimitedStatus {
   hasUnlimited: boolean;
@@ -32,7 +34,10 @@ interface UsageStats {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [walletAccount, setWalletAccount] = useState<any>(null);
+  const { open } = useWeb3Modal();
+  const { address, isConnected, chain } = useAccount();
+  const { disconnect } = useDisconnect();
+
   const [unlimitedStatus, setUnlimitedStatus] = useState<UnlimitedStatus>({ hasUnlimited: false });
   const [usageStats, setUsageStats] = useState<UsageStats>({ today: 0, thisMonth: 0, limit: 100 });
   const [loading, setLoading] = useState(true);
@@ -41,42 +46,39 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [address, isConnected]);
 
   const loadDashboardData = async () => {
     try {
       // Check for connected wallet
-      const savedAccount = WalletService.getSavedAccount();
-
-      if (!savedAccount) {
+      if (!isConnected || !address) {
         router.push('/login');
         return;
       }
 
-      setWalletAccount(savedAccount);
-
       // Check if wallet has unlimited access
-      const response = await fetch('/api/payment/check-unlimited', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: savedAccount.address }),
-      });
+      const response = await fetch(`/api/payment/check-unlimited?address=${address}`);
+
+      if (!response.ok) {
+        console.error('API error:', response.status);
+        setLoading(false);
+        return;
+      }
 
       const data = await response.json();
 
-      if (data.hasUnlimited) {
+      if (data.hasUnlimitedAccess) {
         setUnlimitedStatus({
           hasUnlimited: true,
           activatedAt: data.activatedAt,
-          txHash: data.txHash,
-          chain: data.chain,
+          chain: data.chainName,
         });
-        setUsageStats({ today: data.usage.today, thisMonth: data.usage.thisMonth, limit: Infinity });
+        setUsageStats({ today: 0, thisMonth: 0, limit: Infinity });
       } else {
-        // Free tier
+        // Free tier - would need to fetch usage data from another endpoint
         setUsageStats({
-          today: data.usage?.today || 0,
-          thisMonth: data.usage?.thisMonth || 0,
+          today: 0,
+          thisMonth: 0,
           limit: 100,
         });
       }
@@ -88,13 +90,13 @@ export default function DashboardPage() {
   };
 
   const handleDisconnect = () => {
-    WalletService.disconnect();
+    disconnect();
     router.push('/');
   };
 
   const copyWalletAddress = () => {
-    if (!walletAccount) return;
-    navigator.clipboard.writeText(walletAccount.address);
+    if (!address) return;
+    navigator.clipboard.writeText(address);
     setCopiedWallet(true);
     setTimeout(() => setCopiedWallet(false), 2000);
   };
@@ -157,7 +159,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-sm text-foreground/70">Connected Wallet</p>
-              <p className="font-mono text-foreground">{WalletService.formatAddress(walletAccount?.address || '')}</p>
+              <p className="font-mono text-foreground">{formatAddress(address || '')}</p>
             </div>
           </div>
           <button
@@ -346,7 +348,7 @@ export default function DashboardPage() {
           <span className="text-[#888]">// Include your wallet address in the header</span><br />
           <span className="text-[#FF6B35]">fetch</span>(<span className="text-[#4CAF50]">'https://btcindexer.com/api/block/latest'</span>, {'{'}<br />
           {'  '}<span className="text-[#FFD700]">headers</span>: {'{'}<br />
-          {'    '}<span className="text-[#4CAF50]">'X-Wallet-Address'</span>: <span className="text-[#4CAF50]">'{walletAccount?.address || 'your-wallet-address'}'</span><br />
+          {'    '}<span className="text-[#4CAF50]">'X-Wallet-Address'</span>: <span className="text-[#4CAF50]">'{address || 'your-wallet-address'}'</span><br />
           {'  }'}
           {'}'})<br />
         </div>

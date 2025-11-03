@@ -35,7 +35,14 @@ export default function HalvingPage() {
 
   const HALVING_INTERVAL = 210000;
   const BLOCK_TIME = 600; // 10 minutes in seconds
-  const NEXT_HALVING_BLOCK = 1050000; // 5th halving
+
+  // Calculate next halving block dynamically
+  const getNextHalvingBlock = (currentHeight: number) => {
+    const currentHalvingNumber = Math.floor(currentHeight / HALVING_INTERVAL);
+    return (currentHalvingNumber + 1) * HALVING_INTERVAL;
+  };
+
+  const NEXT_HALVING_BLOCK = currentBlock > 0 ? getNextHalvingBlock(currentBlock) : 1050000;
 
   // Historical halving data
   const halvingHistory: HalvingEvent[] = [
@@ -103,13 +110,13 @@ export default function HalvingPage() {
     if (currentBlock === 0) return;
 
     const calculateTimeRemaining = () => {
-      const blocksRemaining = NEXT_HALVING_BLOCK - currentBlock;
-      const secondsRemaining = blocksRemaining * BLOCK_TIME;
+      const blocksRemaining = Math.max(0, NEXT_HALVING_BLOCK - currentBlock);
+      const secondsRemaining = Math.max(0, blocksRemaining * BLOCK_TIME);
 
-      const days = Math.floor(secondsRemaining / 86400);
-      const hours = Math.floor((secondsRemaining % 86400) / 3600);
-      const minutes = Math.floor((secondsRemaining % 3600) / 60);
-      const seconds = Math.floor(secondsRemaining % 60);
+      const days = Math.max(0, Math.floor(secondsRemaining / 86400));
+      const hours = Math.max(0, Math.floor((secondsRemaining % 86400) / 3600));
+      const minutes = Math.max(0, Math.floor((secondsRemaining % 3600) / 60));
+      const seconds = Math.max(0, Math.floor(secondsRemaining % 60));
 
       setTimeRemaining({ days, hours, minutes, seconds });
     };
@@ -118,10 +125,13 @@ export default function HalvingPage() {
     const interval = setInterval(calculateTimeRemaining, 1000);
 
     return () => clearInterval(interval);
-  }, [currentBlock]);
+  }, [currentBlock, NEXT_HALVING_BLOCK]);
 
-  const blocksRemaining = NEXT_HALVING_BLOCK - currentBlock;
-  const progressPercentage = ((currentBlock - 840000) / HALVING_INTERVAL) * 100;
+  const blocksRemaining = Math.max(0, NEXT_HALVING_BLOCK - currentBlock);
+  const previousHalvingBlock = NEXT_HALVING_BLOCK - HALVING_INTERVAL;
+  const progressPercentage = currentBlock > 0
+    ? Math.min(100, Math.max(0, ((currentBlock - previousHalvingBlock) / HALVING_INTERVAL) * 100))
+    : 0;
   const estimatedDate = new Date(Date.now() + blocksRemaining * BLOCK_TIME * 1000);
 
   // Supply data for chart
