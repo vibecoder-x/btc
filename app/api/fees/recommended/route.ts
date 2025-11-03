@@ -8,43 +8,53 @@ import { createProtectedRoute } from '@/lib/x402/middleware';
 
 async function handler(request: NextRequest) {
   try {
-    // TODO: Implement actual fee estimation from Bitcoin node
+    // Fetch recommended fees from Mempool.space
+    const feesResponse = await fetch('https://mempool.space/api/v1/fees/recommended', {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 30 }, // Cache for 30 seconds
+    });
 
-    // Mock response
+    if (!feesResponse.ok) {
+      throw new Error(`Mempool.space fees API error: ${feesResponse.status}`);
+    }
+
+    const feesData = await feesResponse.json();
+
+    // Format response to match expected structure
     const feeData = {
       timestamp: Date.now(),
       fees: {
         fastest: {
-          sat_per_vbyte: 45,
+          sat_per_vbyte: feesData.fastestFee || 0,
           expected_blocks: 1,
           expected_time_minutes: 10,
         },
         halfHour: {
-          sat_per_vbyte: 30,
+          sat_per_vbyte: feesData.halfHourFee || 0,
           expected_blocks: 3,
           expected_time_minutes: 30,
         },
         hour: {
-          sat_per_vbyte: 20,
+          sat_per_vbyte: feesData.hourFee || 0,
           expected_blocks: 6,
           expected_time_minutes: 60,
         },
         economy: {
-          sat_per_vbyte: 12,
+          sat_per_vbyte: feesData.economyFee || 0,
           expected_blocks: 24,
           expected_time_minutes: 240,
         },
         minimum: {
-          sat_per_vbyte: 1,
+          sat_per_vbyte: feesData.minimumFee || 0,
           expected_blocks: 144,
           expected_time_minutes: 1440,
         },
       },
       mempool_info: {
         loaded: true,
-        size: 10523,
-        bytes: 142000000,
-        usage: 0.35,
+        size: 0, // Not available from this endpoint
+        bytes: 0, // Not available from this endpoint
+        usage: 0, // Not available from this endpoint
       },
     };
 

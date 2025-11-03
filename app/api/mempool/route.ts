@@ -8,38 +8,51 @@ import { createProtectedRoute } from '@/lib/x402/middleware';
 
 async function handler(request: NextRequest) {
   try {
-    // TODO: Implement actual mempool data from Bitcoin node
+    // Fetch mempool data from Mempool.space
+    const mempoolResponse = await fetch('https://mempool.space/api/mempool', {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 30 }, // Cache for 30 seconds
+    });
 
-    // Mock response
-    const mempoolData = {
-      count: 10523,
-      vsize: 142000000,
-      total_fee: 0.45678,
-      fee_histogram: [
-        [1, 5000000],
-        [2, 10000000],
-        [3, 15000000],
-        [4, 20000000],
-        [5, 25000000],
-        [10, 30000000],
-        [20, 25000000],
-        [30, 12000000],
-      ],
+    if (!mempoolResponse.ok) {
+      throw new Error(`Mempool API error: ${mempoolResponse.status}`);
+    }
+
+    const mempoolData = await mempoolResponse.json();
+
+    // Fetch recommended fees from Mempool.space
+    const feesResponse = await fetch('https://mempool.space/api/v1/fees/recommended', {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 30 }, // Cache for 30 seconds
+    });
+
+    if (!feesResponse.ok) {
+      throw new Error(`Fees API error: ${feesResponse.status}`);
+    }
+
+    const feesData = await feesResponse.json();
+
+    // Combine the data into expected format
+    const response = {
+      count: mempoolData.count || 0,
+      vsize: mempoolData.vsize || 0,
+      total_fee: (mempoolData.total_fee || 0) / 100000000, // Convert satoshis to BTC
+      fee_histogram: mempoolData.fee_histogram || [],
       recommended_fees: {
-        fastest: 45,
-        halfHour: 30,
-        hour: 20,
-        economy: 12,
-        minimum: 1,
+        fastest: feesData.fastestFee || 0,
+        halfHour: feesData.halfHourFee || 0,
+        hour: feesData.hourFee || 0,
+        economy: feesData.economyFee || 0,
+        minimum: feesData.minimumFee || 0,
       },
-      mempool_size: 142000000,
-      usage: 0.35, // 35% of max mempool
+      mempool_size: mempoolData.vsize || 0, // Use vsize as mempool size
+      usage: mempoolData.vsize ? (mempoolData.vsize / 300000000) : 0, // Calculate usage percentage
       max_mempool: 300000000,
-      transactions_per_second: 4.2,
-      bytes_per_second: 1234,
+      transactions_per_second: 0, // Not available from API
+      bytes_per_second: 0, // Not available from API
     };
 
-    return NextResponse.json(mempoolData, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
 
   } catch (error) {
     console.error('Error fetching mempool data:', error);
