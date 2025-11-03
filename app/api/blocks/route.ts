@@ -6,50 +6,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Function to extract miner from coinbase transaction
-function extractMiner(coinbaseHex: string): string {
-  if (!coinbaseHex) return 'Unknown';
+function extractMiner(coinbaseData: string): string {
+  if (!coinbaseData) return 'Unknown';
 
   try {
-    // Convert hex to ASCII and look for common miner signatures
-    const ascii = Buffer.from(coinbaseHex, 'hex').toString('ascii');
+    let textToSearch = coinbaseData;
 
-    // Common mining pool signatures
-    const miners: { [key: string]: string } = {
-      'Foundry USA': 'Foundry USA',
-      'FoundryUSA': 'Foundry USA',
-      'AntPool': 'AntPool',
-      'Antpool': 'AntPool',
-      'F2Pool': 'F2Pool',
-      'f2pool': 'F2Pool',
-      'ViaBTC': 'ViaBTC',
-      'viabtc': 'ViaBTC',
-      'Binance': 'Binance Pool',
-      'BinancePool': 'Binance Pool',
-      'Poolin': 'Poolin',
-      'poolin': 'Poolin',
-      'MARA': 'MARA Pool',
-      'MaraPool': 'MARA Pool',
-      'Luxor': 'Luxor',
-      'SlushPool': 'Slush Pool',
-      'slush': 'Slush Pool',
-      'BTC.com': 'BTC.com',
-      'btccom': 'BTC.com',
-      'SpiderPool': 'Spider Pool',
-      'Huobi': 'Huobi Pool',
-      'EMCD': 'EMCD',
-      'SBI Crypto': 'SBI Crypto',
-      'Ultimus': 'Ultimus Pool',
-    };
+    // If it looks like hex, convert to ASCII
+    if (/^[0-9a-fA-F]+$/.test(coinbaseData) && coinbaseData.length > 10) {
+      try {
+        textToSearch = Buffer.from(coinbaseData, 'hex').toString('ascii');
+      } catch {
+        // If hex conversion fails, search the original string
+        textToSearch = coinbaseData;
+      }
+    }
 
-    // Search for miner signatures in the ASCII string
-    for (const [signature, minerName] of Object.entries(miners)) {
-      if (ascii.includes(signature)) {
-        return minerName;
+    // Make search case-insensitive
+    const searchText = textToSearch.toLowerCase();
+
+    // Common mining pool signatures (most common first for faster matching)
+    const miners = [
+      { patterns: ['foundry usa', 'foundryusa'], name: 'Foundry USA' },
+      { patterns: ['antpool'], name: 'AntPool' },
+      { patterns: ['f2pool'], name: 'F2Pool' },
+      { patterns: ['viabtc'], name: 'ViaBTC' },
+      { patterns: ['binance', 'binancepool'], name: 'Binance Pool' },
+      { patterns: ['poolin'], name: 'Poolin' },
+      { patterns: ['mara pool', 'mara', 'marapool'], name: 'MARA Pool' },
+      { patterns: ['luxor'], name: 'Luxor' },
+      { patterns: ['slushpool', 'slush pool', 'braiins'], name: 'Slush Pool' },
+      { patterns: ['btc.com', 'btccom'], name: 'BTC.com' },
+      { patterns: ['spiderpool', 'spider pool'], name: 'Spider Pool' },
+      { patterns: ['huobi'], name: 'Huobi Pool' },
+      { patterns: ['emcd'], name: 'EMCD' },
+      { patterns: ['sbi crypto'], name: 'SBI Crypto' },
+      { patterns: ['ultimus'], name: 'Ultimus Pool' },
+      { patterns: ['btc guild', 'btcguild'], name: 'BTC Guild' },
+      { patterns: ['kano'], name: 'Kano CKPool' },
+      { patterns: ['btc top', 'btctop'], name: 'BTC.TOP' },
+      { patterns: ['58coin', '58 coin'], name: '58COIN' },
+      { patterns: ['sigmapool', 'sigma pool'], name: 'SigmaPool' },
+      { patterns: ['titan'], name: 'Titan' },
+    ];
+
+    // Search for miner signatures
+    for (const miner of miners) {
+      for (const pattern of miner.patterns) {
+        if (searchText.includes(pattern)) {
+          return miner.name;
+        }
       }
     }
 
     return 'Unknown';
   } catch (error) {
+    console.error('Error extracting miner:', error);
     return 'Unknown';
   }
 }
@@ -112,14 +124,26 @@ export async function GET(request: NextRequest) {
             if (coinbaseTx.vin && coinbaseTx.vin[0]) {
               const input = coinbaseTx.vin[0];
 
-              // Try scriptsig first
+              // Try scriptsig first (check both possible field names)
               if (input.scriptsig) {
                 miner = extractMiner(input.scriptsig);
+              } else if (input.scriptSig && input.scriptSig.hex) {
+                miner = extractMiner(input.scriptSig.hex);
+              }
+
+              // Try scriptsig_asm (human-readable format)
+              if (miner === 'Unknown' && input.scriptsig_asm) {
+                miner = extractMiner(input.scriptsig_asm);
               }
 
               // If not found and has witness data, try that
               if (miner === 'Unknown' && input.witness && input.witness.length > 0) {
                 miner = extractMiner(input.witness.join(''));
+              }
+
+              // Try inner_witnessscript_asm
+              if (miner === 'Unknown' && input.inner_witnessscript_asm) {
+                miner = extractMiner(input.inner_witnessscript_asm);
               }
             }
 
