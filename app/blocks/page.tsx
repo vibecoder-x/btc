@@ -58,7 +58,7 @@ export default function BlocksPage() {
           height: block.height,
           size: `${(block.size / 1024 / 1024).toFixed(2)} MB`,
           txCount: block.tx_count,
-          miner: 'Unknown', // Blockstream API doesn't provide miner info
+          miner: block.miner || 'Unknown',
           time: timeStr,
         };
       });

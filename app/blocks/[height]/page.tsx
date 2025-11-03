@@ -50,6 +50,7 @@ export default function BlockDetailPage() {
           txCount: data.tx_count,
           totalFees,
           reward: 6.25, // Current Bitcoin block reward
+          miner: data.miner || 'Unknown',
           previousHash: data.previousblockhash,
           nextHash: data.nextblockhash,
         };

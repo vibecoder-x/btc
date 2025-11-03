@@ -6,6 +6,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createProtectedRoute } from '@/lib/x402/middleware';
 
+// Function to extract miner from coinbase transaction
+function extractMiner(coinbaseHex: string): string {
+  if (!coinbaseHex) return 'Unknown';
+
+  try {
+    // Convert hex to ASCII and look for common miner signatures
+    const ascii = Buffer.from(coinbaseHex, 'hex').toString('ascii');
+
+    // Common mining pool signatures
+    const miners: { [key: string]: string } = {
+      'Foundry USA': 'Foundry USA',
+      'FoundryUSA': 'Foundry USA',
+      'AntPool': 'AntPool',
+      'Antpool': 'AntPool',
+      'F2Pool': 'F2Pool',
+      'f2pool': 'F2Pool',
+      'ViaBTC': 'ViaBTC',
+      'viabtc': 'ViaBTC',
+      'Binance': 'Binance Pool',
+      'BinancePool': 'Binance Pool',
+      'Poolin': 'Poolin',
+      'poolin': 'Poolin',
+      'MARA': 'MARA Pool',
+      'MaraPool': 'MARA Pool',
+      'Luxor': 'Luxor',
+      'SlushPool': 'Slush Pool',
+      'slush': 'Slush Pool',
+      'BTC.com': 'BTC.com',
+      'btccom': 'BTC.com',
+      'SpiderPool': 'Spider Pool',
+      'Huobi': 'Huobi Pool',
+      'EMCD': 'EMCD',
+      'SBI Crypto': 'SBI Crypto',
+      'Ultimus': 'Ultimus Pool',
+    };
+
+    // Search for miner signatures in the ASCII string
+    for (const [signature, minerName] of Object.entries(miners)) {
+      if (ascii.includes(signature)) {
+        return minerName;
+      }
+    }
+
+    return 'Unknown';
+  } catch (error) {
+    return 'Unknown';
+  }
+}
+
 async function handler(
   request: NextRequest,
   { params }: { params: Promise<{ height: string }> }
@@ -83,9 +132,29 @@ async function handler(
       transactions = await txsResponse.json();
     }
 
-    // Return block data with transactions
+    // Extract miner from coinbase transaction (first transaction)
+    let miner = 'Unknown';
+    if (transactions.length > 0) {
+      const coinbaseTx = transactions[0];
+      if (coinbaseTx.vin && coinbaseTx.vin[0]) {
+        const input = coinbaseTx.vin[0];
+
+        // Try scriptsig first
+        if (input.scriptsig) {
+          miner = extractMiner(input.scriptsig);
+        }
+
+        // If not found and has witness data, try that
+        if (miner === 'Unknown' && input.witness && input.witness.length > 0) {
+          miner = extractMiner(input.witness.join(''));
+        }
+      }
+    }
+
+    // Return block data with transactions and miner
     return NextResponse.json({
       ...blockData,
+      miner,
       transactions: transactions.slice(0, 25), // Return first 25 transactions
     }, { status: 200 });
 
