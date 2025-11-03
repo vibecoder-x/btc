@@ -1,0 +1,2870 @@
+Below is a reference for the Bitcoin REST API service.
+
+Note that we enforce rate limits. If you exceed these limits, you will get an HTTP 429 error. If you repeatedly exceed the limits, you may be banned from accessing the service altogether. Consider an enterprise sponsorship if you need higher API limits.
+
+GET Difficulty Adjustmentgeneral
+Endpoint
+GET /api/v1/difficulty-adjustment
+Description
+Returns details about difficulty adjustment.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/v1/difficulty-adjustment"
+Response
+{
+  progressPercent: 44.397234501112074,
+  difficultyChange: 98.45932018381687,
+  estimatedRetargetDate: 1627762478,
+  remainingBlocks: 1121,
+  remainingTime: 665977,
+  previousRetarget: -4.807005268478962,
+  nextRetargetHeight: 741888,
+  timeAvg: 302328,
+  adjustedTimeAvg: 302328,
+  timeOffset: 0
+}
+GET Pricegeneral
+Endpoint
+GET /api/v1/prices
+Description
+Returns bitcoin latest price denominated in main currencies.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/prices"
+Response
+{
+  time: 1703252411,
+  USD: 43753,
+  EUR: 40545,
+  GBP: 37528,
+  CAD: 58123,
+  CHF: 37438,
+  AUD: 64499,
+  JPY: 6218915
+}
+GET Historical Pricegeneral
+Endpoint
+GET /api/v1/historical-price?currency=EUR&timestamp=1500000000
+Description
+Returns bitcoin historical price denominated in main currencies. Available query parameters: currency, timestamp. If no parameter is provided, the full price history for all currencies is returned.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/historical-price?currency=EUR&timestamp=1500000000"
+Response
+{
+  prices: [
+    {
+      "time": 1499904000,
+      "EUR": 1964,
+      "USD": 2254.9
+    }
+  ],
+  exchangeRates: {
+    "USDEUR": 0.92,
+    "USDGBP": 0.78,
+    "USDCAD": 1.36,
+    "USDCHF": 0.89,
+    "USDAUD": 1.53,
+    "USDJPY": 149.48
+  }
+}
+GET Addressaddresses
+Endpoint
+GET /api/address/:address
+Description
+Returns details about an address. Available fields: address, chain_stats, and mempool_stats. chain_stats and mempool_stats each contain an object with tx_count, funded_txo_count, funded_txo_sum, spent_txo_count, and spent_txo_sum.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/address/1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv"
+Response
+{
+  address: "1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv",
+  chain_stats: {
+    funded_txo_count: 5,
+    funded_txo_sum: 15007599040,
+    spent_txo_count: 5,
+    spent_txo_sum: 15007599040,
+    tx_count: 7
+  },
+  mempool_stats: {
+    funded_txo_count: 0,
+    funded_txo_sum: 0,
+    spent_txo_count: 0,
+    spent_txo_sum: 0,
+    tx_count: 0
+  }
+}
+GET Address Transactionsaddresses
+Endpoint
+GET /api/address/:address/txs
+Description
+Get transaction history for the specified address/scripthash, sorted with newest first. Returns up to 50 mempool transactions plus the first 25 confirmed transactions. You can request more confirmed transactions using an after_txid query parameter.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/address/1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv/txs"
+Response
+[
+  {
+    txid: "dba43fd04b7ae3df8e5b596f2e7fab247c58629d622e3a5213f03a5a09684430",
+    version: 1,
+    locktime: 0,
+    vin: [ [Object] ],
+    vout: [ [Object], [Object] ],
+    size: 255,
+    weight: 1020,
+    fee: 10000,
+    status: {
+      confirmed: true,
+      block_height: 326148,
+      block_hash: "00000000000000001e4118adcfbb02364bc13c41c210d8811e4f39aeb3687e36",
+      block_time: 1413798020
+    }
+  },
+  ...
+]
+GET Address Transactions Chainaddresses
+Endpoint
+GET /api/address/:address/txs/chain
+Description
+Get confirmed transaction history for the specified address/scripthash, sorted with newest first. Returns 25 transactions per page. More can be requested by specifying the last txid seen by the previous query.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/address/1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv/txs/chain"
+Response
+[
+  {
+    txid: "c4e53c2e37f4fac759fdb0d8380e4d49e6c7211233ae276a44ce7074a1d6d168",
+    version: 2,
+    locktime: 697761,
+    vin: [],
+    vout: [],
+    size: 221,
+    weight: 884,
+    fee: 331,
+    status: {
+      confirmed: true,
+      block_height: 697782,
+      block_hash: "000000000000000000011397e53a5b1442b3dbc5df046c959c11dfe0275a4579",
+      block_time: 1630040570
+    }
+  },
+  ...
+],
+GET Address Transactions Mempooladdresses
+Endpoint
+GET /api/address/:address/txs/mempool
+Description
+Get unconfirmed transaction history for the specified address/scripthash. Returns up to 50 transactions (no paging).
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/address/1wiz18xYmhRX6xStj2b9t1rwWX4GKUgpv/txs/mempool"
+Response
+[
+  {
+    txid: "16cd9bbc6b62313a22d16671fa559aec6bf581df8b5853d37775c84b0fddfa90",
+    version: 2,
+    locktime: 0,
+    vin: [ [Object] ],
+    vout: [ [Object], [Object] ],
+    size: 226,
+    weight: 904,
+    fee: 6720,
+    status: { confirmed: false }
+  }
+]
+GET Address UTXOaddresses
+Endpoint
+GET /api/address/:address/utxo
+Description
+Get the list of unspent transaction outputs associated with the address/scripthash. Available fields: txid, vout, value, and status (with the status of the funding tx).
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/address/1KFHE7w8BhaENAswwryaoccDb6qcT6DbYY/utxo"
+Response
+[
+  {
+    txid: "12f96289f8f9cd51ccfe390879a46d7eeb0435d9e0af9297776e6bdf249414ff",
+    vout: 0,
+    status: {
+      confirmed: true,
+      block_height: 698642,
+      block_hash: "00000000000000000007839f42e0e86fd53c797b64b7135fcad385158c9cafb8",
+      block_time: 1630561459
+    },
+    value: 644951084
+  },
+  ...
+]
+GET Address Validationaddresses
+Endpoint
+GET /api/v1/validate-address/:address
+Description
+Returns whether an address is valid or not. Available fields: isvalid (boolean), address (string), scriptPubKey (string), isscript (boolean), iswitness (boolean), witness_version (numeric, optional), and witness_program (string, optional).
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/validate-address/1KFHE7w8BhaENAswwryaoccDb6qcT6DbYY"
+Response
+{
+  isvalid: true,
+  address: "1KFHE7w8BhaENAswwryaoccDb6qcT6DbYY",
+  scriptPubKey: "76a914c825a1ecf2a6830c4401620c3a16f1995057c2ab88ac",
+  isscript: false,
+  iswitness: false
+}
+GET Blockblocks
+Endpoint
+GET /api/block/:hash
+Description
+Returns details about a block.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block/000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce"
+Response
+{
+  "id": "000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce",
+  "height": 363366,
+  "version": 2,
+  "timestamp": 1435766771,
+  "tx_count": 494,
+  "size": 286494,
+  "weight": 1145976,
+  "merkle_root": "9d3cb87bf05ebae366b4262ed5f768ce8c62fc385c3886c9cb097647b04b686c",
+  "previousblockhash": "000000000000000010c545b6fa3ef1f7cf45a2a8760b1ee9f2e89673218207ce",
+  "mediantime": 1435763435,
+  "nonce": 2892644888,
+  "bits": 404111758,
+  "difficulty": 49402014931.2275
+}
+GET Block (v1)blocks
+Endpoint
+GET /api/v1/block/:hash
+Description
+Returns details about a block using Mempool's Node.js backend.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/v1/block/000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce"
+Response
+{
+  "id": "000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce",
+  "height": 363366,
+  "version": 2,
+  "timestamp": 1435766771,
+  "bits": 404111758,
+  "nonce": 2892644888,
+  "difficulty": 49402014931.22746,
+  "merkle_root": "9d3cb87bf05ebae366b4262ed5f768ce8c62fc385c3886c9cb097647b04b686c",
+  "tx_count": 494,
+  "size": 286494,
+  "weight": 1145976,
+  "previousblockhash": "000000000000000010c545b6fa3ef1f7cf45a2a8760b1ee9f2e89673218207ce",
+  "mediantime": 1435763435,
+  "extras": {
+    "totalFees": 5949764,
+    "medianFee": 14,
+    "feeRange": [
+      0,
+      0,
+      1,
+      14,
+      38,
+      48,
+      261
+    ],
+    "reward": 2505949764,
+    "pool": {
+      "id": 0,
+      "name": "Unknown",
+      "slug": "unknown",
+      "minerNames": null
+    },
+    "avgFee": 12068,
+    "avgFeeRate": 20,
+    "coinbaseRaw": "03668b050455940ee2ebbc03100000046d",
+    "coinbaseAddress": "17JJ3oZyF4ShQMGukDjpMWhmooCjEvoVVB",
+    "coinbaseAddresses": [
+      "17JJ3oZyF4ShQMGukDjpMWhmooCjEvoVVB"
+    ],
+    "coinbaseSignature": "OP_DUP OP_HASH160 OP_PUSHBYTES_20 45160ea9d45f6edefef3977ac0b2cdcc29aa594a OP_EQUALVERIFY OP_CHECKSIG",
+    "coinbaseSignatureAscii": "...",
+    "avgTxSize": 579.57,
+    "totalInputs": 1424,
+    "totalOutputs": 1764,
+    "totalOutputAmt": 531126071491,
+    "medianFeeAmt": 10000,
+    "feePercentiles": [
+      0,
+      735,
+      10000,
+      10000,
+      10000,
+      20000,
+      300000
+    ],
+    "segwitTotalTxs": 0,
+    "segwitTotalSize": 0,
+    "segwitTotalWeight": 0,
+    "header": "02000000ce0782217396e8f2e91e0b76a8a245cff7f13efab645c51000000000000000006c684bb0477609cbc986385c38fc628cce68f7d52e26b466e3ba5ef07bb83c9df30f94558e41161818426aac",
+    "utxoSetChange": 340,
+    "utxoSetSize": 21180314,
+    "totalInputAmt": 531132021255,
+    "virtualSize": 286494,
+    "firstSeen": null,
+    "orphans": [],
+    "matchRate": null,
+    "expectedFees": null,
+    "expectedWeight": null
+  }
+}
+GET Block Headerblocks
+Endpoint
+GET /api/block/:hash/header
+Description
+Returns the hex-encoded block header.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block/0000000000000000000065bda8f8a88f2e1e00d9a6887a43d640e52a4c7660f2/header"
+Response
+040000202c04d4c450187d1da9b1bc23ba47d67fe028d22486fd0c00000000000000000059a3a33d4642c799af9f54a4dd351fff9130e6a89d4e251130c60064878616e906b5ea60ce9813173a25caf3
+GET Block Heightblocks
+Endpoint
+GET /api/block-height/:height
+Description
+Returns the hash of the block currently at :height.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block-height/615615"
+Response
+000000000000000000067bea442af50a91377ac796e63b8d284354feff4042b3
+GET Block Timestampblocks
+Endpoint
+GET /api/v1/mining/blocks/timestamp/:timestamp
+Description
+Returns the height and the hash of the block closest to the given :timestamp.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/timestamp/1672531200"
+Response
+{
+  height: 769786,
+  hash: "000000000000000000017f6405c2382de84944eb21be9cec0379a735813f137b",
+  timestamp: "2022-12-31T23:30:31.000Z"
+}
+GET Block Rawblocks
+Endpoint
+GET /api/block/:hash/raw
+Description
+Returns the raw block representation in binary.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block/0000000000000000000065bda8f8a88f2e1e00d9a6887a43d640e52a4c7660f2/raw"
+GET Block Statusblocks
+Endpoint
+GET /api/block/:hash/status
+Description
+Returns the confirmation status of a block. Available fields: in_best_chain (boolean, false for orphaned blocks), next_best (the hash of the next block, only available for blocks in the best chain).
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block/0000000000000000000065bda8f8a88f2e1e00d9a6887a43d640e52a4c7660f2/status"
+Response
+{
+  in_best_chain: true,
+  height: 690557,
+  next_best: "00000000000000000003a59a34c93e39e636c8cd23ead726fdc467fbed0b7c5a"
+}
+GET Block Tip Heightblocks
+Endpoint
+GET /api/blocks/tip/height
+Description
+Returns the height of the last block.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/blocks/tip/height"
+Response
+698767
+GET Block Tip Hashblocks
+Endpoint
+GET /api/blocks/tip/hash
+Description
+Returns the hash of the last block.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/blocks/tip/hash"
+Response
+0000000000000000000624d76f52661d0f35a0da8b93a87cb93cf08fd9140209
+GET Block Transaction IDblocks
+Endpoint
+GET /api/block/:hash/txid/:index
+Description
+Returns the transaction at index :index within the specified block.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block/000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce/txid/218"
+Response
+0fa6da60e484941f255cbb025c3d6440e5a7e970119e899b4065c7999360e406
+GET Block Transaction IDsblocks
+Endpoint
+GET /api/block/:hash/txids
+Description
+Returns a list of all txids in the block.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block/000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce/txids"
+Response
+[
+  "cfe624ccdd8010cf78dbedd1b25e1ff601b470c4d7d90fa9fc8c1bcc5cdc6e0e",
+  "a5ef89881bd5103f223a0fa285dfc75f4718974cb792cf85e623a7de05801bc9",
+  ...,
+]
+GET Block Transactionsblocks
+Endpoint
+GET /api/block/:hash/txs[/:start_index]
+Description
+Returns a list of transactions in the block (up to 25 transactions beginning at start_index). Transactions returned here do not have the status field, since all the transactions share the same block and confirmation status.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/block/000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce/txs"
+Response
+[
+  {
+    txid: "cfe624ccdd8010cf78dbedd1b25e1ff601b470c4d7d90fa9fc8c1bcc5cdc6e0e",
+    version: 1,
+    locktime: 0,
+    vin: [],
+    vout: [],
+    size: 102,
+    weight: 408,
+    fee: 0,
+    status: {
+      confirmed: true,
+      block_height: 363366,
+      block_hash: "000000000000000015dc777b3ff2611091336355d3f0ee9766a2cf3be8e4b1ce",
+      block_time: 1435766771
+    }
+  },
+  ...
+]
+GET Blocksblocks
+Endpoint
+GET /api/blocks[/:startHeight]
+Description
+Returns details on the past 10 blocks. If :startHeight is specified, the 10 blocks before (and including) :startHeight are returned.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/blocks/730000"
+Response
+[
+  {
+    "id": "0000000000000000000384f28cb3b9cf4377a39cfd6c29ae9466951de38c0529",
+    "height": 730000,
+    "version": 536870912,
+    "timestamp": 1648829449,
+    "tx_count": 1627,
+    "size": 1210916,
+    "weight": 3993515,
+    "merkle_root": "efa344bcd6c0607f93b709515dd6dc5496178112d680338ebea459e3de7b4fbc",
+    "previousblockhash": "00000000000000000008b6f6fb83f8d74512ef1e0af29e642dd20daddd7d318f",
+    "mediantime": 1648827418,
+    "nonce": 3580664066,
+    "bits": 386521239,
+    "difficulty": 28587155782195.1
+  },
+  {
+    "id": "00000000000000000008b6f6fb83f8d74512ef1e0af29e642dd20daddd7d318f",
+    "height": 729999,
+    "version": 793796608,
+    "timestamp": 1648828946,
+    "tx_count": 2574,
+    "size": 1481957,
+    "weight": 3993485,
+    "merkle_root": "d84f9cc1823bd069c505061b1f6faabd809d67ab5354e9f6234312dc4bdb1ecf",
+    "previousblockhash": "000000000000000000071e6c86c2175aa86817cae2a77acd95372b55c1103d89",
+    "mediantime": 1648827210,
+    "nonce": 3477019455,
+    "bits": 386521239,
+    "difficulty": 28587155782195.1
+  },
+  ...
+]
+GET Blocks (v1)blocks
+Endpoint
+GET /api/v1/blocks[/:startHeight]
+Description
+Returns details on the past 15 blocks from Mempool's Node.js backend. Includes fee and mining details in an extras field. If :startHeight is specified, the past 15 blocks before (and including) :startHeight are returned.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/v1/blocks/730000"
+Response
+[
+  {
+    "id": "0000000000000000000384f28cb3b9cf4377a39cfd6c29ae9466951de38c0529",
+    "height": 730000,
+    "version": 536870912,
+    "timestamp": 1648829449,
+    "bits": 386521239,
+    "nonce": 3580664066,
+    "difficulty": 28587155782195.1,
+    "merkle_root": "efa344bcd6c0607f93b709515dd6dc5496178112d680338ebea459e3de7b4fbc",
+    "tx_count": 1627,
+    "size": 1210916,
+    "weight": 3993515,
+    "previousblockhash": "00000000000000000008b6f6fb83f8d74512ef1e0af29e642dd20daddd7d318f",
+    "mediantime": 1648827418,
+    "extras": {
+      "totalFees": 16321983,
+      "medianFee": 11,
+      "feeRange": [1, 11, 11, 11, 18, 21, 660],
+      "reward": 641321983,
+      "pool": {
+        "id": 105,
+        "name": "Binance Pool",
+        "slug": "binancepool",
+        "minerNames": null
+      },
+      "avgFee": 10038,
+      "avgFeeRate": 16,
+      "coinbaseRaw": "0390230b1362696e616e63652f383038e0006f02cd583765fabe6d6d686355577affaad03015e732428a927a5d2d842471b350394139616bcb4401d804000000000000001a750000c9ad0000",
+      "coinbaseAddress": "1JvXhnHCi6XqcanvrZJ5s2Qiv4tsmm2UMy",
+      "coinbaseAddresses": [
+        "1JvXhnHCi6XqcanvrZJ5s2Qiv4tsmm2UMy"
+      ],
+      "coinbaseSignature": "OP_DUP OP_HASH160 OP_PUSHBYTES_20 c499d0604392cc2051d7476056647d1c1bfc3f38 OP_EQUALVERIFY OP_CHECKSIG",
+      "coinbaseSignatureAscii": "...",
+      "avgTxSize": 744,
+      "totalInputs": 6249,
+      "totalOutputs": 6768,
+      "totalOutputAmt": 1314305994870,
+      "medianFeeAmt": 3182,
+      "feePercentiles": [313, 2086, 2538, 3182, 5625, 14136, 990660],
+      "segwitTotalTxs": 1314,
+      "segwitTotalSize": 1031785,
+      "segwitTotalWeight": 3277099,
+      "header": "000000208f317dddad0dd22d649ef20a1eef1245d7f883fbf6b608000000000000000000bc4f7bdee359a4be8e3380d61281179654dcd65d5109b7937f60c0d6bc44a3ef0924476297d8091702996cd5",
+      "utxoSetChange": 519,
+      "utxoSetSize": 80390138,
+      "totalInputAmt": 1314322316853,
+      "virtualSize": 998378.75,
+      "firstSeen": null,
+      "orphans": [],
+      "matchRate": null,
+      "expectedFees": null,
+      "expectedWeight": null
+    }
+  },
+  ...
+]
+GET Blocks (Bulk)blocks
+Endpoint
+GET /api/v1/blocks-bulk/:minHeight[/:maxHeight]
+Description
+Returns details on the range of blocks between :minHeight and :maxHeight, inclusive, up to 10 blocks. If :maxHeight is not specified, it defaults to the current tip.
+
+To return data for more than 10 blocks, consider becoming an enterprise sponsor.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/blocks-bulk/100000/100000"
+Response
+[
+  {
+    "height": 100000,
+    "hash": "000000000003ba27aa200b1cecaad478d2b00432346c3f1f3986da1afd33e506",
+    "timestamp": 1293623863,
+    "median_timestamp": 1293622620,
+    "previous_block_hash": "000000000002d01c1fccc21636b607dfd930d31d01c3a62104612a1719011250",
+    "difficulty": 14484.1623612254,
+    "header": "0100000050120119172a610421a6c3011dd330d9df07b63616c2cc1f1cd00200000000006657a9252aacd5c0b2940996ecff952228c3067cc38d4885efb5a4ac4247e9f337221b4d4c86041b0f2b5710",
+    "version": 1,
+    "bits": 453281356,
+    "nonce": 274148111,
+    "size": 957,
+    "weight": 3828,
+    "tx_count": 4,
+    "merkle_root": "f3e94742aca4b5ef85488dc37c06c3282295ffec960994b2c0d5ac2a25a95766",
+    "reward": 5000000000,
+    "total_fee_amt": 0,
+    "avg_fee_amt": 0,
+    "median_fee_amt": 0,
+    "fee_amt_percentiles": {
+      "min": 0,
+      "perc_10": 0,
+      "perc_25": 0,
+      "perc_50": 0,
+      "perc_75": 0,
+      "perc_90": 0,
+      "max": 0
+    },
+    "avg_fee_rate": 0,
+    "median_fee_rate": 0,
+    "fee_rate_percentiles": {
+      "min": 0,
+      "perc_10": 0,
+      "perc_25": 0,
+      "perc_50": 0,
+      "perc_75": 0,
+      "perc_90": 0,
+      "max": 0
+    },
+    "total_inputs": 3,
+    "total_input_amt": 5301000000,
+    "total_outputs": 6,
+    "total_output_amt": 5301000000,
+    "segwit_total_txs": 0,
+    "segwit_total_size": 0,
+    "segwit_total_weight": 0,
+    "avg_tx_size": 185.25,
+    "utxoset_change": 3,
+    "utxoset_size": 71888,
+    "coinbase_raw": "044c86041b020602",
+    "coinbase_address": null,
+    "coinbase_signature": "OP_PUSHBYTES_65 041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84 OP_CHECKSIG",
+    "coinbase_signature_ascii": "L�",
+    "pool_slug": "unknown",
+    "orphans": []
+  }
+]
+GET Mining Poolsmining
+Endpoint
+GET /api/v1/mining/pools[/:timePeriod]
+Description
+Returns a list of all known mining pools ordered by blocks found over the specified trailing :timePeriod.
+Leave :timePeriod unspecified to get all available data, or specify one of the following values: 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/pools/1w"
+Response
+{
+  "pools": [
+  {
+    "poolId": 111,
+    "name": "Foundry USA",
+    "link": "https://foundrydigital.com/",
+    "blockCount": 194,
+    "rank": 1,
+    "emptyBlocks": 0,
+    "slug": "foundryusa"
+  },
+  {
+    "poolId": 36,
+    "name": "F2Pool",
+    "link": "https://www.f2pool.com/",
+    "blockCount": 154,
+    "rank": 2,
+    "emptyBlocks": 0,
+    "slug": "f2pool"
+  },
+  {
+    "poolId": 44,
+    "name": "AntPool",
+    "link": "https://www.antpool.com/",
+    "blockCount": 138,
+    "rank": 3,
+    "emptyBlocks": 0,
+    "slug": "antpool"
+  },
+  ...
+  "blockCount": 1005,
+  "lastEstimatedHashrate": 230086716765559200000
+}
+GET Mining Poolmining
+Endpoint
+GET /api/v1/mining/pool/:slug
+Description
+Returns details about the mining pool specified by :slug.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/pool/slushpool"
+Response
+{
+  "pool": {
+    "id": 43,
+    "name": "SlushPool",
+    "link": "https://slushpool.com/",
+    "addresses": [
+      "1CK6KHY6MHgYvmRQ4PAafKYDrg1ejbH1cE",
+      "1AqTMY7kmHZxBuLUR5wJjPFUvqGs23sesr"
+    ],
+    "regexes": [
+      "/slush/"
+    ],
+    "slug": "slushpool"
+  },
+  "blockCount": {
+    "all": 679,
+    "24h": 8,
+    "1w": 56
+  },
+  "blockShare": {
+    "all": 0.06015770355275981,
+    "24h": 0.05333333333333334,
+    "1w": 0.055666003976143144
+  },
+  "estimatedHashrate": 12448077385930390000,
+  "reportedHashrate": null
+}
+GET Mining Pool Hashratesmining
+Endpoint
+GET /api/v1/mining/hashrate/pools/[:timePeriod]
+Description
+Returns average hashrates (and share of total hashrate) of mining pools active in the specified trailing :timePeriod, in descending order of hashrate.
+
+Leave :timePeriod unspecified to get all available data, or specify any of the following time periods: 1m, 3m, 6m, 1y, 2y, 3y.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/hashrate/pools/1m"
+Response
+[
+  {
+    "timestamp": 1650240000,
+    "avgHashrate": 38258816322322470000,
+    "share": 0.185366,
+    "poolName": "Foundry USA"
+  },
+  {
+    "timestamp": 1650240000,
+    "avgHashrate": 28996155528497033000,
+    "share": 0.140488,
+    "poolName": "F2Pool"
+  },
+  {
+    "timestamp": 1650240000,
+    "avgHashrate": 29801604293177496000,
+    "share": 0.14439,
+    "poolName": "AntPool"
+  },
+  {
+    "timestamp": 1650240000,
+    "avgHashrate": 21747116646372770000,
+    "share": 0.105366,
+    "poolName": "Poolin"
+  },
+  {
+    "timestamp": 1650240000,
+    "avgHashrate": 26579809234455600000,
+    "share": 0.12878,
+    "poolName": "Binance Pool"
+  },
+  {
+    "timestamp": 1650240000,
+    "avgHashrate": 19934856925841707000,
+    "share": 0.0965854,
+    "poolName": "ViaBTC"
+  },
+  {
+    "timestamp": 1650240000,
+    "avgHashrate": 11679007087866855000,
+    "share": 0.0565854,
+    "poolName": "SlushPool"
+  },
+  ...
+]
+GET Mining Pool Hashratemining
+Endpoint
+GET /api/v1/mining/pool/:slug/hashrate
+Description
+Returns all known hashrate data for the mining pool specified by :slug. Hashrate values are weekly averages.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/pool/foundryusa/hashrate"
+Response
+[
+  {
+    "timestamp": 1647216000,
+    "avgHashrate": 39126788325841880000,
+    "share": 0.195312,
+    "poolName": "Foundry USA"
+  },
+  {
+    "timestamp": 1647302400,
+    "avgHashrate": 42038778612166990000,
+    "share": 0.208941,
+    "poolName": "Foundry USA"
+  },
+  {
+    "timestamp": 1647820800,
+    "avgHashrate": 40677922193000910000,
+    "share": 0.196597,
+    "poolName": "Foundry USA"
+  },
+  {
+    "timestamp": 1647907200,
+    "avgHashrate": 40210989932016525000,
+    "share": 0.194707,
+    "poolName": "Foundry USA"
+  },
+  {
+    "timestamp": 1648425600,
+    "avgHashrate": 39336856807414260000,
+    "share": 0.194605,
+    "poolName": "Foundry USA"
+  },
+  {
+    "timestamp": 1648512000,
+    "avgHashrate": 39391244745360090000,
+    "share": 0.193487,
+    "poolName": "Foundry USA"
+  },
+  ...
+]
+GET Mining Pool Blocksmining
+Endpoint
+GET /api/v1/mining/pool/:slug/blocks/[:blockHeight]
+Description
+Returns past 10 blocks mined by the specified mining pool (:slug) before the specified :blockHeight. If no :blockHeight is specified, the mining pool's 10 most recent blocks are returned.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/pool/luxor/blocks/730000"
+Response
+[
+  {
+    "id": "0000000000000000000572c6eb693c51b728593139079c613c8ea0bc6384e362",
+    "timestamp": 1648778242,
+    "height": 729910,
+    "version": 536895488,
+    "bits": 386521239,
+    "nonce": 1708647181,
+    "difficulty": 28587155782195.14,
+    "merkle_root": "729be37fb4b1bff0ca2e4b572e5dc3fb57e5aa57a8a400f8c89d4993d05c204f",
+    "tx_count": 1808,
+    "size": 1595444,
+    "weight": 3992846,
+    "previousblockhash": "00000000000000000000034e117bb9922da36adc6393fabfe9ed97c7bb38998c",
+    "extras": {
+      "coinbaseRaw": "0336230b315c20506f7765726564206279204c75786f722054656368205c000000002103a960b06341e200000e744596150000000000",
+      "medianFee": 1,
+      "reward": 628988802,
+      "totalFees": 3988802,
+      "pool": {
+        "id": 4
+      }
+    }
+  },
+  {
+    "id": "00000000000000000009b6d122d9e2299d2f9cda13274a9f024bebe52ef96a59",
+    "timestamp": 1648717740,
+    "height": 729820,
+    "version": 536870912,
+    "bits": 386521239,
+    "nonce": 1608169168,
+    "difficulty": 28587155782195.14,
+    "merkle_root": "4f67e65e8e5e554cd4a8d0f91aa63b5e8686817984eb8188af5fb39958263f5d",
+    "tx_count": 1425,
+    "size": 729585,
+    "weight": 1954155,
+    "previousblockhash": "000000000000000000006441657fa1eea37d68784ebd86dc1cd7f89251130f56",
+    "extras": {
+      "coinbaseRaw": "03dc220b315c20506f7765726564206279204c75786f722054656368205c00000000e5ae4908ac1f20df00000410c830000000000000",
+      "medianFee": 8,
+      "reward": 630138805,
+      "totalFees": 5138805,
+      "pool": {
+        "id": 4
+      }
+    }
+  },
+  {
+    "id": "0000000000000000000796834c03bd3be474bfa895146a58015f5ff325ef50c0",
+    "timestamp": 1648653948,
+    "height": 729714,
+    "version": 549453824,
+    "bits": 386547904,
+    "nonce": 883606929,
+    "difficulty": 27452707696466.39,
+    "merkle_root": "45593907e5fa0dee743d2f9194b0923a800cb6313e66221a86bf51df388e012c",
+    "tx_count": 1709,
+    "size": 1434271,
+    "weight": 3993013,
+    "previousblockhash": "000000000000000000000fbfac1a91cdeaf64d689f7673d02613da9d10bfb284",
+    "extras": {
+      "coinbaseRaw": "0372220b315c20506f7765726564206279204c75786f722054656368205c0000000063349a9b3d185fed000007e7092a000000000000",
+      "medianFee": 3,
+      "reward": 632350743,
+      "totalFees": 7350743,
+      "pool": {
+        "id": 4
+      }
+    }
+  },
+  ...
+]
+GET Hashratemining
+Endpoint
+GET /api/v1/mining/hashrate/[:timePeriod]
+Description
+Returns network-wide hashrate and difficulty figures over the specified trailing :timePeriod:
+
+Current (real-time) hashrate
+Current (real-time) difficulty
+Historical daily average hashrates
+Historical difficulty
+Valid values for :timePeriod are 1m, 3m, 6m, 1y, 2y, 3y. If no time interval is specified, all available data is returned.
+
+Be sure that INDEXING_BLOCKS_AMOUNT is set properly in your backend config so that enough blocks are indexed to properly serve your request.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/hashrate/3d"
+Response
+{
+  "hashrates": [
+    {
+      "timestamp": 1652486400,
+      "avgHashrate": 236499762108771800000
+    },
+    {
+      "timestamp": 1652572800,
+      "avgHashrate": 217473276787331300000
+    },
+    {
+      "timestamp": 1652659200,
+      "avgHashrate": 189877203506913000000
+    }
+  ],
+  "difficulty": [
+    {
+      "timestamp": 1652468330,
+      "difficulty": 31251101365711.12,
+      "height": 736249
+    }
+  ],
+  "currentHashrate": 252033247355212300000,
+  "currentDifficulty": 31251101365711.12
+}
+GET Difficulty Adjustmentsmining
+Endpoint
+GET /api/v1/mining/difficulty-adjustments/[:interval]
+Description
+Returns the record of difficulty adjustments over the specified trailing :interval:
+
+Block timestamp
+Block height
+Difficulty
+Difficulty change
+If no time interval is specified, all available data is returned.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/difficulty-adjustments/1m"
+Response
+[
+  [
+    1703311464,
+    822528,
+    72006146478567.1,
+    1.06983
+  ],
+  [
+    1702180644,
+    820512,
+    67305906902031.39,
+    0.990408
+  ],
+  [
+    1700957763,
+    818496,
+    67957790298897.88,
+    1.0507
+  ]
+]
+GET Reward Statsmining
+Endpoint
+GET /api/v1/mining/reward-stats/:blockCount
+Description
+Returns block reward and total transactions confirmed for the past :blockCount blocks.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/reward-stats/100"
+Response
+{
+  "startBlock": 736556,
+  "endBlock": 736655,
+  "totalReward": "63811748254",
+  "totalFee": "1311748254",
+  "totalTx": "164216"
+}
+GET Block Feesmining
+Endpoint
+GET /api/v1/mining/blocks/fees/:timePeriod
+Description
+Returns average total fees for blocks in the specified :timePeriod, ordered oldest to newest. :timePeriod can be any of the following: 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y.
+
+For 24h and 3d time periods, every block is included and fee amounts are exact (not averages). For the 1w time period, fees may be averages depending on how fast blocks were found around a particular timestamp. For other time periods, fees are averages.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/fees/1w"
+Response
+[
+  {
+    "avgHeight": 735644,
+    "timestamp": 1652119111,
+    "avgFees": 24212890
+  },
+  {
+    "avgHeight": 735646,
+    "timestamp": 1652120252,
+    "avgFees": 21655996
+  },
+  {
+    "avgHeight": 735648,
+    "timestamp": 1652121214,
+    "avgFees": 20678859
+  },
+  {
+    "avgHeight": 735649,
+    "timestamp": 1652121757,
+    "avgFees": 21020140
+  },
+  {
+    "avgHeight": 735650,
+    "timestamp": 1652122367,
+    "avgFees": 23064200
+  },
+  {
+    "avgHeight": 735652,
+    "timestamp": 1652122893,
+    "avgFees": 17620723
+  },
+  ...
+]
+GET Block Rewardsmining
+Endpoint
+GET /api/v1/mining/blocks/rewards/:timePeriod
+Description
+Returns average block rewards for blocks in the specified :timePeriod, ordered oldest to newest. :timePeriod can be any of the following: 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y.
+
+For 24h and 3d time periods, every block is included and block rewards are exact (not averages). For the 1w time period, block rewards may be averages depending on how fast blocks were found around a particular timestamp. For other time periods, block rewards are averages.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/rewards/1d"
+Response
+[
+  {
+    "avgHeight": 599992,
+    "timestamp": 1571438412,
+    "avgRewards": 1260530933
+  },
+  {
+    "avgHeight": 600000,
+    "timestamp": 1571443398,
+    "avgRewards": 1264314538
+  },
+  {
+    "avgHeight": 725441,
+    "timestamp": 1646139035,
+    "avgRewards": 637067563
+  },
+  {
+    "avgHeight": 725585,
+    "timestamp": 1646222444,
+    "avgRewards": 646519104
+  },
+  {
+    "avgHeight": 725727,
+    "timestamp": 1646308374,
+    "avgRewards": 638709605
+  },
+  ...
+]
+GET Block Feeratesmining
+Endpoint
+GET /api/v1/mining/blocks/fee-rates/:timePeriod
+Description
+Returns average feerate percentiles for blocks in the specified :timePeriod, ordered oldest to newest. :timePeriod can be any of the following: 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y.
+For 24h and 3d time periods, every block is included and percentiles are exact (not averages). For the 1w time period, percentiles may be averages depending on how fast blocks were found around a particular timestamp. For other time periods, percentiles are averages.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/fee-rates/1m"
+Response
+[
+  {
+    "avgHeight": 732152,
+    "timestamp": 1650132959,
+    "avgFee_0": 1,
+    "avgFee_10": 2,
+    "avgFee_25": 2,
+    "avgFee_50": 3,
+    "avgFee_75": 4,
+    "avgFee_90": 8,
+    "avgFee_100": 393
+  },
+  {
+    "avgHeight": 732158,
+    "timestamp": 1650134432,
+    "avgFee_0": 1,
+    "avgFee_10": 1,
+    "avgFee_25": 2,
+    "avgFee_50": 4,
+    "avgFee_75": 6,
+    "avgFee_90": 10,
+    "avgFee_100": 240
+  },
+  {
+    "avgHeight": 732161,
+    "timestamp": 1650135818,
+    "avgFee_0": 1,
+    "avgFee_10": 1,
+    "avgFee_25": 1,
+    "avgFee_50": 2,
+    "avgFee_75": 5,
+    "avgFee_90": 8,
+    "avgFee_100": 251
+  },
+  ...
+]
+GET Block Sizes and Weightsmining
+Endpoint
+GET /api/v1/mining/blocks/sizes-weights/:timePeriod
+Description
+Returns average size (bytes) and average weight (weight units) for blocks in the specified :timePeriod, ordered oldest to newest. :timePeriod can be any of the following: 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y.
+
+For 24h and 3d time periods, every block is included and figures are exact (not averages). For the 1w time period, figures may be averages depending on how fast blocks were found around a particular timestamp. For other time periods, figures are averages.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/sizes-weights/3y"
+Response
+{
+  "sizes": [
+    {
+      "avgHeight": 576650,
+      "timestamp": 1558212081,
+      "avgSize": 1271404
+    },
+    {
+      "avgHeight": 576715,
+      "timestamp": 1558246272,
+      "avgSize": 1105893
+    },
+    {
+      "avgHeight": 576797,
+      "timestamp": 1558289379,
+      "avgSize": 1141071
+    },
+    {
+      "avgHeight": 576885,
+      "timestamp": 1558330184,
+      "avgSize": 1108166
+    },
+    ...
+  ],
+  "weights": [
+    {
+      "avgHeight": 576650,
+      "timestamp": 1558212081,
+      "avgWeight": 3994002
+    },
+    {
+      "avgHeight": 576715,
+      "timestamp": 1558246272,
+      "avgWeight": 3756312
+    },
+    {
+      "avgHeight": 576797,
+      "timestamp": 1558289379,
+      "avgWeight": 3719625
+    },
+    {
+      "avgHeight": 576885,
+      "timestamp": 1558330184,
+      "avgWeight": 3631381
+    },
+    ...
+  ]
+}
+GET Block Predictionsmining
+Endpoint
+GET /api/v1/mining/blocks/predictions/:timePeriod
+Description
+Returns average block health in the specified :timePeriod, ordered oldest to newest. :timePeriod can be any of the following: 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y.
+
+For 24h and 3d time periods, every block is included and figures are exact (not averages). For the 1w time period, figures may be averages depending on how fast blocks were found around a particular timestamp. For other time periods, figures are averages.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/predictions/3y"
+Response
+[
+  [
+    1687247274,
+    777625,
+    100
+  ],
+  [
+    1687066238,
+    788621,
+    99.85
+  ],
+  [
+    1687263518,
+    795182,
+    99.46
+  ],
+  [
+    1687312271,
+    795260,
+    100
+  ],
+  ...
+]
+GET Block Audit Scoremining
+Endpoint
+GET /api/v1/mining/blocks/audit/score/:blockHash
+Description
+Returns the block audit score for the specified :blockHash. Available fields: hash, matchRate, expectedFees, and expectedWeight.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/audit/score/000000000000000000032535698c5b0c48283b792cf86c1c6e36ff84464de785"
+Response
+{
+  hash: "000000000000000000032535698c5b0c48283b792cf86c1c6e36ff84464de785",
+  matchRate: 99.66,
+  expectedFees: 12090955,
+  expectedWeight: 3991988
+}
+GET Blocks Audit Scoresmining
+Endpoint
+GET /api/v1/mining/blocks/audit/scores/:startHeight
+Description
+Returns blocks audit score for the past 16 blocks. If :startHeight is specified, the past 15 blocks before (and including) :startHeight are returned. Available fields: hash, matchRate, expectedFees, and expectedWeight.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/mining/blocks/audit/scores/820000"
+Response
+[
+  {
+    hash: "000000000000000000034cd3689507da0386d3d1790dd56f2e6945e650e02c74",
+    matchRate: 100,
+    expectedFees: 225828975,
+    expectedWeight: 3991756
+  },
+  {
+    hash: "00000000000000000000b3ad97907e99c54e6b9145a8f77842e59d9c0c8377cf",
+    matchRate: 100,
+    expectedFees: 295107022,
+    expectedWeight: 3991752
+  },
+  ...
+]
+GET Block Audit Summarymining
+Endpoint
+GET /api/v1/block/:blockHash/audit-summary
+Description
+Returns the block audit summary for the specified :blockHash. Available fields: height, id, timestamp, template, missingTxs, addedTxs, freshTxs, sigopTxs, fullrbfTxs, acceleratedTxs, matchRate, expectedFees, and expectedWeight.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/block/00000000000000000000f218ceda7a5d9c289040b9c3f05ef9f7c2f4930e0123/audit-summary"
+Response
+{
+  height: 822418,
+  id: "00000000000000000000f218ceda7a5d9c289040b9c3f05ef9f7c2f4930e0123",
+  timestamp: 1703262962,
+  template: [
+    {
+      txid: "1de119e4fe0fb92378de74a59fec337c39d505bbc0d04d20d151cc3fb7a91bf0",
+      fee: 92000,
+      vsize: 140.25,
+      value: 354245800,
+      rate: 655.9714795008913,
+      flags: 1099511631881
+    },
+    ...
+  ],
+  missingTxs: [],
+  addedTxs: [
+    "3036565d1af6c5b14876a255cdf06214aa350e62154d1ce8619c8e933d0526f8",
+    "aaa9d8e8f1de712574182a618b4d608f96f39bfc55e296d2e5904561cdef2e77",
+    ...
+  ],
+  freshTxs: [
+    "8ede292d8f0319cbe79fff9fd47564cd7f78fad74d7c506d2b157399ff41d904"
+  ],
+  sigopTxs: [],
+  fullrbfTxs: [
+    "271e7792910a4ea134c02c03c9d7477b32a8531a5dd92fbc4dbf3ca70614fcce",
+    "634a5b2de393f0f5b4eeb335bee75c1779b1f2308a07e86cafb95894aa4734d0",
+    ...
+  ],
+  acceleratedTxs: [],
+  matchRate: 100,
+  expectedFees: 169464627,
+  expectedWeight: 3991702
+}
+GET Mempool Blocks Feesfees
+Endpoint
+GET /api/v1/fees/mempool-blocks
+Description
+Returns current mempool as projected blocks.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/v1/fees/mempool-blocks"
+Response
+[
+  {
+    blockSize: 873046,
+    blockVSize: 746096.5,
+    nTx: 863,
+    totalFees: 8875608,
+    medianFee: 10.79646017699115,
+    feeRange: [
+      1,
+      2.4242424242424243,
+      8.107816711590296,
+      10.148014440433213,
+      11.053311793214863,
+      12.041811846689896,
+      14.930957683741648,
+      302.11480362537765
+    ]
+  }
+]
+GET Recommended Feesfees
+Endpoint
+GET /api/v1/fees/recommended
+Description
+Returns our currently suggested fees for new transactions.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/v1/fees/recommended"
+Response
+{
+  fastestFee: 1,
+  halfHourFee: 1,
+  hourFee: 1,
+  economyFee: 1,
+  minimumFee: 1
+}
+GET Mempoolmempool
+Endpoint
+GET /api/mempool
+Description
+Returns current mempool backlog statistics.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/mempool"
+Response
+{
+  count: 3169,
+  vsize: 1891542,
+  total_fee: 20317481,
+  fee_histogram: []
+}
+GET Mempool Transaction IDsmempool
+Endpoint
+GET /api/mempool/txids
+Description
+Get the full list of txids in the mempool as an array. The order of the txids is arbitrary and does not match bitcoind.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/mempool/txids"
+Response
+[
+  "65b04c4618999a221e8b66943a17c216172a9c865f49c88b76de81212b24bf01",
+  "4a3ebe804f273b4c7a96e63f6b963e812ef7e6e0e8381c2d662715bcf5bfa846",
+  "1ef9df26fab649183b591d148011ce809756f9cd9e6be3d383e80808b1929724",
+  ...
+]
+GET Mempool Recentmempool
+Endpoint
+GET /api/mempool/recent
+Description
+Get a list of the last 10 transactions to enter the mempool. Each transaction object contains simplified overview data, with the following fields: txid, fee, vsize, and value.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/mempool/recent"
+Response
+[
+  {
+    txid: "4b93c138293a7e3dfea6f0a63d944890b5ba571b03cc22d8c66995535e90dce8",
+    fee: 18277,
+    vsize: 2585,
+    value: 4972029
+  },
+  ...
+]
+GET Mempool RBF Transactionsmempool
+Endpoint
+GET /api/v1/replacements
+Description
+Returns the list of mempool transactions that are part of a RBF chain.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/replacements"
+Response
+[
+  {
+    tx: {
+      txid: "1ca4b22006e57b1b13f5cc89a41cf7c9e99fe225aabf407251e4fe0268f22d93",
+      fee: 14983,
+      vsize: 141.5,
+      value: 343934,
+      rate: 105.886925795053,
+      rbf: true,
+      fullRbf: false
+    },
+    time: 1703331467,
+    fullRbf: false,
+    replaces: [
+      {
+        tx: {
+          txid: "9f8e30674af641bb153a35254d539468e1d847b16bbdc13ce23b5a970b0b11cf",
+          fee: 13664,
+          vsize: 141.25,
+          value: 345253,
+          rate: 96.7362831858407,
+          rbf: true
+        },
+        time: 1703331398,
+        interval: 69,
+        fullRbf: false,
+        replaces: []
+      }
+    ]
+  },
+  ...
+]
+GET Mempool Full RBF Transactionsmempool
+Endpoint
+GET /api/v1/fullrbf/replacements
+Description
+Returns the list of mempool transactions that are part of a Full-RBF chain.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/fullrbf/replacements"
+Response
+[
+  {
+    tx: {
+      txid: "25e2bfaf0e0821e5cb71f11e460b2f71e1d5a3755015de42544afa5fbad6d443",
+      fee: 24436,
+      vsize: 297.75,
+      value: 273418,
+      rate: 82.0688497061293,
+      rbf: false,
+      fullRbf: true
+    },
+    time: 1703409882,
+    fullRbf: true,
+    replaces: [
+      {
+        tx: {
+          txid: "07d501e8ad4a25f07f3ced0a6102741720f710765e6fdb2eb966ba0df657997a",
+          fee: 24138,
+          vsize: 297.75,
+          value: 273716,
+          rate: 81.06801007556675,
+          rbf: false
+        },
+        time: 1703409853,
+        interval: 29,
+        fullRbf: true,
+        replaces: []
+      }
+    ]
+  },
+  ...
+]
+GET Children Pay for Parenttransactions
+Endpoint
+GET /api/v1/cpfp
+
+Description
+Returns the ancestors and the best descendant fees for a transaction.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/v1/cpfp/txid"
+GET Transactiontransactions
+Endpoint
+GET /api/tx/:txid
+Description
+Returns details about a transaction. Available fields: txid, version, locktime, size, weight, fee, vin, vout, and status.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521"
+Response
+{
+  txid: "15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521",
+  version: 1,
+  locktime: 0,
+  vin: [],
+  vout: [],
+  size: 884,
+  weight: 3536,
+  fee: 20000,
+  status: {
+    confirmed: true,
+    block_height: 363348,
+    block_hash: "0000000000000000139385d7aa78ffb45469e0c715b8d6ea6cb2ffa98acc7171",
+    block_time: 1435754650
+  }
+}
+GET Transaction Hextransactions
+Endpoint
+GET /api/tx/:txid/hex
+Description
+Returns a transaction serialized as hex.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521/hex"
+Response
+010000000536a007284bd52ee826680a7f43536472f1bcce1e76cd76b826b88c5884eddf1f0c0000006b483045022100bcdf40fb3b5ebfa2c158ac8d1a41c03eb3dba4e180b00e81836bafd56d946efd022005cc40e35022b614275c1e485c409599667cbd41f6e5d78f421cb260a020a24f01210255ea3f53ce3ed1ad2c08dfc23b211b15b852afb819492a9a0f3f99e5747cb5f0ffffffffee08cb90c4e84dd7952b2cfad81ed3b088f5b...
+GET Transaction Merkleblock Prooftransactions
+Endpoint
+GET /api/tx/:txid/merkleblock-proof
+Description
+Returns a merkle inclusion proof for the transaction using bitcoind's merkleblock format.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521/merkleblock-proof"
+Response
+0300000058f6dd09ac5aea942c01d12e75b351e73f4304cc442741000000000000000000ef0c2fa8517414b742094a020da7eba891b47d660ef66f126ad01e5be99a2fd09ae093558e411618c14240df820700000ce4d15e17594f257b22d1ddf47d07b3b88779a8374fcd515ad883d79726c6027da6abfcbc1341a049b30277d3bf14e4663...
+GET Transaction Merkle Prooftransactions
+Endpoint
+GET /api/tx/:txid/merkle-proof
+Description
+Returns a merkle inclusion proof for the transaction using Electrum's blockchain.transaction.get_merkle format.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521/merkle-proof"
+Response
+{
+  block_height: 363348,
+  merkle: [
+    "acf931fe8980c6165b32fe7a8d25f779af7870a638599db1977d5309e24d2478",
+    "ee25997c2520236892c6a67402650e6b721899869dcf6715294e98c0b45623f9",
+    "790889ac7c0f7727715a7c1f1e8b05b407c4be3bd304f88c8b5b05ed4c0c24b7",
+    "facfd99cc4cfe45e66601b37a9637e17fb2a69947b1f8dc3118ed7a50ba7c901",
+    "8c871dd0b7915a114f274c354d8b6c12c689b99851edc55d29811449a6792ab7",
+    "eb4d9605966b26cfa3bf69b1afebe375d3d6aadaa7f2899d48899b6bd2fd6a43",
+    "daa1dc59f22a8601b489fc8a89da78bc35415291c62c185e711b8eef341e6e70",
+    "102907c1b95874e2893c6f7f06b45a3d52455d3bb17796e761df75aeda6aa065",
+    "baeede9b8e022bb98b63cb765ba5ca3e66e414bfd37702b349a04113bcfcaba6",
+    "b6f07be94b55144588b33ff39fb8a08004baa03eb7ff121e1847d715d0da6590",
+    "7d02c62697d783d85a51cd4f37a87987b8b3077df4ddd1227b254f59175ed1e4"
+  ],
+  pos: 1465
+}
+GET Transaction Outspendtransactions
+Endpoint
+GET /api/tx/:txid/outspend/:vout
+Description
+Returns the spending status of a transaction output. Available fields: spent (boolean), txid (optional), vin (optional), and status (optional, the status of the spending tx).
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521/outspend/3"
+Response
+{
+  spent: true,
+  txid: "2a1b8ec06d68096911da82b02806c3848c415b0044a0046850c4a97cbffac7b1",
+  vin: 1,
+  status: {
+    confirmed: true,
+    block_height: 363354,
+    block_hash: "000000000000000012e6130dec174ca877bf39ead6e3d04a8ba3b0cd683c1661",
+    block_time: 1435758032
+  }
+}
+GET Transaction Outspendstransactions
+Endpoint
+GET /api/tx/:txid/outspends
+Description
+Returns the spending status of all transaction outputs.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521/outspends"
+Response
+[
+  {
+    spent: true,
+    txid: "34de8ba520eb846da8831fa47c06eef9b4eb4a2ff6a3271165fd6b9aafc5a20c",
+    vin: 12,
+    status: {
+      confirmed: true,
+      block_height: 363349,
+      block_hash: "000000000000000012ad81b3ea2cb1c4ba115901bd1b41cd05a6a8d736691322",
+      block_time: 1435754897
+    }
+  },
+  ...
+]
+GET Transaction Rawtransactions
+Endpoint
+GET /api/tx/:txid/raw
+Description
+Returns a transaction as binary data.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521/raw"
+GET Transaction RBF Timelinetransactions
+Endpoint
+GET /apiv1/tx/:txId/rbf
+Description
+Returns the RBF tree timeline of a transaction.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/tx/2e95ff9094df9f3650e3f2abc189250760162be89a88f9f2f23301c7cb14b8b4/rbf"
+Response
+{
+  replacements: {
+    tx: {
+      txid: "2e95ff9094df9f3650e3f2abc189250760162be89a88f9f2f23301c7cb14b8b4",
+      fee: 1668,
+      vsize: 276.75,
+      value: 14849,
+      rate: 4.824207492795389,
+      rbf: false,
+      fullRbf: true
+    },
+    time: 1703240261,
+    fullRbf: true,
+    replaces: [
+      {
+        tx: {
+          txid: "3f4670463daadffed07d7a1060071b07f7e81a2566eca21d78bb513cbf21c82a",
+          fee: 420,
+          vsize: 208.25,
+          value: 4856,
+          rate: 2.0168067226890756,
+          rbf: false
+        },
+        time: 1702870898,
+        interval: 369363,
+        fullRbf: true,
+        replaces: []
+      }
+      ...
+    ]
+  },
+  replaces: [
+    "3f4670463daadffed07d7a1060071b07f7e81a2566eca21d78bb513cbf21c82a",
+    "92f9b4f719d0ffc9035d3a9767d80c940cecbc656df2243bafd33f52b583ee92"
+  ]
+}
+GET Transaction Statustransactions
+Endpoint
+GET /api/tx/:txid/status
+Description
+Returns the confirmation status of a transaction. Available fields: confirmed (boolean), block_height (optional), and block_hash (optional).
+cURL
+CommonJS
+ES Module
+Code Example
+curl -sSL "https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521/status"
+Response
+{
+  confirmed: true,
+  block_height: 363348,
+  block_hash: "0000000000000000139385d7aa78ffb45469e0c715b8d6ea6cb2ffa98acc7171",
+  block_time: 1435754650
+}
+GET Transaction Timestransactions
+Endpoint
+GET /api/v1/transaction-times
+Description
+Returns the timestamps when a list of unconfirmed transactions was initially observed in the mempool. If a transaction is not found in the mempool or has been mined, the timestamp will be 0.
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/transaction-times?txId[]=51545ef0ec7f09196e60693b59369a134870985c8a90e5d42655b191de06285e&txId[]=6086089bd1c56a9c42a39d470cdfa7c12d4b52bf209608b390dfc4943f2d3851"
+Response
+[1703082129,1702325558]
+POST Transactiontransactions
+Endpoint
+POST /api/tx
+Description
+Broadcast a raw transaction to the network. The transaction should be provided as hex in the request body. The txid will be returned on success.
+cURL
+CommonJS
+ES Module
+Code Example
+curl -X POST -sSLd "0200000001fd5b5fcd1cb066c27cfc9fda5428b9be850b81ac440ea51f1ddba2f987189ac1010000008a4730440220686a40e9d2dbffeab4ca1ff66341d06a17806767f12a1fc4f55740a7af24c6b5022049dd3c9a85ac6c51fecd5f4baff7782a518781bbdd94453c8383755e24ba755c01410436d554adf4a3eb03a317c77aa4020a7bba62999df633bba0ea8f83f48b9e01b0861d3b3c796840f982ee6b14c3c4b7ad04fcfcc3774f81bff9aaf52a15751fedfdffffff02416c00000000000017a914bc791b2afdfe1e1b5650864a9297b20d74c61f4787d71d0000000000001976a9140a59837ccd4df25adc31cdad39be6a8d97557ed688ac00000000" "https://mempool.space/api/tx"
+GET Network Statslightning
+Endpoint
+GET /api/v1/lightning/statistics/:interval
+Description
+Returns network-wide stats such as total number of channels and nodes, total capacity, and average/median fee figures.
+
+Pass one of the following for :interval: latest, 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/statistics/latest"
+Response
+{
+  "latest": {
+    "id": 163,
+    "added": "2022-08-30T00:00:00.000Z",
+    "channel_count": 81690,
+    "node_count": 15851,
+    "total_capacity": 460820222344,
+    "tor_nodes": 11455,
+    "clearnet_nodes": 2305,
+    "unannounced_nodes": 974,
+    "avg_capacity": 5641085,
+    "avg_fee_rate": 497,
+    "avg_base_fee_mtokens": 915,
+    "med_capacity": 1500000,
+    "med_fee_rate": 40,
+    "med_base_fee_mtokens": 100,
+    "clearnet_tor_nodes": 1117
+  }
+}
+GET Nodes/Channelslightning
+Endpoint
+GET /api/v1/lightning/search?searchText=:query
+Description
+Returns Lightning nodes and channels that match a full-text, case-insensitive search :query across node aliases, node pubkeys, channel IDs, and short channel IDs.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/search?searchText=ACINQ"
+Response
+{
+  "nodes": [
+    {
+      "public_key": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+      "alias": "ACINQ",
+      "capacity": 35920090247,
+      "channels": 2907
+    },
+    {
+      "public_key": "03d3902b46d6ab9558a76cbf91b27d093c0a3c54e59f33c7eb4bd643dbb3b1b5b0",
+      "alias": "Acinq",
+      "capacity": null,
+      "channels": null
+    }
+  ],
+  "channels": []
+}
+GET Nodes in Countrylightning
+Endpoint
+GET /api/v1/lightning/nodes/country/:country
+Description
+Returns a list of Lightning nodes running on clearnet in the requested :country, where :country is an ISO Alpha-2 country code.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/country/ch"
+Response
+{
+  "country": {
+    "de": "Schweiz",
+    "en": "Switzerland",
+    "es": "Suiza",
+    "fr": "Suisse",
+    "ja": "スイス連邦",
+    "pt-BR": "Suíça",
+    "ru": "Швейцария",
+    "zh-CN": "瑞士"
+  },
+  "nodes": [
+    {
+      "public_key": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025",
+      "capacity": 54339697486,
+      "channels": 991,
+      "alias": "bfx-lnd0",
+      "first_seen": 1574813156,
+      "updated_at": 1661814056,
+      "city": {
+        "de": "Zürich",
+        "en": "Zurich",
+        "es": "Zúrich",
+        "fr": "Zurich",
+        "ja": "チューリッヒ",
+        "pt-BR": "Zurique",
+        "ru": "Цюрих",
+        "zh-CN": "苏黎世"
+      },
+      "country": {
+        "de": "Schweiz",
+        "en": "Switzerland",
+        "es": "Suiza",
+        "fr": "Suisse",
+        "ja": "スイス連邦",
+        "pt-BR": "Suíça",
+        "ru": "Швейцария",
+        "zh-CN": "瑞士"
+      },
+      "iso_code": "CH",
+      "subdivision": {
+        "de": "Zürich",
+        "en": "Zurich",
+        "fr": "Zurich"
+      }
+    },
+    ...
+  ]
+}
+GET Node Stats Per Countrylightning
+Endpoint
+GET /api/v1/lightning/nodes/countries
+Description
+Returns aggregate capacity and number of clearnet nodes per country. Capacity figures are in satoshis.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/countries"
+Response
+[
+  {
+    "name": {
+      "de": "Vereinigte Staaten",
+      "en": "United States",
+      "es": "Estados Unidos",
+      "fr": "États Unis",
+      "ja": "アメリカ",
+      "pt-BR": "EUA",
+      "ru": "США",
+      "zh-CN": "美国"
+    },
+    "iso": "US",
+    "count": 2775,
+    "share": 34.53,
+    "capacity": "372732844657"
+  },
+  {
+    "name": {
+      "de": "Frankreich",
+      "en": "France",
+      "es": "Francia",
+      "fr": "France",
+      "ja": "フランス共和国",
+      "pt-BR": "França",
+      "ru": "Франция",
+      "zh-CN": "法国"
+    },
+    "iso": "FR",
+    "count": 972,
+    "share": 12.09,
+    "capacity": "7740713270"
+  },
+  ...
+]
+GET ISP Nodeslightning
+Endpoint
+GET /api/v1/lightning/nodes/isp/:isp
+Description
+Returns a list of nodes hosted by a specified :isp, where :isp is an ISP's ASN.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/isp/16509"
+Response
+{
+  "isp": "Amazon.com",
+  "nodes": [
+    {
+      "public_key": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+      "capacity": 36010390247,
+      "channels": 2907,
+      "alias": "ACINQ",
+      "first_seen": 1522941222,
+      "updated_at": 1661274935,
+      "city": null,
+      "country": {
+        "de": "Vereinigte Staaten",
+        "en": "United States",
+        "es": "Estados Unidos",
+        "fr": "États Unis",
+        "ja": "アメリカ",
+        "pt-BR": "EUA",
+        "ru": "США",
+        "zh-CN": "美国"
+      },
+      "iso_code": "US",
+      "subdivision": null
+    },
+    ...
+  ]
+}
+GET Node Stats Per ISPlightning
+Endpoint
+GET /api/v1/lightning/nodes/isp-ranking
+Description
+Returns aggregate capacity, number of nodes, and number of channels per ISP. Capacity figures are in satoshis.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/isp-ranking"
+Response
+{
+  "clearnetCapacity": 417154330493,
+  "torCapacity": 36605381932,
+  "unknownCapacity": 6678700534,
+  "ispRanking": [
+    [
+      "14061",           //ASN
+      "DigitalOcean",    //ISP name
+      43681728521,       //aggregate capacity, in sats
+      5028,              //total number of channels
+      192                //number of nodes
+    ],
+    [
+      "701",
+      "Verizon Internet Services",
+      3047086363,
+      507,
+      55
+    ],
+    [
+      "396982,15169",
+      "Google Cloud",
+      139554933568,
+      2747,
+      78
+    ],
+    ...
+  ]
+}
+GET Top 100 Nodeslightning
+Endpoint
+GET /api/v1/lightning/nodes/rankings
+Description
+Returns two lists of the top 100 nodes: one ordered by liquidity (aggregate channel capacity) and the other ordered by connectivity (number of open channels).
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/rankings"
+Response
+{
+  "topByCapacity": [
+    {
+      "publicKey": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025",
+      "alias": "bfx-lnd0",
+      "capacity": 54361697486
+    },
+    {
+      "publicKey": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+      "alias": "ACINQ",
+      "capacity": 36010516297
+    },
+    ...
+  ],
+  "topByChannels": [
+    {
+      "publicKey": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+      "alias": "ACINQ",
+      "channels": 2908
+    },
+    {
+      "publicKey": "035e4ff418fc8b5554c5d9eea66396c227bd429a3251c8cbc711002ba215bfc226",
+      "alias": "WalletOfSatoshi.com",
+      "channels": 2771
+    },
+    ...
+  ]
+}
+GET Top 100 Nodes by Liquiditylightning
+Endpoint
+GET /api/v1/lightning/nodes/rankings/liquidity
+Description
+Returns a list of the top 100 nodes by liquidity (aggregate channel capacity).
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/rankings/liquidity"
+Response
+[
+  {
+    "publicKey": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025",
+    "alias": "bfx-lnd0",
+    "capacity": 54361697486,
+    "channels": 993,
+    "firstSeen": 1574813156,
+    "updatedAt": 1661814056,
+    "city": {
+      "de": "Zürich",
+      "en": "Zurich",
+      "es": "Zúrich",
+      "fr": "Zurich",
+      "ja": "チューリッヒ",
+      "pt-BR": "Zurique",
+      "ru": "Цюрих",
+      "zh-CN": "苏黎世"
+    },
+    "country": {
+      "de": "Schweiz",
+      "en": "Switzerland",
+      "es": "Suiza",
+      "fr": "Suisse",
+      "ja": "スイス連邦",
+      "pt-BR": "Suíça",
+      "ru": "Швейцария",
+      "zh-CN": "瑞士"
+    }
+  },
+  {
+    "publicKey": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+    "alias": "ACINQ",
+    "capacity": 36010516297,
+    "channels": 2908,
+    "firstSeen": 1522941222,
+    "updatedAt": 1661274935,
+    "city": null,
+    "country": {
+      "de": "Vereinigte Staaten",
+      "en": "United States",
+      "es": "Estados Unidos",
+      "fr": "États Unis",
+      "ja": "アメリカ",
+      "pt-BR": "EUA",
+      "ru": "США",
+      "zh-CN": "美国"
+    }
+  },
+  ...
+]
+GET Top 100 Nodes by Connectivitylightning
+Endpoint
+GET /api/v1/lightning/nodes/rankings/connectivity
+Description
+Returns a list of the top 100 nodes by connectivity (number of open channels).
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/rankings/connectivity"
+Response
+[
+  {
+    "publicKey": "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+    "alias": "ACINQ",
+    "channels": 2908,
+    "capacity": 36010516297,
+    "firstSeen": 1522941222,
+    "updatedAt": 1661274935,
+    "city": null,
+    "country": {
+      "de": "Vereinigte Staaten",
+      "en": "United States",
+      "es": "Estados Unidos",
+      "fr": "États Unis",
+      "ja": "アメリカ",
+      "pt-BR": "EUA",
+      "ru": "США",
+      "zh-CN": "美国"
+    }
+  },
+  {
+    "publicKey": "035e4ff418fc8b5554c5d9eea66396c227bd429a3251c8cbc711002ba215bfc226",
+    "alias": "WalletOfSatoshi.com",
+    "channels": 2772,
+    "capacity": 15464503162,
+    "firstSeen": 1601429940,
+    "updatedAt": 1661812116,
+    "city": {
+      "de": "Vancouver",
+      "en": "Vancouver",
+      "es": "Vancouver",
+      "fr": "Vancouver",
+      "ja": "バンクーバー市",
+      "pt-BR": "Vancôver",
+      "ru": "Ванкувер"
+    },
+    "country": {
+      "de": "Kanada",
+      "en": "Canada",
+      "es": "Canadá",
+      "fr": "Canada",
+      "ja": "カナダ",
+      "pt-BR": "Canadá",
+      "ru": "Канада",
+      "zh-CN": "加拿大"
+    }
+  },
+  ...
+]
+GET Top 100 Oldest Nodeslightning
+Endpoint
+GET /api/v1/lightning/nodes/rankings/age
+Description
+Returns a list of the top 100 oldest nodes.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/rankings/age"
+Response
+[
+  {
+    "publicKey": "02d4531a2f2e6e5a9033d37d548cff4834a3898e74c3abe1985b493c42ebbd707d",
+    "alias": "coinfinity.co",
+    "channels": 13,
+    "capacity": 35945717,
+    "firstSeen": 1518001533,
+    "updatedAt": 1661713804,
+    "city": {
+      "de": "Brüssel",
+      "en": "Brussels",
+      "es": "Bruselas",
+      "fr": "Bruxelles",
+      "ja": "ブリュッセル",
+      "pt-BR": "Bruxelas",
+      "ru": "Брюссель",
+      "zh-CN": "布鲁塞尔"
+    },
+    "country": {
+      "de": "Belgien",
+      "en": "Belgium",
+      "es": "Bélgica",
+      "fr": "Belgique",
+      "ja": "ベルギー王国",
+      "pt-BR": "Bélgica",
+      "ru": "Бельгия",
+      "zh-CN": "比利时"
+    }
+  },
+  {
+    "publicKey": "024bd94f0425590434538fd21d4e58982f7e9cfd8f339205a73deb9c0e0341f5bd",
+    "alias": "CL.rompert.com🔵 ",
+    "channels": 2,
+    "capacity": 600000,
+    "firstSeen": 1520596684,
+    "updatedAt": 1603261631,
+    "city": {
+      "de": "Clifton",
+      "en": "Clifton",
+      "ja": "クリフトン",
+      "pt-BR": "Clifton",
+      "ru": "Клифтон",
+      "zh-CN": "克利夫頓"
+    },
+    "country": {
+      "de": "Vereinigte Staaten",
+      "en": "United States",
+      "es": "Estados Unidos",
+      "fr": "États Unis",
+      "ja": "アメリカ",
+      "pt-BR": "EUA",
+      "ru": "США",
+      "zh-CN": "美国"
+    }
+  },
+  ...
+]
+GET Node Statslightning
+Endpoint
+GET /api/v1/lightning/nodes/:pubKey
+Description
+Returns details about a node with the given :pubKey.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/033ac2f9f7ff643c235cc247c521663924aff73b26b38118a6c6821460afcde1b3"
+Response
+{
+  "public_key": "033ac2f9f7ff643c235cc247c521663924aff73b26b38118a6c6821460afcde1b3",
+  "alias": "Red.de.Rayos",
+  "first_seen": 1521504055,
+  "updated_at": 1661869523,
+  "color": "#68f442",
+  "sockets": "84.44.203.181:9735",
+  "as_number": 8422,
+  "city_id": 2886242,
+  "country_id": 2921044,
+  "subdivision_id": 2861876,
+  "longitude": 6.9489,
+  "latitude": 50.9298,
+  "iso_code": "DE",
+  "as_organization": "NetCologne GmbH",
+  "city": {
+    "de": "Köln",
+    "en": "Cologne",
+    "es": "Colonia",
+    "fr": "Cologne",
+    "ja": "ケルン",
+    "pt-BR": "Colônia",
+    "ru": "Кёльн",
+    "zh-CN": "科隆"
+  },
+  "country": {
+    "de": "Deutschland",
+    "en": "Germany",
+    "es": "Alemania",
+    "fr": "Allemagne",
+    "ja": "ドイツ連邦共和国",
+    "pt-BR": "Alemanha",
+    "ru": "Германия",
+    "zh-CN": "德国"
+  },
+  "subdivision": {
+    "de": "Nordrhein-Westfalen",
+    "en": "North Rhine-Westphalia",
+    "es": "Renania del Norte-Westfalia",
+    "fr": "Rhénanie du Nord-Westphalie",
+    "ru": "Северный Рейн-Вестфалия"
+  },
+  "active_channel_count": 55,
+  "capacity": "31505027",
+  "opened_channel_count": 55,
+  "closed_channel_count": 111
+}
+GET Historical Node Statslightning
+Endpoint
+GET /api/v1/lightning/nodes/:pubKey/statistics
+Description
+Returns historical stats for a node with the given :pubKey.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/nodes/033ac2f9f7ff643c235cc247c521663924aff73b26b38118a6c6821460afcde1b3/statistics"
+Response
+[
+  {
+    "added": 1661817600,
+    "capacity": 31505027,
+    "channels": 55
+  },
+  {
+    "added": 1661731200,
+    "capacity": 31505027,
+    "channels": 55
+  },
+  {
+    "added": 1655078400,
+    "capacity": 26487523,
+    "channels": 43
+  },
+  {
+    "added": 1654992000,
+    "capacity": 32692287,
+    "channels": 57
+  },
+  {
+    "added": 1654905600,
+    "capacity": 32692287,
+    "channels": 57
+  },
+  ...
+]
+GET Channellightning
+Endpoint
+GET /api/v1/lightning/channels/:channelId
+Description
+Returns info about a Lightning channel with the given :channelId.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/channels/768457472831193088"
+Response
+{
+  "id": "768457472831193088",
+  "short_id": "698908x1305x0",
+  "capacity": 16777215,
+  "transaction_id": "9f248ff82f6ff4c112c218438cfde8260623663bc85a360d09a13b9a9b083564",
+  "transaction_vout": 0,
+  "closing_transaction_id": null,
+  "closing_reason": null,
+  "updated_at": "2022-08-25T23:05:40.000Z",
+  "created": "2021-09-04T00:10:42.000Z",
+  "status": 1,
+  "node_left": {
+    "alias": "CoinGate",
+    "public_key": "0242a4ae0c5bef18048fbecf995094b74bfb0f7391418d71ed394784373f41e4f3",
+    "channels": 1,
+    "capacity": 20000,
+    "base_fee_mtokens": 1000,
+    "cltv_delta": 0,
+    "fee_rate": 1,
+    "is_disabled": 0,
+    "max_htlc_mtokens": 16609443000,
+    "min_htlc_mtokens": 1000,
+    "updated_at": "2022-08-25T23:05:40.000Z",
+    "longitude": 8.6843,
+    "latitude": 50.1188
+  },
+  "node_right": {
+    "alias": "Blixt Wallet 🟡",
+    "public_key": "0230a5bca558e6741460c13dd34e636da28e52afd91cf93db87ed1b0392a7466eb",
+    "channels": 3,
+    "capacity": 34754430,
+    "base_fee_mtokens": 1000,
+    "cltv_delta": 0,
+    "fee_rate": 180,
+    "is_disabled": 0,
+    "max_htlc_mtokens": 16609443000,
+    "min_htlc_mtokens": 1000,
+    "updated_at": "2022-08-25T18:44:00.000Z",
+    "longitude": 9.491,
+    "latitude": 51.2993
+  }
+}
+GET Channels from TXIDlightning
+Endpoint
+GET /api/v1/lightning/channels/txids?txId[]=:txid
+Description
+Returns channels that correspond to the given :txid (multiple transaction IDs can be specified).
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/channels/txids?txId[]=c3173549f502ede6440d5c48ea74af5607d88484c7a912bbef73d430049f8af4&txId[]=d78f0b41a263af3df91fa4171cc2f60c40196aaf8f4bde5d1c8ff4474cfe753b"
+Response
+[
+  {
+    "inputs": {},
+    "outputs": {
+      "1": {
+        "id": "819296691409584129",
+        "short_id": "745146x287x1",
+        "capacity": 300000000,
+        "transaction_id": "c3173549f502ede6440d5c48ea74af5607d88484c7a912bbef73d430049f8af4",
+        "transaction_vout": 1,
+        "closing_transaction_id": null,
+        "closing_reason": null,
+        "updated_at": "2022-08-25T18:44:07.000Z",
+        "created": "2022-07-16T00:11:33.000Z",
+        "status": 1,
+        "node_left": {
+          "alias": "River Financial 1",
+          "public_key": "03037dc08e9ac63b82581f79b662a4d0ceca8a8ca162b1af3551595b8f2d97b70a",
+          "base_fee_mtokens": 0,
+          "cltv_delta": 0,
+          "fee_rate": 500,
+          "is_disabled": 0,
+          "max_htlc_mtokens": 297000000000,
+          "min_htlc_mtokens": 1000,
+          "updated_at": "2022-08-23T17:53:43.000Z"
+        },
+        "node_right": {
+          "alias": "0204a91bb5802ad0a799",
+          "public_key": "0204a91bb5802ad0a799acfd86ef566da03d80cc9e13acb01e680634bf64188a0d",
+          "base_fee_mtokens": 0,
+          "cltv_delta": 0,
+          "fee_rate": 152,
+          "is_disabled": 0,
+          "max_htlc_mtokens": 297000000000,
+          "min_htlc_mtokens": 1000,
+          "updated_at": "2022-08-25T18:44:07.000Z"
+        }
+      }
+    }
+  },
+  {
+    "inputs": {},
+    "outputs": {
+      "1": {
+        "id": "814662250034036737",
+        "short_id": "740931x2355x1",
+        "capacity": 300000000,
+        "transaction_id": "d78f0b41a263af3df91fa4171cc2f60c40196aaf8f4bde5d1c8ff4474cfe753b",
+        "transaction_vout": 1,
+        "closing_transaction_id": null,
+        "closing_reason": null,
+        "updated_at": "2022-08-28T18:54:40.000Z",
+        "created": "2022-06-15T16:18:33.000Z",
+        "status": 1,
+        "node_left": {
+          "alias": "bfx-lnd0",
+          "public_key": "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025",
+          "base_fee_mtokens": 1000,
+          "cltv_delta": 0,
+          "fee_rate": 1,
+          "is_disabled": 0,
+          "max_htlc_mtokens": 297000000000,
+          "min_htlc_mtokens": 1000,
+          "updated_at": "2022-08-25T18:44:03.000Z"
+        },
+        "node_right": {
+          "alias": "River Financial 1",
+          "public_key": "03037dc08e9ac63b82581f79b662a4d0ceca8a8ca162b1af3551595b8f2d97b70a",
+          "base_fee_mtokens": 0,
+          "cltv_delta": 0,
+          "fee_rate": 750,
+          "is_disabled": 0,
+          "max_htlc_mtokens": 297000000000,
+          "min_htlc_mtokens": 1000,
+          "updated_at": "2022-08-28T18:54:40.000Z"
+        }
+      }
+    }
+  }
+]
+GET Channels from Node Pubkeylightning
+Endpoint
+GET /api/v1/lightning/channels?public_key=:pubKey&status=:channelStatus
+Description
+Returns a list of a node's channels given its :pubKey. Ten channels are returned at a time. Use :index for paging. :channelStatus can be open, active, or closed.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/channels?public_key=026165850492521f4ac8abd9bd8088123446d126f648ca35e60f88177dc149ceb2&status=open"
+Response
+[
+  {
+    "status": 1,
+    "closing_reason": null,
+    "capacity": 59200000,
+    "short_id": "751361x1324x1",
+    "id": "826130156244172801",
+    "fee_rate": 1,
+    "node": {
+      "alias": "ipayblue.com",
+      "public_key": "032fe854a231aeb2357523ee6ca263ae04ce53eee8a13767ecbb911b69fefd8ace",
+      "channels": 65,
+      "capacity": "856675361"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "capacity": 51000000,
+    "short_id": "750792x1586x1",
+    "id": "825504534145138689",
+    "fee_rate": 1,
+    "node": {
+      "alias": "Escher",
+      "public_key": "02b515c74f334dee09821bee299fcbd9668182730c5719b25a8f262b28893198b0",
+      "channels": 50,
+      "capacity": "2202925844"
+    }
+  },
+  ...
+]
+GET Channel Geodatalightning
+Endpoint
+GET /api/v1/lightning/channels-geo
+Description
+Returns a list of channels with corresponding node geodata.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/channels-geo"
+Response
+[
+  [
+    "03120ac28af913889cbc3cb86d7aff12bc0abe939f1fa9fb1980bdff8483197092",
+    "LIGHTNING2",
+    -77.2278,
+    38.9567,
+    "03baa70886d9200af0ffbd3f9e18d96008331c858456b16e3a9b41e735c6208fef",
+    "LIGHTNING",
+    -77.2278,
+    38.9567
+  ],
+  [
+    "033d8656219478701227199cbd6f670335c8d408a92ae88b962c49d4dc0e83e025",
+    "bfx-lnd0",
+    8.5671,
+    47.3682,
+    "028d98b9969fbed53784a36617eb489a59ab6dc9b9d77fcdca9ff55307cd98e3c4",
+    "OpenNode.com",
+    -83.0061,
+    39.9625
+  ],
+  ...
+]
+GET Channel Geodata for Nodelightning
+Endpoint
+GET /api/v1/lightning/channels-geo/:pubKey
+Description
+Returns a list of channels with corresponding geodata for a node with the given :pubKey.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/lightning/channels-geo/03d607f3e69fd032524a867b288216bfab263b6eaee4e07783799a6fe69bb84fac"
+Response
+[
+  [
+    "03d607f3e69fd032524a867b288216bfab263b6eaee4e07783799a6fe69bb84fac",
+    "Bitrefill",
+    -77.4903,
+    39.0469,
+    "024a2e265cd66066b78a788ae615acdc84b5b0dec9efac36d7ac87513015eaf6ed",
+    "Bitrefill",
+    -6.2591,
+    53.3379
+  ],
+  [
+    "03d607f3e69fd032524a867b288216bfab263b6eaee4e07783799a6fe69bb84fac",
+    "Bitrefill",
+    -77.4903,
+    39.0469,
+    "030c3f19d742ca294a55c00376b3b355c3c90d61c6b6b39554dbc7ac19b141c14f",
+    "Bitrefill Routing",
+    -6.2591,
+    53.3379
+  ],
+  ...
+]
+POST Calculate Estimated Costsaccelerator-public
+Endpoint
+POST /v1/services/accelerator/estimate
+Description
+Returns estimated costs to accelerate a transaction. Optionally set the X-Mempool-Auth header to get customized estimation.
+
+cURL
+Code Example
+curl -H "X-Mempool-Auth: stacksats" -X POST -sSLd "txInput=ee13ebb99632377c15c94980357f674d285ac413452050031ea6dcd3e9b2dc29" "https://mempool.space/api/v1/services/accelerator/estimate"
+Response
+{
+  "txSummary": {
+    "txid": "ee13ebb99632377c15c94980357f674d285ac413452050031ea6dcd3e9b2dc29",
+    "effectiveVsize": 154,
+    "effectiveFee": 154,
+    "ancestorCount": 1
+  },
+  "cost": 1386,
+  "targetFeeRate": 10,
+  "nextBlockFee": 1540,
+  "userBalance": 0,
+  "mempoolBaseFee": 50000,
+  "vsizeFee": 0,
+  "pools": [
+    111,
+    102,
+    112,
+    142,
+    115
+  ],
+  "options": [
+    {
+      "fee": 1500
+    },
+    {
+      "fee": 3000
+    },
+    {
+      "fee": 12500
+    }
+  ],
+  "hasAccess": false,
+  "availablePaymentMethods": {
+    "bitcoin": {
+      "enabled": true,
+      "min": 1000,
+      "max": 10000000
+    },
+    "cashapp": {
+      "enabled": true,
+      "min": 10,
+      "max": 200
+    }
+  },
+  "unavailable": false
+}
+POST Generate Acceleration Invoiceaccelerator-public
+Endpoint
+POST /v1/services/payments/bitcoin
+Description
+Request a LN invoice to accelerate a transaction.
+
+cURL
+Code Example
+curl -X POST -sSLd "product=ee13ebb99632377c15c94980357f674d285ac413452050031ea6dcd3e9b2dc29&amount=12500" "https://mempool.space/api/v1/services/payments/bitcoin"
+Response
+[
+  {
+    "btcpayInvoiceId": "4Ww53d7VgSa596jmCFufe7",
+    "btcDue": "0.000625",
+    "addresses": {
+      "BTC": "bc1qcvqx2kr5mktd7gvym0atrrx0sn27mwv5kkghl3m78kegndm5t8ksvcqpja",
+      "BTC_LNURLPAY": null,
+      "BTC_LightningLike": "lnbc625u1pngl0wzpp56j7cqghsw2y5q7vdu9shmpxgpzsx4pqra4wcm9vdnvqegutplk2qdxj2pskjepqw3hjqnt9d4cx7mmvypqkxcm9d3jhyct5daezq2z0wfjx2u3qf9zr5grpvd3k2mr9wfshg6t0dckk2ef3xdjkyc3e8ymrxv3nxumkxvf4vvungwfcxqen2dmxxcmngepj8q6kzce5xyengdfjxq6nqvpnx9jkzdnyvdjrxefevgexgcej8yknzdejxqmrjd3jx5mrgdpj9ycqzpuxqrpr5sp58593dzj2uauaj3afa7x47qeam8k9yyqrh9qasj2ssdzstew6qv3q9qxpqysgqj8qshfkxmj0gfkly5xfydysvsx55uhnc6fgpw66uf6hl8leu07454axe2kq0q788yysg8guel2r36d6f75546nkhmdcmec4mmlft8dsq62rnsj"
+    }
+  }
+]
+GET Pending Accelerationsaccelerator-public
+Endpoint
+GET /api/v1/services/accelerator/accelerations
+Description
+Returns all transactions currently being accelerated.
+
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/services/accelerator/accelerations"
+Response
+[
+  {
+    "txid": "8a183c8ae929a2afb857e7f2acd440aaefdf2797f8f7eab1c5f95ff8602abc81",
+    "added": 1707558316,
+    "feeDelta": 3500,
+    "effectiveVsize": 111,
+    "effectiveFee": 1671,
+    "pools": [
+      111
+    ]
+  },
+  {
+    "txid": "6097f295e21bdd8d725bd8d9ad4dd72b05bd795dc648bfef52150a9b2b7f7a45",
+    "added": 1707560464,
+    "feeDelta": 60000,
+    "effectiveVsize": 812,
+    "effectiveFee": 7790,
+    "pools": [
+      111
+    ]
+  }
+]
+GET Acceleration Historyaccelerator-public
+Endpoint
+GET /api/v1/services/accelerator/accelerations/history
+Description
+Returns all past accelerated transactions. Filters can be applied:
+
+status: all, requested, accelerating, mined, completed, failed
+timeframe: 24h, 3d, 1w, 1m, 3m, 6m, 1y, 2y, 3y, 4y, all
+minedByPoolUniqueId: any id from pools-v2.json
+blockHash: a block hash
+blockHeight: a block height
+page: the requested page number if using pagination (min: 1)
+pageLength: the page lenght if using pagination (min: 1, max: 50)
+from: unix timestamp (overrides timeframe)
+to: unix timestamp (overrides timeframe)
+cURL
+Code Example
+curl -sSL "https://mempool.space/api/v1/services/accelerator/accelerations/history?blockHash=00000000000000000000482f0746d62141694b9210a813b97eb8445780a32003"
+Response
+[
+  {
+    "txid": "f829900985aad885c13fb90555d27514b05a338202c7ef5d694f4813ad474487",
+    "status": "completed_provisional",
+    "added": 1728111527,
+    "lastUpdated": 1728112113,
+    "effectiveFee": 1385,
+    "effectiveVsize": 276,
+    "feeDelta": 3000,
+    "blockHash": "00000000000000000000cde89e34036ece454ca2d07ddd7f71ab46307ca87423",
+    "blockHeight": 864248,
+    "bidBoost": 65,
+    "boostVersion": "v2",
+    "pools": [
+      111,
+      115,
+    ],
+    "minedByPoolUniqueId": 115
+  }
+]
+GET Top Up Historyaccelerator-private
+Endpoint
+GET /api/v1/services/accelerator/top-up-history
+Description
+Returns a list of top ups the user has made as prepayment for the accelerator service.
+
+cURL
+Code Example
+curl -H "X-Mempool-Auth: stacksats" -sSL "https://mempool.space/api/v1/services/accelerator/top-up-history"
+Response
+[
+  {
+    "type": "Bitcoin",
+    "invoiceId": "CCunucVyNw7jUiUz64mmHz",
+    "amount": 10311031,
+    "status": "pending",
+    "date": 1706372653000,
+    "link": "/payment/bitcoin/CCunucVyNw7jUiUz64mmHz"
+  },
+  {
+    "type": "Bitcoin",
+    "invoiceId": "SG1U27R9PdWi3gH3jB9tm9",
+    "amount": 21000000,
+    "status": "paid",
+    "date": 1706372582000,
+    "link": null
+  },
+  ...
+]
+GET Available Balanceaccelerator-private
+Endpoint
+GET /api/v1/services/accelerator/balance
+Description
+Returns the user's currently available balance, currently locked funds, and total fees paid so far.
+
+cURL
+Code Example
+curl -H "X-Mempool-Auth: stacksats" -sSL "https://mempool.space/api/v1/services/accelerator/balance"
+Response
+{
+  "balance": 99900000,
+  "hold": 101829,
+  "feesPaid": 133721
+}
+POST Accelerate A Transaction (Pro)accelerator-private
+Endpoint
+POST /v1/services/accelerator/accelerate
+Description
+Sends a request to accelerate a transaction.
+
+cURL
+Code Example
+curl -H "X-Mempool-Auth: stacksats" -X POST -sSLd "txInput=ee13ebb99632377c15c94980357f674d285ac413452050031ea6dcd3e9b2dc29&userBid=21000000" "https://mempool.space/api/v1/services/accelerator/accelerate"
+Response
+HTTP/1.1 200 OK
+GET Acceleration Historyaccelerator-private
+Endpoint
+GET /api/v1/services/accelerator/history?status=:status&details=:details
+Description
+Returns the user's past acceleration requests.
+
+Pass one of the following for :status (required): all, requested, accelerating, mined, completed, failed.
+Pass true in :details to get a detailed history of the acceleration request.
+
+cURL
+Code Example
+curl -H "X-Mempool-Auth: stacksats" -sSL "https://mempool.space/api/v1/services/accelerator/history?status=all&details=true"
+Response
+[
+  {
+    "id": 89,
+    "user_id": 1,
+    "txid": "ae2639469ec000ed1d14e2550cbb01794e1cd288a00cdc7cce18398ba3cc2ffe",
+    "status": "failed"
+    "fee_paid": 0,
+    "added": 1706378712,
+    "last_updated": 1706378712,
+    "confirmations": 4,
+    "base_fee": 0,
+    "vsize_fee": 0,
+    "max_bid": 7000,
+    "effective_vsize": 135,
+    "effective_fee": 3128,
+    "history": [
+      {
+        "event": "user-requested-acceleration",
+        "timestamp": 1706378712
+      },
+      {
+        "event": "accepted_test-api-key",
+        "timestamp": 1706378712
+      },
+      {
+        "event": "failed-at-block-827672",
+        "timestamp": 1706380261
+      }
+    ]
+  },
+  {
+    "id": 88,
+    "user_id": 1,
+    "txid": "c5840e89173331760e959a190b24e2a289121277ed7f8a095fe289b37cee9fde",
+    "status": "completed"
+    "fee_paid": 140019,
+    "added": 1706378704,
+    "last_updated": 1706380231,
+    "confirmations": 6,
+    "base_fee": 40000,
+    "vsize_fee": 100000,
+    "max_bid": 14000,
+    "effective_vsize": 135,
+    "effective_fee": 3152,
+    "history": [
+      {
+        "event": "user-requested-acceleration",
+        "timestamp": 1706378704
+      },
+      {
+        "event": "accepted_test-api-key",
+        "timestamp": 1706378704
+      },
+      {
+        "event": "complete-at-block-827670",
+        "timestamp": 1706380231
+      }
+    ]
+  },
+  {
+    "id": 87,
+    "user_id": 1,
+    "txid": "178b5b9b310f0d667d7ea563a2cdcc17bc8cd15261b58b1653860a724ca83458",
+    "status": "completed"
+    "fee_paid": 90062,
+    "added": 1706378684,
+    "last_updated": 1706380231,
+    "confirmations": 6,
+    "base_fee": 40000,
+    "vsize_fee": 50000,
+    "max_bid": 14000,
+    "effective_vsize": 135,
+    "effective_fee": 3260,
+    "history": [
+      {
+        "event": "user-requested-acceleration",
+        "timestamp": 1706378684
+      },
+      {
+        "event": "accepted_test-api-key",
+        "timestamp": 1706378684
+      },
+      {
+        "event": "complete-at-block-827670",
+        "timestamp": 1706380231
+      }
+    ]
+  }
+]
+POST Cancel Acceleration (Pro)accelerator-private
+Endpoint
+POST /v1/services/accelerator/cancel
+Description
+Sends a request to cancel an acceleration in the accelerating status.
+You can retrieve eligible acceleration id using the history endpoint GET /api/v1/services/accelerator/history?status=accelerating.
+
+cURL
+Code Example
+curl -H "X-Mempool-Auth: stacksats" -X POST -sSLd "id=42" "https://mempool.space/api/v1/services/accelerator/cancel"
+Response
+HTTP/1.1 200 OK

@@ -117,10 +117,13 @@ export default function MempoolPanel() {
           <p className="text-[#E0E0E0]">
             Unconfirmed Transactions: <span className="text-[#FFD700] font-semibold">{mounted ? formatNumber(totalTx) : totalTx}</span>
           </p>
+          <p className="text-xs text-foreground/50 mt-1">
+            Updates every 30 seconds • Real-time data
+          </p>
         </div>
-        <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30">
-          <div className="w-3 h-3 rounded-full bg-[#FFD700] animate-pulse glow-gold"></div>
-          <span className="text-sm text-[#E0E0E0]">Live</span>
+        <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#4CAF50]/10 border border-[#4CAF50]/30">
+          <div className="w-3 h-3 rounded-full bg-[#4CAF50] animate-pulse"></div>
+          <span className="text-sm text-[#4CAF50] font-semibold">LIVE</span>
         </div>
       </div>
 

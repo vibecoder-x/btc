@@ -1,0 +1,13 @@
+Hostname
+
+mempool.space
+
+Port
+
+50002
+
+SSL
+
+Enabled
+
+Electrum RPC interface for Bitcoin Signet and Bitcoin Testnet4 is publicly available. Electrum RPC interface for all other networks is available to sponsors only—whitelisting is required.

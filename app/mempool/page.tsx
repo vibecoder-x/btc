@@ -44,6 +44,7 @@ export default function MempoolPage() {
   const [feeEstimates, setFeeEstimates] = useState<FeeEstimate[]>([]);
   const [feeHistory, setFeeHistory] = useState<any[]>([]);
   const [mempoolHistory, setMempoolHistory] = useState<any[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   useEffect(() => {
     const fetchMempoolData = async () => {
@@ -54,6 +55,7 @@ export default function MempoolPage() {
 
           setTxCount(data.count || 0);
           setMempoolSize((data.mempool_size || 0) / 1024 / 1024);
+          setLastUpdate(new Date());
 
           // Update fee estimates
           if (data.recommended_fees) {
@@ -79,22 +81,51 @@ export default function MempoolPage() {
             ]);
           }
 
-          // Build fee history (last 24 data points from current data)
-          const now = new Date();
-          const historyData = Array.from({ length: 24 }, (_, i) => ({
-            time: `${23 - i}h`,
-            high: data.recommended_fees?.fastest || 0,
-            medium: data.recommended_fees?.halfHour || 0,
-            low: data.recommended_fees?.economy || 0,
-          }));
-          setFeeHistory(historyData);
+          // Update fee history - add new data point and keep last 24
+          setFeeHistory(prev => {
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            const newPoint = {
+              time: timeStr,
+              high: data.recommended_fees?.fastest || 0,
+              medium: data.recommended_fees?.halfHour || 0,
+              low: data.recommended_fees?.economy || 0,
+            };
 
-          // Build mempool history (last 7 days from current size)
-          const daysData = Array.from({ length: 7 }, (_, i) => ({
-            day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
-            size: (data.mempool_size || 0) / 1024 / 1024,
-          }));
-          setMempoolHistory(daysData);
+            const updated = [...prev, newPoint].slice(-24);
+
+            // If this is the first load, fill with some initial data
+            if (prev.length === 0) {
+              return Array.from({ length: 24 }, (_, i) => ({
+                time: `${(now.getHours() - (23 - i) + 24) % 24}:00`,
+                high: newPoint.high,
+                medium: newPoint.medium,
+                low: newPoint.low,
+              }));
+            }
+
+            return updated;
+          });
+
+          // Update mempool history - add new data point and keep last 48
+          setMempoolHistory(prev => {
+            const newPoint = {
+              time: new Date().toLocaleTimeString(),
+              size: (data.mempool_size || 0) / 1024 / 1024,
+            };
+
+            const updated = [...prev, newPoint].slice(-48);
+
+            // If this is the first load, fill with some initial data
+            if (prev.length === 0) {
+              return Array.from({ length: 48 }, (_, i) => ({
+                time: `${i}h ago`,
+                size: newPoint.size,
+              }));
+            }
+
+            return updated;
+          });
         }
       } catch (error) {
         console.error('Error fetching mempool data:', error);
@@ -135,6 +166,9 @@ export default function MempoolPage() {
           <h1 className="text-5xl font-bold text-gradient-gold">Live Mempool</h1>
         </div>
         <p className="text-foreground/70 text-lg">Real-time Bitcoin mempool visualization and fee market analysis</p>
+        <p className="text-[#FFD700] text-sm mt-2">
+          Last updated: {lastUpdate.toLocaleTimeString()} • Updates every 30 seconds
+        </p>
       </motion.div>
 
       {/* Stats Overview */}
@@ -277,18 +311,31 @@ export default function MempoolPage() {
         </motion.div>
       </div>
 
-      {/* Info Message */}
+      {/* Live Data Info */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1 }}
-        className="card-3d p-8 text-center"
+        className="card-3d p-8"
       >
-        <Activity className="w-12 h-12 text-[#FFD700] mx-auto mb-4" />
-        <h3 className="text-2xl font-bold text-gradient-gold mb-2">Real-Time Mempool Data</h3>
-        <p className="text-foreground/70">
-          This page shows live mempool statistics from the Bitcoin blockchain. Data updates every 30 seconds.
-        </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Activity className="w-12 h-12 text-[#FFD700]" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#4CAF50] rounded-full animate-pulse"></div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gradient-gold mb-1">Real-Time Mempool Data</h3>
+              <p className="text-foreground/70">
+                Live data from Mempool.space API • Updates every 30 seconds
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-foreground/60">Last Update</p>
+            <p className="text-lg font-semibold text-[#FFD700]">{lastUpdate.toLocaleTimeString()}</p>
+          </div>
+        </div>
       </motion.div>
     </div>
   );
