@@ -12,7 +12,12 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:www.x402scan.com)",
       "Bash(npm install:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(git log:*)",
+      "Bash(nul)",
+      "Bash(if exist .nextdev rmdir /s /q .nextdev)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

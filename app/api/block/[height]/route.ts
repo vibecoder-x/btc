@@ -118,23 +118,30 @@ async function handler(
 
     const blockData = await blockResponse.json();
 
-    // Fetch block transactions (first 25)
-    const txsResponse = await fetch(
-      `https://blockstream.info/api/block/${blockHash}/txs`,
-      {
-        headers: { 'Accept': 'application/json' },
-        next: { revalidate: 3600 },
-      }
-    );
+    // Get start_index from query parameter for pagination
+    const { searchParams } = new URL(request.url);
+    const startIndex = parseInt(searchParams.get('start_index') || '0');
+
+    // Fetch block transactions with pagination
+    let txUrl = `https://blockstream.info/api/block/${blockHash}/txs`;
+    if (startIndex > 0) {
+      // Get last txid from a separate call to know where to start
+      txUrl = `https://blockstream.info/api/block/${blockHash}/txs/${startIndex}`;
+    }
+
+    const txsResponse = await fetch(txUrl, {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 3600 },
+    });
 
     let transactions = [];
     if (txsResponse.ok) {
       transactions = await txsResponse.json();
     }
 
-    // Extract miner from coinbase transaction (first transaction)
+    // Extract miner from coinbase transaction (first transaction) only on first load
     let miner = 'Unknown';
-    if (transactions.length > 0) {
+    if (startIndex === 0 && transactions.length > 0) {
       const coinbaseTx = transactions[0];
       if (coinbaseTx.vin && coinbaseTx.vin[0]) {
         const input = coinbaseTx.vin[0];
@@ -155,7 +162,9 @@ async function handler(
     return NextResponse.json({
       ...blockData,
       miner,
-      transactions: transactions.slice(0, 25), // Return first 25 transactions
+      transactions, // Return all fetched transactions (25 at a time from Blockstream)
+      hasMore: transactions.length === 25, // Blockstream returns 25 per page
+      nextStartIndex: startIndex + transactions.length,
     }, { status: 200 });
 
   } catch (error) {

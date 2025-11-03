@@ -12,7 +12,10 @@ export default function BlockDetailPage() {
   const [blockData, setBlockData] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextStartIndex, setNextStartIndex] = useState(0);
 
   // Fetch block data from API
   useEffect(() => {
@@ -68,6 +71,10 @@ export default function BlockDetailPage() {
           setTransactions(processedTxs);
         }
 
+        // Set pagination state
+        setHasMore(data.hasMore || false);
+        setNextStartIndex(data.nextStartIndex || 0);
+
       } catch (err: any) {
         console.error('Error fetching block:', err);
         setError(err.message || 'Failed to load block data');
@@ -78,6 +85,41 @@ export default function BlockDetailPage() {
 
     fetchBlockData();
   }, [height]);
+
+  // Load more transactions
+  const loadMoreTransactions = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+
+      const response = await fetch(`/api/block/${height}?start_index=${nextStartIndex}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to load more transactions');
+      }
+
+      const data = await response.json();
+
+      if (data.transactions) {
+        const processedTxs = data.transactions.map((tx: any) => ({
+          txid: tx.txid,
+          fee: ((tx.fee || 0) / 100000000).toFixed(8),
+          size: tx.size || 0,
+          weight: tx.weight || 0,
+        }));
+        setTransactions([...transactions, ...processedTxs]);
+      }
+
+      setHasMore(data.hasMore || false);
+      setNextStartIndex(data.nextStartIndex || 0);
+
+    } catch (err: any) {
+      console.error('Error loading more transactions:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // Loading state
   if (loading) {
@@ -232,22 +274,33 @@ export default function BlockDetailPage() {
                 </Link>
               </motion.div>
             ))}
-            {blockData.txCount > transactions.length && (
-              <div className="text-center py-6 glassmorphism rounded-lg">
-                <p className="text-foreground/70 mb-2">
+
+            {hasMore && (
+              <div className="text-center py-8">
+                <p className="text-foreground/60 mb-4">
                   Showing {transactions.length} of {blockData.txCount} transactions
                 </p>
-                <p className="text-sm text-foreground/50">
-                  Visit{' '}
-                  <a
-                    href={`https://blockstream.info/block/${blockData.hash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#FFD700] hover:text-[#FF6B35] transition-colors underline"
-                  >
-                    Blockstream
-                  </a>
-                  {' '}to view all transactions
+                <button
+                  onClick={loadMoreTransactions}
+                  disabled={loadingMore}
+                  className="px-8 py-4 rounded-lg bg-gradient-to-r from-[#FFD700] to-[#FF6B35] hover:glow-gold transition-all duration-300 font-semibold text-white text-lg shadow-lg hover:shadow-[#FFD700]/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingMore ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Loading...
+                    </span>
+                  ) : (
+                    `Load More Transactions (${Math.min(25, blockData.txCount - transactions.length)} more)`
+                  )}
+                </button>
+              </div>
+            )}
+
+            {!hasMore && transactions.length >= blockData.txCount && transactions.length > 0 && (
+              <div className="text-center py-6 glassmorphism rounded-lg">
+                <p className="text-[#FFD700] font-semibold">
+                  ✓ All {blockData.txCount} transactions loaded
                 </p>
               </div>
             )}

@@ -1,0 +1,523 @@
+PROMPT 1: Transaction Detail Page
+
+
+Create a modern, responsive Bitcoin transaction detail page for btcindexer.com with the following specifications:
+
+DESIGN REQUIREMENTS:
+- Dark theme with blue accents (#3b82f6) to match existing site
+- Clean, modern UI with card-based layout
+- Mobile-first responsive design
+- Use Inter or similar sans-serif font
+
+PAGE STRUCTURE:
+1. Header Section:
+   - Transaction ID (with copy button)
+   - Confirmation status badge (Confirmed/Unconfirmed)
+   - Timestamp and block height
+
+2. Transaction Overview Card:
+   - Total Input Amount (BTC)
+   - Total Output Amount (BTC)
+   - Transaction Fee (in BTC and USD)
+   - Fee Rate (sat/vB)
+   - Transaction Size (bytes)
+   - Virtual Size (vBytes)
+   - Weight
+
+3. Input Addresses Section:
+   - Table showing all input addresses
+   - Columns: Address, Amount, Previous TX
+   - Make addresses clickable links
+
+4. Output Addresses Section:
+   - Table showing all output addresses
+   - Columns: Address, Amount, Script Type
+   - Mark OP_RETURN outputs if present
+
+5. Technical Details (Collapsible):
+   - Raw transaction hex
+   - Lock time
+   - Version
+   - Witness data (if SegWit)
+
+6. Transaction Flow Visualization:
+   - Visual diagram showing inputs → transaction → outputs
+   - Show fee calculation
+
+FEATURES TO INCLUDE:
+- QR code generator for transaction ID
+- Share button (Twitter, copy link)
+- "View in block" button linking to block page
+- Real-time confirmation counter
+- USD value conversion at current BTC price
+
+ADDITIONAL ELEMENTS:
+- Breadcrumb navigation: Home > Transactions > [TX ID]
+- Related transactions section
+- Warning messages for unusual patterns (high fees, RBF enabled)
+- Loading skeleton while data fetches
+PROMPT 2: Address Explorer Page
+
+
+Design a comprehensive Bitcoin address explorer page for btcindexer.com with the following specifications:
+
+DESIGN REQUIREMENTS:
+- Consistent with existing dark theme
+- Card-based layout with gradient accents
+- Responsive grid system
+- Smooth animations and transitions
+
+PAGE LAYOUT:
+1. Address Header:
+   - Bitcoin address (with copy and QR code buttons)
+   - Address type badge (P2PKH, P2SH, P2WPKH, P2WSH, Bech32)
+   - Balance in BTC and USD
+   - "Watch this address" bookmark feature
+
+2. Balance Summary Card:
+   - Total Received (all-time)
+   - Total Sent (all-time)
+   - Current Balance
+   - Number of transactions
+   - First seen date
+   - Last activity date
+
+3. Transaction History:
+   - Paginated table (20 transactions per page)
+   - Columns: Date, TX ID, Type (Sent/Received), Amount, Balance After, Confirmations
+   - Color coding: Green for received, Red for sent
+   - Filter options: All, Sent, Received, Date range
+   - Search box for finding specific transactions
+
+4. Charts & Analytics Section:
+   - Balance over time line chart
+   - Transaction volume bar chart (weekly/monthly)
+   - Receive vs Send pie chart
+
+5. UTXO Set (Collapsible):
+   - List of unspent transaction outputs
+   - Columns: TX ID, Output Index, Amount, Confirmations
+   - Total UTXO count and value
+
+FEATURES:
+- Export transaction history (CSV, JSON)
+- Real-time updates via WebSocket
+- Address verification tool
+- Related addresses section (common counterparties)
+- Labels for known addresses (exchanges, services)
+- Privacy score indicator
+
+ADDITIONAL SECTIONS:
+- Warning for reused addresses
+- SegWit savings calculator
+- Dust detection
+- API endpoint link for this address
+PROMPT 3: User Dashboard Page (Post-Login)
+
+
+Create an interactive user dashboard for btcindexer.com that shows after wallet authentication:
+
+DESIGN STYLE:
+- Modern dashboard with dark theme
+- Use cards with subtle shadows and borders
+- Incorporate charts and graphs
+- Highlight important metrics with accent colors
+
+DASHBOARD SECTIONS:
+
+1. Welcome Header:
+   - "Welcome back, [Wallet Address shortened]"
+   - Current plan badge (Free/Unlimited)
+   - Quick actions: View API Docs, Upgrade Plan, Settings
+
+2. API Usage Statistics Card:
+   - Large number showing requests used today
+   - Progress bar (e.g., "45/100 requests used")
+   - Reset timer ("Resets in 14 hours 23 minutes")
+   - Usage trend chart (last 7 days)
+   - Peak usage time of day
+
+3. Plan Overview Card:
+   - Current tier (Free/Unlimited)
+   - Tier benefits checklist
+   - Upgrade CTA button if on Free tier
+   - "Lifetime Unlimited" badge if upgraded
+   - Payment history if applicable
+
+4. Quick API Test Panel:
+   - Dropdown to select endpoint
+   - "Test API Call" button
+   - Response preview window
+   - Copy cURL command button
+   - Response time display
+
+5. Recent API Calls Log:
+   - Table showing last 10 API calls
+   - Columns: Time, Endpoint, Status Code, Response Time
+   - Status indicators (green for 200, red for errors)
+
+6. Wallet Information Card:
+   - Connected wallet address (with copy button)
+   - Network (Ethereum, Bitcoin, Solana, etc.)
+   - Connection status (Active/Disconnected)
+   - "Change Wallet" button
+
+7. Quick Links Grid:
+   - API Documentation
+   - Code Examples
+   - Support/Help
+   - Pricing
+   - Status Page
+   - API Keys (future feature)
+
+8. Notifications/Announcements:
+   - Service updates
+   - New features
+   - Maintenance notices
+
+INTERACTIVE FEATURES:
+- Real-time usage updates
+- Downloadable API usage reports (PDF/CSV)
+- Custom date range for analytics
+- Dark/light theme toggle
+- Notification preferences
+
+CHARTS TO INCLUDE:
+- Line chart: Daily API usage (last 30 days)
+- Bar chart: Most used endpoints
+- Pie chart: Request types distribution
+PROMPT 4: Mempool Live Visualization Page
+
+
+Design an advanced mempool visualization page for btcindexer.com with real-time updates:
+
+CONCEPT:
+Create an engaging, real-time visualization of Bitcoin's mempool showing unconfirmed transactions and fee market dynamics.
+
+PAGE STRUCTURE:
+
+1. Hero Section:
+   - Large "Live Mempool" title
+   - Real-time transaction counter (updating every second)
+   - Current mempool size (MB)
+   - Estimated time to next block
+
+2. Fee Market Overview:
+   - Three priority panels side-by-side:
+     * High Priority: X sat/vB (confirmation in ~10 min)
+     * Medium Priority: X sat/vB (confirmation in ~30 min)
+     * Low Priority: X sat/vB (confirmation in ~2 hours)
+   - Color-coded: Red (high), Yellow (medium), Green (low)
+
+3. Live Transaction Stream:
+   - Scrolling list of incoming transactions (auto-updates)
+   - Show: TX ID (shortened), Fee Rate, Size, Time received
+   - Animation when new tx appears
+   - Ability to pause/resume stream
+
+4. Mempool Visualization:
+   - Interactive 3D block projection showing pending transactions
+   - Color-coded by fee rate (gradient from green to red)
+   - Show how transactions would fit into next blocks
+   - Hover to see individual transaction details
+
+5. Historical Fee Charts:
+   - Line chart: Fee rates over last 24 hours
+   - Bar chart: Mempool size over last 7 days
+   - Projected confirmation times graph
+
+6. Statistics Panel:
+   - Total unconfirmed transactions
+   - Average transaction size
+   - Average fee rate
+   - Mempool churn rate (tx entering vs leaving)
+   - Oldest transaction in mempool
+
+7. Fee Estimator Tool:
+   - Input: Transaction size (bytes)
+   - Output: Recommended fee for desired confirmation time
+   - Interactive slider for priority level
+   - Cost in BTC and USD
+
+8. Block Candidates Section:
+   - Preview of next 3-5 blocks based on current mempool
+   - Show projected fees, size, transaction count
+   - Update as mempool changes
+
+TECHNICAL FEATURES:
+- WebSocket connection for real-time updates
+- Smooth animations for new data
+- Performance-optimized for continuous streaming
+- Optional sound notifications for large transactions
+- Export mempool snapshot data
+
+VISUAL ELEMENTS:
+- Animated particles representing transactions
+- Heatmap showing fee density
+- Progress indicator for block formation
+- Pulsing effects for real-time activity
+PROMPT 5: Mining Statistics Page
+
+
+Create a comprehensive Bitcoin mining statistics page for btcindexer.com:
+
+PAGE TITLE: "Bitcoin Mining Analytics"
+
+SECTIONS TO INCLUDE:
+
+1. Network Overview Card:
+   - Current difficulty (with trend indicator)
+   - Next difficulty adjustment (blocks remaining, estimated date)
+   - Percentage change prediction
+   - Global hash rate (EH/s)
+   - Hash rate trend (7-day, 30-day)
+
+2. Mining Pool Distribution:
+   - Pie chart showing pool market share (last 1000 blocks)
+   - List with logos: Foundry USA, AntPool, F2Pool, ViaBTC, etc.
+   - Percentage and block count for each pool
+   - Links to pool websites
+   - "Unknown" category for solo miners
+
+3. Block Production Timeline:
+   - Visual timeline of last 50 blocks
+   - Color-coded by mining pool
+   - Show time between blocks
+   - Highlight unusual gaps (>30 minutes)
+
+4. Profitability Calculator:
+   - Inputs: Hash rate, Power consumption, Electricity cost
+   - Outputs: Daily/monthly/yearly profit
+   - BTC mined estimate
+   - Break-even calculation
+   - Popular ASIC presets (Antminer S19, Whatsminer M50, etc.)
+
+5. Difficulty History Chart:
+   - Line graph: Difficulty over last 2 years
+   - Overlay: Hash rate progression
+   - Mark halving events
+   - Zoom and pan functionality
+
+6. Recent Blocks by Pool:
+   - Table showing last 20 blocks
+   - Columns: Block Height, Miner, Time, Reward, Fees
+   - Sort functionality
+   - Filter by specific pool
+
+7. Mining Hardware Comparison:
+   - Table of popular ASICs
+   - Columns: Model, Hash Rate, Power, Efficiency, Price
+   - ROI calculator for each model
+
+8. Network Health Indicators:
+   - Block time variance (target vs actual)
+   - Orphaned/stale blocks count
+   - Average block propagation time
+   - Geographic distribution estimate
+
+9. Historical Milestones:
+   - Timeline of major events (halvings, difficulty records, etc.)
+   - All-time highs and lows
+   - Notable achievements
+
+INTERACTIVE FEATURES:
+- Toggle between different time periods
+- Export data as CSV/JSON
+- Share specific statistics on social media
+- Subscribe to difficulty adjustment alerts
+
+DESIGN NOTES:
+- Use mining-themed iconography (pickaxes, blocks, chips)
+- Incorporate orange/gold accent colors for "mining" theme
+- Make charts interactive with tooltips
+- Mobile-responsive tables with horizontal scroll
+PROMPT 6: About/FAQ Page
+
+
+Design a comprehensive About and FAQ page for btcindexer.com:
+
+PAGE STRUCTURE:
+
+1. Hero Section:
+   - Title: "About BTC Indexer"
+   - Tagline: "Real-time blockchain data, powered by wallet authentication"
+   - Brief mission statement (2-3 sentences)
+
+2. What We Do Section:
+   - Card grid explaining core features:
+     * Blockchain Explorer
+     * API Access
+     * Real-time Data
+     * Wallet-Based Auth
+   - Each card with icon, title, and description
+
+3. Why Choose Us:
+   - Bullet points highlighting unique value:
+     * No email/password needed
+     * Affordable lifetime pricing
+     * Fast, reliable API
+     * Comprehensive documentation
+     * Multi-chain wallet support
+
+4. Team Section (if applicable):
+   - Photos and bios of team members
+   - Links to social profiles
+
+5. Technology Stack:
+   - Brief overview of tech used
+   - Why these technologies were chosen
+   - Performance metrics
+
+6. FAQ Section:
+   Large, organized FAQ with categories:
+
+   **Getting Started:**
+   - What is BTC Indexer?
+   - How do I create an account?
+   - Which wallets are supported?
+   - Is my wallet safe to connect?
+
+   **Pricing & Plans:**
+   - What's included in the free tier?
+   - How does the unlimited plan work?
+   - Can I upgrade anytime?
+   - What payment methods are accepted?
+   - Do you offer refunds?
+
+   **API Usage:**
+   - How do I authenticate API requests?
+   - What are the rate limits?
+   - Where can I find API documentation?
+   - Can I use the API in production?
+   - Do you provide API support?
+
+   **Technical:**
+   - What data sources do you use?
+   - How often is data updated?
+   - What's your uptime guarantee?
+   - Do you have a status page?
+   - How do I report bugs?
+
+   **Security & Privacy:**
+   - Do you store my private keys?
+   - What data do you collect?
+   - Is my data encrypted?
+   - GDPR compliance?
+
+   **Blockchain Specifics:**
+   - What Bitcoin networks do you support? (mainnet/testnet)
+   - How far back does your data go?
+   - Do you support other cryptocurrencies?
+
+7. Contact Section:
+   - Support email
+   - Twitter/social links
+   - Discord/Telegram community
+   - GitHub repository
+
+8. CTA Section:
+   - "Ready to get started?" button
+   - Link to signup/login
+   - Link to API documentation
+
+DESIGN ELEMENTS:
+- Accordion-style FAQ (click to expand)
+- Search box to filter FAQs
+- Smooth scroll to sections
+- "Was this helpful?" feedback buttons
+- Related questions suggestions
+PROMPT 7: API Status & Health Dashboard
+
+
+Create a public status page for btcindexer.com showing system health and uptime:
+
+PAGE TITLE: "System Status"
+
+LAYOUT:
+
+1. Overall Status Banner:
+   - Large status indicator (green = all systems operational)
+   - Text: "All Systems Operational" or "Partial Outage" or "Major Outage"
+   - Last updated timestamp (auto-refreshing)
+
+2. Service Status Grid:
+   Individual cards for each service:
+   
+   a) API Endpoints:
+      - Status indicator (green/yellow/red)
+      - Response time (ms)
+      - Success rate (%)
+   
+   b) Bitcoin Node:
+      - Sync status
+      - Current block height
+      - Peer connections
+   
+   c) Database:
+      - Query performance
+      - Connection pool status
+   
+   d) Authentication Service:
+      - Wallet connection success rate
+   
+   e) Website:
+      - Page load time
+      - CDN status
+
+3. Uptime Metrics (Last 90 Days):
+   - Visual bar chart showing daily uptime
+   - Green = 100%, Yellow = 99-99.9%, Red = <99%
+   - Overall uptime percentage
+
+4. Recent Incidents:
+   - Timeline of past issues
+   - Show: Date, Duration, Affected Services, Status (Resolved/Investigating)
+   - Link to detailed incident reports
+
+5. Scheduled Maintenance:
+   - Upcoming maintenance windows
+   - Date, time, expected duration
+   - Affected services
+   - "Subscribe to updates" option
+
+6. Performance Metrics:
+   - Average API response time (last 24h, 7d, 30d)
+   - Requests per second (current)
+   - Error rate
+   - Latency percentiles (p50, p95, p99)
+
+7. Bitcoin Network Status:
+   - Current blockchain height
+   - Last block time
+   - Network hash rate
+   - Mempool size
+   - (This shows the external network is healthy)
+
+8. Subscribe to Updates:
+   - Email notification signup
+   - Webhook integration option
+   - RSS feed link
+   - Twitter status account
+
+FEATURES:
+- Auto-refresh every 30 seconds
+- Historical incident log (searchable)
+- Status API endpoint for programmatic access
+- Embed widget for third-party sites
+
+DESIGN:
+- Clean, minimal interface
+- Clear color coding (green/yellow/red)
+- Large, easy-to-read status indicators
+- Mobile-responsive
+- Dark theme consistent with main site
+🎯 PRIORITY RECOMMENDATIONS
+Based on the review, implement in this order:
+
+Transaction Detail Page (Critical - currently broken)
+Address Explorer Page (Essential blockchain explorer feature)
+User Dashboard (Improve user experience post-login)
+Status Page (Build trust and transparency)
+Mempool Visualization (Unique feature to differentiate)
+About/FAQ (Reduce support burden)
+Mining Statistics (Additional value-add feature)
