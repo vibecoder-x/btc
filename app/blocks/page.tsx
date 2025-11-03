@@ -100,14 +100,13 @@ export default function BlocksPage() {
           if (newBlocks.length > 0) {
             // Mark new blocks with isNew flag
             const markedNewBlocks = newBlocks.map((b: Block) => ({ ...b, isNew: true }));
-            const updated = [...markedNewBlocks, ...prevBlocks].slice(0, blocksPerPage * page);
 
             // Remove isNew flag after animation
             setTimeout(() => {
               setBlocks(prev => prev.map(b => ({ ...b, isNew: false })));
             }, 500);
 
-            return updated;
+            return [...markedNewBlocks, ...prevBlocks];
           }
           return prevBlocks;
         });
@@ -116,7 +115,7 @@ export default function BlocksPage() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [page]);
+  }, []); // Remove page dependency
 
   const loadMore = async () => {
     if (blocks.length === 0 || loading) return;

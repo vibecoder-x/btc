@@ -16,38 +16,92 @@ interface Block {
 
 export default function BlocksTable() {
   const [mounted, setMounted] = useState(false);
-  const [blocks, setBlocks] = useState<Block[]>([
-    { height: 820450, size: '1.2 MB', txCount: 2345, miner: 'Foundry USA', time: '2 min ago' },
-    { height: 820449, size: '1.1 MB', txCount: 2156, miner: 'AntPool', time: '12 min ago' },
-    { height: 820448, size: '1.3 MB', txCount: 2567, miner: 'F2Pool', time: '23 min ago' },
-    { height: 820447, size: '0.9 MB', txCount: 1876, miner: 'ViaBTC', time: '35 min ago' },
-    { height: 820446, size: '1.2 MB', txCount: 2234, miner: 'Binance Pool', time: '47 min ago' },
-  ]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch blocks from API
+  const fetchBlocks = async () => {
+    try {
+      const response = await fetch('/api/blocks');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch blocks');
+      }
+
+      const data = await response.json();
+
+      // Transform blocks data
+      const transformedBlocks = data.blocks.slice(0, 5).map((block: any) => {
+        const now = Date.now();
+        const blockTime = block.timestamp * 1000;
+        const diffMinutes = Math.floor((now - blockTime) / 60000);
+
+        let timeStr;
+        if (diffMinutes < 1) {
+          timeStr = 'Just now';
+        } else if (diffMinutes < 60) {
+          timeStr = `${diffMinutes} min ago`;
+        } else if (diffMinutes < 1440) {
+          const hours = Math.floor(diffMinutes / 60);
+          timeStr = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        } else {
+          const days = Math.floor(diffMinutes / 1440);
+          timeStr = `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        return {
+          height: block.height,
+          size: `${(block.size / 1024 / 1024).toFixed(2)} MB`,
+          txCount: block.tx_count,
+          miner: 'Unknown', // Blockstream API doesn't provide miner info
+          time: timeStr,
+        };
+      });
+
+      return transformedBlocks;
+    } catch (error) {
+      console.error('Error fetching blocks:', error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
 
-    // Simulate new blocks
-    const interval = setInterval(() => {
-      setBlocks((prev) => {
-        const newBlock: Block = {
-          height: prev[0].height + 1,
-          size: `${(Math.random() * 0.5 + 0.8).toFixed(1)} MB`,
-          txCount: Math.floor(Math.random() * 1000 + 1500),
-          miner: ['Foundry USA', 'AntPool', 'F2Pool', 'ViaBTC', 'Binance Pool'][
-            Math.floor(Math.random() * 5)
-          ],
-          time: 'Just now',
-          isNew: true,
-        };
-        return [newBlock, ...prev.slice(0, 9)];
-      });
+    // Initial fetch
+    const loadBlocks = async () => {
+      setLoading(true);
+      const fetchedBlocks = await fetchBlocks();
+      setBlocks(fetchedBlocks);
+      setLoading(false);
+    };
 
-      // Remove isNew flag after animation
-      setTimeout(() => {
-        setBlocks((prev) => prev.map((b) => ({ ...b, isNew: false })));
-      }, 500);
-    }, 15000);
+    loadBlocks();
+
+    // Refresh blocks every 60 seconds
+    const interval = setInterval(async () => {
+      const fetchedBlocks = await fetchBlocks();
+
+      setBlocks(prevBlocks => {
+        // Check if there are new blocks
+        const latestHeight = prevBlocks.length > 0 ? prevBlocks[0].height : 0;
+        const newBlocks = fetchedBlocks.filter((b: Block) => b.height > latestHeight);
+
+        if (newBlocks.length > 0) {
+          // Mark new blocks with isNew flag
+          const markedNewBlocks = newBlocks.map((b: Block) => ({ ...b, isNew: true }));
+          const updated = [...markedNewBlocks, ...prevBlocks].slice(0, 5);
+
+          // Remove isNew flag after animation
+          setTimeout(() => {
+            setBlocks(prev => prev.map((b: Block) => ({ ...b, isNew: false })));
+          }, 500);
+
+          return updated;
+        }
+        return fetchedBlocks;
+      });
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -76,6 +130,13 @@ export default function BlocksTable() {
           View All →
         </Link>
       </div>
+
+      {loading && blocks.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-12 h-12 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-foreground/60">Loading blocks...</p>
+        </div>
+      ) : null}
 
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto">
