@@ -73,19 +73,19 @@ export default function HeroSection() {
 
   if (!mounted) {
     return (
-      <div className="relative w-full h-[500px] overflow-hidden bg-gradient-to-b from-space-black via-dark-gray to-medium-gray">
+      <div className="relative w-full h-[500px] overflow-hidden bg-gradient-to-b from-[#0A0A0A] via-[#2D3436] to-[#0A0A0A]">
         {/* Grid pattern background */}
         <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: 'linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(255, 215, 0, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.3) 1px, transparent 1px)',
           backgroundSize: '50px 50px'
         }}></div>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 bg-gradient-to-r from-neon-blue to-neon-orange bg-clip-text text-transparent text-center">
-            Bitcoin Explorer
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 text-gradient-gold text-center">
+            BTCindexer
           </h1>
           <p className="text-xl md:text-2xl text-foreground/70 text-center max-w-3xl">
-            Real-time blockchain visualization and analytics
+            Professional Bitcoin blockchain API with wallet authentication
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent"></div>

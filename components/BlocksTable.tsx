@@ -142,7 +142,7 @@ export default function BlocksTable() {
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-neon-blue/20">
+            <tr className="border-b border-[#FFD700]/20">
               <th className="text-left py-4 px-4 text-foreground/70 font-semibold">Height</th>
               <th className="text-left py-4 px-4 text-foreground/70 font-semibold">Size</th>
               <th className="text-left py-4 px-4 text-foreground/70 font-semibold">Transactions</th>
@@ -155,10 +155,10 @@ export default function BlocksTable() {
               {blocks.map((block) => (
                 <motion.tr
                   key={block.height}
-                  initial={block.isNew ? { backgroundColor: 'rgba(0, 255, 255, 0.2)' } : false}
+                  initial={block.isNew ? { backgroundColor: 'rgba(255, 215, 0, 0.2)' } : false}
                   animate={{ backgroundColor: 'rgba(0, 0, 0, 0)' }}
                   transition={{ duration: 0.5 }}
-                  className="border-b border-neon-blue/10 hover:bg-neon-blue/5 transition-colors duration-200"
+                  className="border-b border-[#FFD700]/10 hover:bg-[#FFD700]/5 transition-colors duration-200"
                 >
                   <td className="py-4 px-4">
                     <Link
@@ -195,7 +195,7 @@ export default function BlocksTable() {
               <div className="flex items-center justify-between">
                 <Link
                   href={`/blocks/${block.height}`}
-                  className="text-xl font-mono font-bold text-neon-blue"
+                  className="text-xl font-mono font-bold text-[#FFD700]"
                 >
                   {mounted ? formatNumber(block.height) : block.height}
                 </Link>
@@ -203,16 +203,16 @@ export default function BlocksTable() {
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center">
-                  <Database className="w-4 h-4 mr-2 text-neon-orange" />
+                  <Database className="w-4 h-4 mr-2 text-[#FF6B35]" />
                   <span className="text-foreground/70">{block.size}</span>
                 </div>
                 <div className="flex items-center">
-                  <Users className="w-4 h-4 mr-2 text-neon-green" />
+                  <Users className="w-4 h-4 mr-2 text-[#4CAF50]" />
                   <span className="text-foreground/70">{mounted ? formatNumber(block.txCount) : block.txCount} txs</span>
                 </div>
               </div>
               <div className="text-sm text-foreground/70">
-                <span className="text-neon-blue">Miner:</span> {block.miner}
+                <span className="text-[#FFD700]">Miner:</span> {block.miner}
               </div>
             </motion.div>
           ))}

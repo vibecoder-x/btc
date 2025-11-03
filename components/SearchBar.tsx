@@ -62,13 +62,13 @@ export default function SearchBar() {
           value={query}
           onChange={handleInputChange}
           placeholder="Search by block height, txid, or address..."
-          className="w-full px-6 py-4 rounded-xl glassmorphism text-foreground placeholder-foreground/50 focus:outline-none focus:ring-2 focus:ring-neon-blue/50 transition-all duration-300"
+          className="w-full px-6 py-4 rounded-xl glassmorphism text-foreground placeholder-foreground/50 focus:outline-none focus:ring-2 focus:ring-[#FFD700]/50 transition-all duration-300"
         />
         <button
           type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-lg bg-gradient-to-br from-neon-blue to-neon-orange hover:glow-blue transition-all duration-300"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300"
         >
-          <Search className="w-5 h-5 text-space-black" />
+          <Search className="w-5 h-5 text-white" />
         </button>
       </form>
 
@@ -82,7 +82,7 @@ export default function SearchBar() {
           {suggestions.map((suggestion, index) => (
             <div
               key={index}
-              className="px-4 py-2 hover:bg-neon-blue/10 rounded-lg cursor-pointer transition-colors duration-200"
+              className="px-4 py-2 hover:bg-[#FFD700]/10 rounded-lg cursor-pointer transition-colors duration-200"
             >
               {suggestion}
             </div>
