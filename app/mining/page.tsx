@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, Cpu, Zap, DollarSign, Clock,
@@ -37,15 +37,39 @@ export default function MiningPage() {
     { name: 'Others', value: 12.5, color: '#607D8B' },
   ];
 
-  // Recent blocks
-  const recentBlocks = Array.from({ length: 20 }, (_, i) => ({
-    height: 820450 - i,
-    miner: poolData[Math.floor(Math.random() * poolData.length)].name,
-    time: Date.now() - i * 600000, // 10 minutes apart
-    reward: 6.25,
-    fees: (Math.random() * 0.5 + 0.1).toFixed(4),
-    timeBetween: Math.floor(Math.random() * 15) + 5, // 5-20 minutes
-  }));
+  // Recent blocks - fetch from API
+  const [recentBlocks, setRecentBlocks] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchRecentBlocks = async () => {
+      try {
+        const response = await fetch('/api/blocks');
+        if (response.ok) {
+          const data = await response.json();
+
+          // Transform blocks to match expected format
+          const transformedBlocks = data.blocks.slice(0, 20).map((block: any, i: number) => ({
+            height: block.height,
+            miner: block.miner || 'Unknown',
+            time: block.timestamp * 1000,
+            reward: 3.125, // Current block reward after April 2024 halving
+            fees: ((block.fee || 0) / 100000000).toFixed(4),
+            timeBetween: i > 0 ? Math.floor((block.timestamp - data.blocks[i-1]?.timestamp) / 60) : 10,
+          }));
+
+          setRecentBlocks(transformedBlocks);
+        }
+      } catch (error) {
+        console.error('Error fetching recent blocks:', error);
+      }
+    };
+
+    fetchRecentBlocks();
+
+    // Refresh every 2 minutes
+    const interval = setInterval(fetchRecentBlocks, 120000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Difficulty history
   const difficultyHistory = Array.from({ length: 24 }, (_, i) => ({

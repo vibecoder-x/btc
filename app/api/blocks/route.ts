@@ -116,12 +116,15 @@ export async function GET(request: NextRequest) {
           );
 
           if (txResponse.ok) {
-            const coinbaseTx = await txResponse.json();
+            const coinbaseTxArray = await txResponse.json();
+
+            // Blockstream API returns an array, get first transaction
+            const coinbaseTx = Array.isArray(coinbaseTxArray) ? coinbaseTxArray[0] : coinbaseTxArray;
 
             // Extract miner from coinbase scriptSig or witness
             let miner = 'Unknown';
 
-            if (coinbaseTx.vin && coinbaseTx.vin[0]) {
+            if (coinbaseTx && coinbaseTx.vin && coinbaseTx.vin[0]) {
               const input = coinbaseTx.vin[0];
 
               // Try scriptsig first (check both possible field names)
