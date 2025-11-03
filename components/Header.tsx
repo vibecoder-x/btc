@@ -2,48 +2,18 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Menu, X, Wallet, LogOut, Copy, Check } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { WalletService, WalletAccount } from '@/lib/wallet/wallet-service';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useAccount } from 'wagmi';
+import { MultiChainWalletButton } from './MultiChainWalletButton';
 import GlobalSearch from './GlobalSearch';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [walletAccount, setWalletAccount] = useState<WalletAccount | null>(null);
-  const [showWalletMenu, setShowWalletMenu] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    // Check for saved wallet connection
-    const savedAccount = WalletService.getSavedAccount();
-    if (savedAccount) {
-      setWalletAccount(savedAccount);
-    }
-
-    // Listen for storage events (wallet connection in other tabs)
-    const handleStorageChange = () => {
-      const account = WalletService.getSavedAccount();
-      setWalletAccount(account);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const handleDisconnect = () => {
-    WalletService.disconnect();
-    setWalletAccount(null);
-    setShowWalletMenu(false);
-  };
-
-  const copyAddress = () => {
-    if (walletAccount) {
-      navigator.clipboard.writeText(walletAccount.address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
+  const { open } = useWeb3Modal();
+  const { address, isConnected } = useAccount();
 
   const getNavItems = () => {
     const baseItems = [
@@ -60,7 +30,7 @@ export default function Header() {
     ];
 
     // Add Dashboard link if wallet is connected
-    if (walletAccount) {
+    if (isConnected) {
       return [
         ...baseItems.slice(0, 1), // Home
         { name: 'Dashboard', href: '/dashboard' },
@@ -107,87 +77,8 @@ export default function Header() {
             {/* Global Search */}
             <GlobalSearch />
 
-            {/* Wallet Status */}
-            {walletAccount ? (
-              <div className="relative">
-                <button
-                  onClick={() => setShowWalletMenu(!showWalletMenu)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-neon-blue to-neon-orange hover:glow-blue transition-all duration-300 font-semibold text-white"
-                >
-                  <Wallet className="w-4 h-4" />
-                  {WalletService.formatAddress(walletAccount.address)}
-                </button>
-
-                {/* Wallet Dropdown */}
-                <AnimatePresence>
-                  {showWalletMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-64 glassmorphism rounded-xl border border-neon-blue/30 p-4 shadow-2xl"
-                    >
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-xs text-foreground/50 mb-1">Connected Wallet</p>
-                          <p className="text-sm font-mono text-foreground break-all">
-                            {walletAccount.address}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-2 pt-2 border-t border-foreground/10">
-                          <button
-                            onClick={copyAddress}
-                            className="flex-1 px-3 py-2 rounded-lg bg-neon-blue/10 hover:bg-neon-blue/20 transition-colors text-sm font-semibold text-neon-blue flex items-center justify-center gap-2"
-                          >
-                            {copied ? (
-                              <>
-                                <Check className="w-4 h-4" />
-                                Copied
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-4 h-4" />
-                                Copy
-                              </>
-                            )}
-                          </button>
-                          <button
-                            onClick={handleDisconnect}
-                            className="flex-1 px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors text-sm font-semibold text-red-400 flex items-center justify-center gap-2"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            Disconnect
-                          </button>
-                        </div>
-
-                        <div className="pt-2 border-t border-foreground/10">
-                          <p className="text-xs text-foreground/50 mb-2">Wallet Type</p>
-                          <span className="inline-block px-2 py-1 rounded bg-neon-orange/20 text-neon-orange text-xs font-semibold capitalize">
-                            {walletAccount.walletType}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="text-foreground/80 hover:text-neon-blue transition-colors duration-300 font-semibold"
-                >
-                  Connect Wallet
-                </Link>
-                <Link
-                  href="/signup"
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-neon-blue to-neon-orange hover:glow-blue transition-all duration-300 font-semibold text-white"
-                >
-                  Get Started
-                </Link>
-              </div>
-            )}
+            {/* Wallet Connection */}
+            <MultiChainWalletButton size="md" showChain={true} />
           </div>
 
           {/* Mobile Menu Button */}
@@ -224,41 +115,10 @@ export default function Header() {
                 </Link>
               ))}
 
-              {/* Mobile Wallet Status */}
-              {walletAccount ? (
-                <div className="pt-4 border-t border-foreground/10 space-y-3">
-                  <div className="p-3 rounded-lg bg-neon-blue/10 border border-neon-blue/30">
-                    <p className="text-xs text-foreground/50 mb-1">Connected</p>
-                    <p className="text-sm font-mono text-foreground break-all">
-                      {walletAccount.address}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleDisconnect}
-                    className="w-full py-2 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-all text-red-400 font-semibold flex items-center justify-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Disconnect Wallet
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="block py-2 text-foreground hover:text-neon-blue transition-colors duration-300"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Connect Wallet
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="block py-2 px-4 rounded-lg bg-gradient-to-r from-neon-blue to-neon-orange hover:glow-blue transition-all text-white font-semibold text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Get Started
-                  </Link>
-                </>
-              )}
+              {/* Mobile Wallet Connection */}
+              <div className="pt-4 border-t border-foreground/10">
+                <MultiChainWalletButton size="md" showChain={true} className="w-full justify-center" />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

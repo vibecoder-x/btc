@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Clock, ArrowRight, Hash, Wallet, Cube, Copy } from 'lucide-react';
+import { Search, X, Clock, ArrowRight, Hash, Wallet, Box, Copy } from 'lucide-react';
 
 interface SearchResult {
   type: 'block' | 'tx' | 'address';
@@ -198,7 +198,7 @@ export default function GlobalSearch() {
   };
 
   const getIcon = (type: string) => {
-    if (type === 'block') return <Cube className="w-5 h-5" />;
+    if (type === 'block') return <Box className="w-5 h-5" />;
     if (type === 'tx') return <Hash className="w-5 h-5" />;
     if (type === 'address') return <Wallet className="w-5 h-5" />;
     return <Search className="w-5 h-5" />;
