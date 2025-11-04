@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Play,
@@ -104,6 +104,12 @@ export default function PlaygroundPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedResponse, setCopiedResponse] = useState(false);
+  const [origin, setOrigin] = useState('');
+
+  // Get origin on client side only
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   const buildUrl = () => {
     let url = selectedEndpoint.path;
@@ -151,7 +157,7 @@ export default function PlaygroundPage() {
   };
 
   const copyUrl = () => {
-    const url = window.location.origin + buildUrl();
+    const url = origin + buildUrl();
     navigator.clipboard.writeText(url);
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 2000);
@@ -292,7 +298,7 @@ export default function PlaygroundPage() {
               <h3 className="text-sm font-semibold text-foreground/70 mb-2">Request URL</h3>
               <div className="flex items-center gap-2">
                 <code className="flex-1 px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#FFD700]/30 text-sm font-mono text-[#FFD700] overflow-x-auto">
-                  {window.location.origin + buildUrl()}
+                  {origin + buildUrl()}
                 </code>
                 <button
                   onClick={copyUrl}
@@ -402,7 +408,7 @@ export default function PlaygroundPage() {
             <div className="bg-[#0A0A0A] border border-[#FFD700]/30 rounded-lg p-4">
               <pre className="text-sm text-foreground font-mono overflow-x-auto">
 {`const response = await fetch(
-  '${window.location.origin}${buildUrl()}',
+  '${origin}${buildUrl()}',
   {
     headers: {
       'Content-Type': 'application/json'
@@ -423,7 +429,7 @@ console.log(data);`}
 {`import requests
 
 response = requests.get(
-    '${window.location.origin}${buildUrl()}'
+    '${origin}${buildUrl()}'
 )
 data = response.json()
 print(data)`}
@@ -437,7 +443,7 @@ print(data)`}
             <div className="bg-[#0A0A0A] border border-[#FFD700]/30 rounded-lg p-4">
               <pre className="text-sm text-foreground font-mono overflow-x-auto">
 {`curl -X GET \\
-  '${window.location.origin}${buildUrl()}' \\
+  '${origin}${buildUrl()}' \\
   -H 'Content-Type: application/json'`}
               </pre>
             </div>
@@ -449,7 +455,7 @@ print(data)`}
             <div className="bg-[#0A0A0A] border border-[#FFD700]/30 rounded-lg p-4">
               <pre className="text-sm text-foreground font-mono overflow-x-auto">
 {`resp, err := http.Get(
-    "${window.location.origin}${buildUrl()}"
+    "${origin}${buildUrl()}"
 )
 if err != nil {
     log.Fatal(err)
