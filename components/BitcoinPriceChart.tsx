@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { fetchWithCache } from '@/lib/api-cache';
 
 interface BitcoinPrice {
   price: number;
@@ -11,7 +12,7 @@ interface BitcoinPrice {
   volume24h: number;
 }
 
-export default function BitcoinPriceChart() {
+function BitcoinPriceChart() {
   const [currentPrice, setCurrentPrice] = useState<BitcoinPrice>({
     price: 0,
     change24h: 0,
@@ -33,11 +34,10 @@ export default function BitcoinPriceChart() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchBitcoinPrice = async () => {
+  const fetchBitcoinPrice = useCallback(async () => {
     try {
-      // Using our secure API route that calls CoinMarketCap
-      const response = await fetch('/api/bitcoin-price');
-      const data = await response.json();
+      // Use cached API with 30 second TTL
+      const data = await fetchWithCache<any>('/api/bitcoin-price', undefined, 30000);
 
       if (data.price) {
         setCurrentPrice({
@@ -52,24 +52,29 @@ export default function BitcoinPriceChart() {
       console.error('Error fetching Bitcoin price:', error);
       setLoading(false);
     }
-  };
+  }, []);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = useCallback((price: number) => {
     return mounted ? price.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }) : `$${price}`;
-  };
+  }, [mounted]);
 
-  const formatLargeNumber = (num: number) => {
+  const formatLargeNumber = useCallback((num: number) => {
     if (!mounted) return num.toString();
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
     return `$${num.toLocaleString()}`;
-  };
+  }, [mounted]);
+
+  // Memoize formatted values to prevent recalculations
+  const formattedPrice = useMemo(() => formatPrice(currentPrice.price), [currentPrice.price, formatPrice]);
+  const formattedMarketCap = useMemo(() => formatLargeNumber(currentPrice.marketCap), [currentPrice.marketCap, formatLargeNumber]);
+  const formattedVolume = useMemo(() => formatLargeNumber(currentPrice.volume24h), [currentPrice.volume24h, formatLargeNumber]);
 
   if (loading) {
     return (
@@ -101,7 +106,7 @@ export default function BitcoinPriceChart() {
           </h2>
           <div className="flex items-center space-x-4">
             <span className="text-4xl md:text-5xl font-bold text-[#FFD700]">
-              {formatPrice(currentPrice.price)}
+              {formattedPrice}
             </span>
             <div className={`flex items-center px-3 py-1 rounded-lg ${
               currentPrice.change24h >= 0
@@ -131,16 +136,19 @@ export default function BitcoinPriceChart() {
         <div className="card-3d p-6 bg-[#FFD700]/5 hover:bg-[#FFD700]/10 transition-all duration-300 hover:scale-105">
           <p className="text-sm text-[#E0E0E0] mb-2">Market Cap</p>
           <p className="text-2xl md:text-3xl font-bold text-[#FFD700] break-words">
-            {formatLargeNumber(currentPrice.marketCap)}
+            {formattedMarketCap}
           </p>
         </div>
         <div className="card-3d p-6 bg-[#FF6B35]/5 hover:bg-[#FF6B35]/10 transition-all duration-300 hover:scale-105">
           <p className="text-sm text-[#E0E0E0] mb-2">24h Volume</p>
           <p className="text-2xl md:text-3xl font-bold text-[#FF6B35] break-words">
-            {formatLargeNumber(currentPrice.volume24h)}
+            {formattedVolume}
           </p>
         </div>
       </div>
     </motion.div>
   );
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export default memo(BitcoinPriceChart);
