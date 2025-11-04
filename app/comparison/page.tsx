@@ -202,7 +202,7 @@ const renderValue = (value: boolean | string) => {
   } else if (value === false) {
     return <X className="w-5 h-5 text-red-400 mx-auto" />;
   } else {
-    return <span className="text-xs text-foreground/70 text-center">{value}</span>;
+    return <span className="text-xs text-foreground/70 block text-center">{value}</span>;
   }
 };
 
@@ -276,7 +276,7 @@ export default function ComparisonPage() {
           <table className="w-full min-w-[800px]">
             <thead>
               <tr className="border-b border-[#FFD700]/30">
-                <th className="text-left py-4 px-4 text-foreground font-bold">Feature</th>
+                <th className="text-center py-4 px-4 text-foreground font-bold">Feature</th>
                 <th className="text-center py-4 px-4">
                   <div className="flex flex-col items-center">
                     <Crown className="w-6 h-6 text-[#FFD700] mb-2" />
@@ -292,12 +292,12 @@ export default function ComparisonPage() {
             <tbody>
               {FEATURE_COMPARISON.map((row, index) => (
                 <tr key={index} className="border-b border-[#FFD700]/10 hover:bg-[#FFD700]/5 transition-colors">
-                  <td className="py-4 px-4 text-foreground">{row.feature}</td>
-                  <td className="py-4 px-4 bg-[#FFD700]/10">{renderValue(row.btcindexer)}</td>
-                  <td className="py-4 px-4">{renderValue(row.blockchain)}</td>
-                  <td className="py-4 px-4">{renderValue(row.blockcypher)}</td>
-                  <td className="py-4 px-4">{renderValue(row.blockstream)}</td>
-                  <td className="py-4 px-4">{renderValue(row.mempool)}</td>
+                  <td className="py-4 px-4 text-foreground text-center">{row.feature}</td>
+                  <td className="py-4 px-4 bg-[#FFD700]/10 text-center">{renderValue(row.btcindexer)}</td>
+                  <td className="py-4 px-4 text-center">{renderValue(row.blockchain)}</td>
+                  <td className="py-4 px-4 text-center">{renderValue(row.blockcypher)}</td>
+                  <td className="py-4 px-4 text-center">{renderValue(row.blockstream)}</td>
+                  <td className="py-4 px-4 text-center">{renderValue(row.mempool)}</td>
                 </tr>
               ))}
             </tbody>
