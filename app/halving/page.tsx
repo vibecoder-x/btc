@@ -197,68 +197,115 @@ export default function HalvingPage() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2 }}
-        className="card-3d p-12 mb-8 text-center"
+        className="card-3d p-8 md:p-12 mb-8"
       >
-        <h2 className="text-3xl font-bold text-gradient-gold mb-6 flex items-center justify-center gap-3">
-          <Clock className="w-8 h-8" />
-          Next Halving In
+        <h2 className="text-2xl md:text-3xl font-bold text-gradient-gold mb-8 text-center flex items-center justify-center gap-3">
+          <Clock className="w-7 h-7 md:w-8 md:h-8" />
+          Next Bitcoin Halving
         </h2>
 
-        {/* Countdown Display */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <div className="p-6 glassmorphism rounded-xl">
-            <p className="text-6xl font-bold text-[#FFD700] mb-2">{timeRemaining.days}</p>
-            <p className="text-foreground/70 text-lg">Days</p>
+        {/* Countdown Display - CoinGecko Style */}
+        <div className="flex items-center justify-center gap-2 md:gap-4 mb-8 flex-wrap">
+          {/* Days */}
+          <div className="flex flex-col items-center">
+            <div className="flex items-baseline gap-1">
+              <span className="text-5xl md:text-7xl font-bold text-[#FFD700] tabular-nums">
+                {timeRemaining.days.toString().padStart(3, '0')}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-foreground/60 mt-2 uppercase tracking-wider">Days</span>
           </div>
-          <div className="p-6 glassmorphism rounded-xl">
-            <p className="text-6xl font-bold text-[#FFD700] mb-2">{timeRemaining.hours}</p>
-            <p className="text-foreground/70 text-lg">Hours</p>
+
+          {/* Separator */}
+          <span className="text-4xl md:text-6xl font-bold text-[#FFD700]/40 pb-6">:</span>
+
+          {/* Hours */}
+          <div className="flex flex-col items-center">
+            <div className="flex items-baseline gap-1">
+              <span className="text-5xl md:text-7xl font-bold text-[#FFD700] tabular-nums">
+                {timeRemaining.hours.toString().padStart(2, '0')}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-foreground/60 mt-2 uppercase tracking-wider">Hours</span>
           </div>
-          <div className="p-6 glassmorphism rounded-xl">
-            <p className="text-6xl font-bold text-[#FFD700] mb-2">{timeRemaining.minutes}</p>
-            <p className="text-foreground/70 text-lg">Minutes</p>
+
+          {/* Separator */}
+          <span className="text-4xl md:text-6xl font-bold text-[#FFD700]/40 pb-6">:</span>
+
+          {/* Minutes */}
+          <div className="flex flex-col items-center">
+            <div className="flex items-baseline gap-1">
+              <span className="text-5xl md:text-7xl font-bold text-[#FFD700] tabular-nums">
+                {timeRemaining.minutes.toString().padStart(2, '0')}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-foreground/60 mt-2 uppercase tracking-wider">Minutes</span>
           </div>
-          <div className="p-6 glassmorphism rounded-xl">
-            <p className="text-6xl font-bold text-[#FFD700] mb-2">{timeRemaining.seconds}</p>
-            <p className="text-foreground/70 text-lg">Seconds</p>
+
+          {/* Separator */}
+          <span className="text-4xl md:text-6xl font-bold text-[#FFD700]/40 pb-6">:</span>
+
+          {/* Seconds */}
+          <div className="flex flex-col items-center">
+            <div className="flex items-baseline gap-1">
+              <span className="text-5xl md:text-7xl font-bold text-[#FFD700] tabular-nums">
+                {timeRemaining.seconds.toString().padStart(2, '0')}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-foreground/60 mt-2 uppercase tracking-wider">Seconds</span>
+          </div>
+        </div>
+
+        {/* Key Stats - CoinGecko Style */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <div className="text-center p-4 rounded-xl bg-foreground/5 border border-[#FFD700]/20">
+            <p className="text-xs md:text-sm text-foreground/60 mb-2 uppercase tracking-wide">Blocks Remaining</p>
+            <p className="text-xl md:text-2xl font-bold text-[#FFD700]">{blocksRemaining.toLocaleString()}</p>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-foreground/5 border border-[#FFD700]/20">
+            <p className="text-xs md:text-sm text-foreground/60 mb-2 uppercase tracking-wide">Current Height</p>
+            <p className="text-xl md:text-2xl font-bold text-[#FFD700]">{currentBlock.toLocaleString()}</p>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-foreground/5 border border-[#FFD700]/20">
+            <p className="text-xs md:text-sm text-foreground/60 mb-2 uppercase tracking-wide">Halving Block</p>
+            <p className="text-xl md:text-2xl font-bold text-[#FFD700]">{nextHalvingBlock.toLocaleString()}</p>
+          </div>
+          <div className="text-center p-4 rounded-xl bg-foreground/5 border border-[#FFD700]/20">
+            <p className="text-xs md:text-sm text-foreground/60 mb-2 uppercase tracking-wide">Estimated Date</p>
+            <p className="text-sm md:text-base font-bold text-[#FFD700]">
+              {estimatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </p>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-6">
-          <div className="flex justify-between text-sm text-foreground/70 mb-2">
-            <span>Block {currentBlock.toLocaleString()}</span>
-            <span>{progressPercentage.toFixed(2)}% Complete</span>
-            <span>Block {nextHalvingBlock.toLocaleString()}</span>
+          <div className="flex justify-between text-xs md:text-sm text-foreground/60 mb-3">
+            <span className="font-semibold">Progress to Halving</span>
+            <span className="text-[#FFD700] font-bold">{progressPercentage.toFixed(2)}%</span>
           </div>
-          <div className="h-4 bg-foreground/10 rounded-full overflow-hidden">
+          <div className="h-3 bg-foreground/10 rounded-full overflow-hidden relative">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ duration: 1, delay: 0.5 }}
-              className="h-full bg-gradient-to-r from-[#FFD700] to-[#FF6B35] glow-gold"
-            />
+              className="h-full bg-gradient-to-r from-[#FFD700] to-[#FF6B35] relative"
+            >
+              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+            </motion.div>
           </div>
-          <p className="text-sm text-foreground/70 mt-2">
-            {blocksRemaining.toLocaleString()} blocks remaining
-          </p>
         </div>
 
-        {/* Halving Info Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="p-4 glassmorphism rounded-lg">
-            <p className="text-foreground/70 text-sm mb-2">Current Reward</p>
-            <p className="text-2xl font-bold text-[#FFD700]">3.125 BTC</p>
+        {/* Reward Info */}
+        <div className="flex items-center justify-center gap-6 md:gap-12 text-center pt-6 border-t border-[#FFD700]/20">
+          <div>
+            <p className="text-xs text-foreground/60 mb-1">Current Block Reward</p>
+            <p className="text-2xl md:text-3xl font-bold text-[#FFD700]">3.125 BTC</p>
           </div>
-          <div className="p-4 glassmorphism rounded-lg">
-            <p className="text-foreground/70 text-sm mb-2">Next Reward</p>
-            <p className="text-2xl font-bold text-[#FF6B35]">1.5625 BTC</p>
-          </div>
-          <div className="p-4 glassmorphism rounded-lg">
-            <p className="text-foreground/70 text-sm mb-2">Estimated Date</p>
-            <p className="text-xl font-bold text-foreground">
-              {estimatedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </p>
+          <div className="text-2xl md:text-4xl text-[#FFD700]/40">→</div>
+          <div>
+            <p className="text-xs text-foreground/60 mb-1">Next Block Reward</p>
+            <p className="text-2xl md:text-3xl font-bold text-[#FF6B35]">1.5625 BTC</p>
           </div>
         </div>
       </motion.div>
