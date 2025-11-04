@@ -5,6 +5,7 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Wallet, ChevronDown, X, Check, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatAddress, getChainIcon } from '@/hooks/useMultiChainPayment';
+import Image from 'next/image';
 
 interface CustomWalletButtonProps {
   size?: 'sm' | 'md' | 'lg';
@@ -24,14 +25,24 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
     lg: 'px-6 py-3 text-lg',
   };
 
-  // Filter out non-wallet connectors (like social login)
+  // Get wallet logo based on connector name
+  const getWalletLogo = (connectorName: string): string | null => {
+    const name = connectorName.toLowerCase();
+    if (name.includes('metamask')) return '/MetaMaskLOGO.png';
+    if (name.includes('walletconnect')) return '/WALLETCONNECTlogo.png';
+    if (name.includes('brave')) return '/bravewalletlogo.png';
+    return null;
+  };
+
+  // Filter out non-wallet connectors (like social login and injected)
   const walletConnectors = connectors.filter(connector => {
     const name = connector.name.toLowerCase();
-    // Only include actual crypto wallets
+    // Exclude social login, email auth, magic, and injected connector
     return !name.includes('social') &&
            !name.includes('email') &&
            !name.includes('auth') &&
-           !name.includes('magic');
+           !name.includes('magic') &&
+           !name.includes('injected');
   });
 
   const handleConnect = (connector: typeof connectors[0]) => {
@@ -152,31 +163,44 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
 
                 {/* Wallet Options */}
                 <div className="space-y-3">
-                  {walletConnectors.map((connector) => (
-                    <button
-                      key={connector.id}
-                      onClick={() => handleConnect(connector)}
-                      disabled={isPending}
-                      className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-                    >
-                      <div className="flex items-center gap-3">
-                        {/* Wallet Icon */}
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FFD700] to-[#FF6B35] flex items-center justify-center">
-                          <Wallet className="w-5 h-5 text-white" />
+                  {walletConnectors.map((connector) => {
+                    const logo = getWalletLogo(connector.name);
+                    return (
+                      <button
+                        key={connector.id}
+                        onClick={() => handleConnect(connector)}
+                        disabled={isPending}
+                        className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Wallet Icon */}
+                          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1.5">
+                            {logo ? (
+                              <Image
+                                src={logo}
+                                alt={connector.name}
+                                width={40}
+                                height={40}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <Wallet className="w-5 h-5 text-[#FFD700]" />
+                            )}
+                          </div>
+
+                          {/* Wallet Name */}
+                          <span className="font-semibold text-foreground">
+                            {connector.name}
+                          </span>
                         </div>
 
-                        {/* Wallet Name */}
-                        <span className="font-semibold text-foreground">
-                          {connector.name}
-                        </span>
-                      </div>
-
-                      {/* Connect Arrow */}
-                      <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">
-                        →
-                      </div>
-                    </button>
-                  ))}
+                        {/* Connect Arrow */}
+                        <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">
+                          →
+                        </div>
+                      </button>
+                    );
+                  })}
 
                   {walletConnectors.length === 0 && (
                     <div className="text-center py-8 text-foreground/50">
