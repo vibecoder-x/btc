@@ -31,6 +31,10 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
     if (name.includes('metamask')) return '/MetaMaskLOGO.png';
     if (name.includes('walletconnect')) return '/WALLETCONNECTlogo.png';
     if (name.includes('brave')) return '/bravewalletlogo.png';
+    if (name.includes('coinbase')) return '/coinbassewalletlogo.svg';
+    if (name.includes('phantom')) return '/phantomwalletlogo.jpg';
+    if (name.includes('trust')) return '/trustwalletllogo.webp';
+    if (name.includes('leap')) return '/leapwalletlogo.webp';
     return null;
   };
 
