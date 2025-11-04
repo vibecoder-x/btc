@@ -87,15 +87,22 @@ export default function HalvingPage() {
   useEffect(() => {
     const fetchCurrentBlock = async () => {
       try {
-        const response = await fetch('/api/block/latest');
+        // Use the existing /api/blocks endpoint which provides tipHeight
+        const response = await fetch('/api/blocks');
         if (response.ok) {
           const data = await response.json();
-          const height = data.height || 920000;
+          const height = data.tipHeight || 920000;
           setCurrentBlock(height);
           setNextHalvingBlock(getNextHalvingBlock(height));
+        } else {
+          // Fallback to a reasonable default
+          const fallbackHeight = 920000;
+          setCurrentBlock(fallbackHeight);
+          setNextHalvingBlock(getNextHalvingBlock(fallbackHeight));
         }
       } catch (error) {
         console.error('Error fetching current block:', error);
+        // Fallback to a reasonable default
         const fallbackHeight = 920000;
         setCurrentBlock(fallbackHeight);
         setNextHalvingBlock(getNextHalvingBlock(fallbackHeight));

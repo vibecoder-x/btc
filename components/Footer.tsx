@@ -17,7 +17,7 @@ export default function Footer() {
       try {
         const [priceRes, blockRes] = await Promise.all([
           fetch('/api/bitcoin-price'),
-          fetch('/api/block/latest'),
+          fetch('/api/blocks'), // Use /api/blocks which provides tipHeight
         ]);
 
         if (priceRes.ok) {
@@ -27,7 +27,7 @@ export default function Footer() {
 
         if (blockRes.ok) {
           const blockData = await blockRes.json();
-          setCurrentBlock(blockData.height || 0);
+          setCurrentBlock(blockData.tipHeight || 0); // Use tipHeight instead of height
         }
       } catch (error) {
         console.error('Error fetching footer data:', error);
