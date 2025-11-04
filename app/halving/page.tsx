@@ -24,6 +24,7 @@ interface HalvingEvent {
 
 export default function HalvingPage() {
   const [currentBlock, setCurrentBlock] = useState(0);
+  const [nextHalvingBlock, setNextHalvingBlock] = useState(1050000);
   const [timeRemaining, setTimeRemaining] = useState({
     days: 0,
     hours: 0,
@@ -41,8 +42,6 @@ export default function HalvingPage() {
     const currentHalvingNumber = Math.floor(currentHeight / HALVING_INTERVAL);
     return (currentHalvingNumber + 1) * HALVING_INTERVAL;
   };
-
-  const NEXT_HALVING_BLOCK = currentBlock > 0 ? getNextHalvingBlock(currentBlock) : 1050000;
 
   // Historical halving data
   const halvingHistory: HalvingEvent[] = [
@@ -91,11 +90,15 @@ export default function HalvingPage() {
         const response = await fetch('/api/block/latest');
         if (response.ok) {
           const data = await response.json();
-          setCurrentBlock(data.height || 920000); // Fallback
+          const height = data.height || 920000;
+          setCurrentBlock(height);
+          setNextHalvingBlock(getNextHalvingBlock(height));
         }
       } catch (error) {
         console.error('Error fetching current block:', error);
-        setCurrentBlock(920000); // Fallback
+        const fallbackHeight = 920000;
+        setCurrentBlock(fallbackHeight);
+        setNextHalvingBlock(getNextHalvingBlock(fallbackHeight));
       }
     };
 
@@ -110,7 +113,7 @@ export default function HalvingPage() {
     if (currentBlock === 0) return;
 
     const calculateTimeRemaining = () => {
-      const blocksRemaining = Math.max(0, NEXT_HALVING_BLOCK - currentBlock);
+      const blocksRemaining = Math.max(0, nextHalvingBlock - currentBlock);
       const secondsRemaining = Math.max(0, blocksRemaining * BLOCK_TIME);
 
       const days = Math.max(0, Math.floor(secondsRemaining / 86400));
@@ -125,10 +128,10 @@ export default function HalvingPage() {
     const interval = setInterval(calculateTimeRemaining, 1000);
 
     return () => clearInterval(interval);
-  }, [currentBlock, NEXT_HALVING_BLOCK]);
+  }, [currentBlock, nextHalvingBlock]);
 
-  const blocksRemaining = Math.max(0, NEXT_HALVING_BLOCK - currentBlock);
-  const previousHalvingBlock = NEXT_HALVING_BLOCK - HALVING_INTERVAL;
+  const blocksRemaining = Math.max(0, nextHalvingBlock - currentBlock);
+  const previousHalvingBlock = nextHalvingBlock - HALVING_INTERVAL;
   const progressPercentage = currentBlock > 0
     ? Math.min(100, Math.max(0, ((currentBlock - previousHalvingBlock) / HALVING_INTERVAL) * 100))
     : 0;
@@ -219,7 +222,7 @@ export default function HalvingPage() {
           <div className="flex justify-between text-sm text-foreground/70 mb-2">
             <span>Block {currentBlock.toLocaleString()}</span>
             <span>{progressPercentage.toFixed(2)}% Complete</span>
-            <span>Block {NEXT_HALVING_BLOCK.toLocaleString()}</span>
+            <span>Block {nextHalvingBlock.toLocaleString()}</span>
           </div>
           <div className="h-4 bg-foreground/10 rounded-full overflow-hidden">
             <motion.div
