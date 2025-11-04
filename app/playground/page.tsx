@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+// Force dynamic rendering to avoid SSR issues with window object
+export const dynamic = 'force-dynamic';
+
 interface Endpoint {
   name: string;
   method: string;
