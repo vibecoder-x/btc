@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useAccount } from 'wagmi';
-import { MultiChainWalletButton } from './MultiChainWalletButton';
+import { CustomWalletButton } from './CustomWalletButton';
 import GlobalSearch from './GlobalSearch';
 
 export default function Header() {
@@ -24,6 +24,8 @@ export default function Header() {
       { name: 'Mining', href: '/mining' },
       { name: 'Stats', href: '/stats' },
       { name: 'API', href: '/api' },
+      { name: 'Playground', href: '/playground' },
+      { name: 'Comparison', href: '/comparison' },
       { name: 'Docs', href: '/docs' },
       { name: 'About', href: '/about' },
       { name: 'Status', href: '/status' },
@@ -78,7 +80,7 @@ export default function Header() {
             <GlobalSearch />
 
             {/* Wallet Connection */}
-            <MultiChainWalletButton size="md" showChain={true} />
+            <CustomWalletButton size="md" showChain={true} />
           </div>
 
           {/* Mobile Menu Button */}
@@ -117,7 +119,7 @@ export default function Header() {
 
               {/* Mobile Wallet Connection */}
               <div className="pt-4 border-t border-foreground/10">
-                <MultiChainWalletButton size="md" showChain={true} className="w-full justify-center" />
+                <CustomWalletButton size="md" showChain={true} className="w-full justify-center" />
               </div>
             </motion.div>
           )}

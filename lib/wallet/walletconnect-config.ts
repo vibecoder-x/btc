@@ -42,10 +42,10 @@ export const config = defaultWagmiConfig({
   storage: createStorage({
     storage: cookieStorage
   }),
-  enableWalletConnect: true,
-  enableInjected: true,
-  enableEIP6963: true,
-  enableCoinbase: true,
+  enableWalletConnect: true, // Enable WalletConnect protocol
+  enableInjected: true,      // Enable injected wallets (MetaMask, etc.)
+  enableEIP6963: true,        // Enable EIP-6963 wallet discovery
+  enableCoinbase: true,       // Enable Coinbase Wallet
 });
 
 // Chain names mapping

@@ -227,14 +227,14 @@ export default function GlobalSearch() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/95 backdrop-blur-md"
           >
             <motion.div
               ref={modalRef}
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="w-full max-w-2xl card-3d rounded-2xl overflow-hidden"
+              className="w-full max-w-2xl bg-[#0F0F0F] border-2 border-[#FFD700]/30 rounded-2xl overflow-hidden shadow-2xl"
             >
               {/* Search Input */}
               <div className="relative p-4 border-b border-[#FFD700]/20">
