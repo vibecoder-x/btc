@@ -85,4 +85,33 @@ body {
       0 10px 15px rgba(0, 0, 0, 0.15),
       inset 0 1px 0 rgba(255, 215, 0, 0.1);
   }
+
+  /* Shimmer animation for loading states */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  /* Gradient animation for backgrounds */
+  @keyframes gradient {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+  }
 }
