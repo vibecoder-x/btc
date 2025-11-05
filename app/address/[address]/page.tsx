@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Wallet, ArrowDownCircle, ArrowUpCircle, Hash, Copy, Check,
   QrCode, Bookmark, Download, ChevronDown, ChevronUp, Filter, Calendar,
-  AlertTriangle, TrendingUp, PieChart as PieChartIcon, Clock, X
+  AlertTriangle, TrendingUp, PieChart as PieChartIcon, Clock, X, Eye, EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -14,16 +14,18 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { QRCodeSVG } from 'qrcode.react';
+import { useAccount } from 'wagmi';
 
 export default function AddressPage() {
   const params = useParams();
   const address = params.address as string;
+  const { address: walletAddress, isConnected } = useAccount();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [showUTXO, setShowUTXO] = useState(false);
   const [showCharts, setShowCharts] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [bookmarked, setBookmarked] = useState(false);
+  const [isWatched, setIsWatched] = useState(false);
   const [btcPrice] = useState(45000);
   const [addressData, setAddressData] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -117,6 +119,41 @@ export default function AddressPage() {
 
     fetchAddressData();
   }, [address]);
+
+  // Check if address is being watched
+  useEffect(() => {
+    if (isConnected && walletAddress && typeof window !== 'undefined') {
+      const savedAddresses = localStorage.getItem(`watched_addresses_${walletAddress}`);
+      if (savedAddresses) {
+        const watchedList = JSON.parse(savedAddresses);
+        setIsWatched(watchedList.includes(address));
+      }
+    }
+  }, [address, walletAddress, isConnected]);
+
+  // Toggle watch status
+  const toggleWatch = () => {
+    if (!isConnected || !walletAddress) {
+      alert('Please connect your wallet to use the watch feature');
+      return;
+    }
+
+    const storageKey = `watched_addresses_${walletAddress}`;
+    const savedAddresses = localStorage.getItem(storageKey);
+    let watchedList: string[] = savedAddresses ? JSON.parse(savedAddresses) : [];
+
+    if (isWatched) {
+      // Remove from watch list
+      watchedList = watchedList.filter(addr => addr !== address);
+      setIsWatched(false);
+    } else {
+      // Add to watch list
+      watchedList.push(address);
+      setIsWatched(true);
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify(watchedList));
+  };
 
   // Detect address type
   const getAddressType = (addr: string) => {
@@ -325,13 +362,13 @@ export default function AddressPage() {
                 <QrCode className="w-5 h-5" />
               </button>
               <button
-                onClick={() => setBookmarked(!bookmarked)}
+                onClick={toggleWatch}
                 className={`p-2 rounded-lg transition-colors ${
-                  bookmarked ? 'bg-[#FFD700] text-white' : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
+                  isWatched ? 'bg-[#FFD700] text-white' : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
                 }`}
-                title="Watch this address"
+                title={isWatched ? 'Unwatch this address' : 'Watch this address'}
               >
-                <Bookmark className="w-5 h-5" fill={bookmarked ? 'currentColor' : 'none'} />
+                {isWatched ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
               </button>
             </div>
           </div>
