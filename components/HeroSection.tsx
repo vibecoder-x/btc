@@ -3,8 +3,10 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useConnect, useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
+import { Wallet } from 'lucide-react';
 
 interface Block {
   id: number;
@@ -33,6 +35,19 @@ export default function HeroSection() {
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const router = useRouter();
+
+  // Get wallet logo based on connector name
+  const getWalletLogo = (connectorName: string): string | null => {
+    const name = connectorName.toLowerCase();
+    if (name.includes('metamask')) return '/MetaMaskLOGO.png';
+    if (name.includes('walletconnect')) return '/WALLETCONNECTlogo.png';
+    if (name.includes('brave')) return '/bravewalletlogo.png';
+    if (name.includes('coinbase')) return '/coinbasewalletlogo.svg';
+    if (name.includes('phantom')) return '/phantomwalletlogo.jpg';
+    if (name.includes('trust')) return '/trustwalletllogo.webp';
+    if (name.includes('leap')) return '/leapwalletlogo.webp';
+    return null;
+  };
 
   // Redirect to dashboard if already connected
   useEffect(() => {
@@ -268,28 +283,42 @@ export default function HeroSection() {
                          !name.includes('auth') && !name.includes('magic') &&
                          !name.includes('injected');
                 })
-                .map((connector) => (
-                  <button
-                    key={connector.id}
-                    onClick={() => {
-                      connect({ connector });
-                      setShowWalletModal(false);
-                    }}
-                    className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FFD700] to-[#FF6B35] flex items-center justify-center">
-                        <span className="text-white font-bold">W</span>
+                .map((connector) => {
+                  const logo = getWalletLogo(connector.name);
+                  return (
+                    <button
+                      key={connector.id}
+                      onClick={() => {
+                        connect({ connector });
+                        setShowWalletModal(false);
+                      }}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Wallet Icon */}
+                        <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1.5">
+                          {logo ? (
+                            <Image
+                              src={logo}
+                              alt={connector.name}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <Wallet className="w-5 h-5 text-[#FFD700]" />
+                          )}
+                        </div>
+                        <span className="font-semibold text-foreground">
+                          {connector.name}
+                        </span>
                       </div>
-                      <span className="font-semibold text-foreground">
-                        {connector.name}
-                      </span>
-                    </div>
-                    <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">
-                      →
-                    </div>
-                  </button>
-                ))}
+                      <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">
+                        →
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
 
             {/* Info */}

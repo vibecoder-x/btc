@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Heart, Copy, Check, Twitter, Github, MessageCircle, Send } from 'lucide-react';
+import { Heart, Copy, Check, Twitter, Github, MessageCircle, Send, QrCode, X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Footer() {
   const [showDonate, setShowDonate] = useState(false);
@@ -195,35 +197,100 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Donate Section */}
-        {showDonate && (
-          <div className="mb-8 card-3d rounded-xl p-6 border border-[#FFD700]/30">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex-1">
-                <p className="text-sm text-foreground/70 mb-2">Support us with Bitcoin:</p>
-                <code className="text-[#FFD700] font-mono text-sm break-all">
-                  {donateAddress}
-                </code>
-              </div>
-              <button
-                onClick={handleCopy}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg card-3d hover:bg-[#FFD700]/10 transition-all duration-300"
+        {/* Donation Modal */}
+        <AnimatePresence>
+          {showDonate && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/95 backdrop-blur-md"
+                onClick={() => setShowDonate(false)}
+              />
+
+              {/* Modal */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: 'spring', duration: 0.5 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-md bg-[#0F0F0F] border-2 border-[#FFD700]/30 rounded-2xl p-8 z-10 shadow-2xl"
               >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 text-[#FFD700]" />
-                    <span className="text-sm text-[#FFD700]">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 text-[#FFD700]" />
-                    <span className="text-sm">Copy Address</span>
-                  </>
-                )}
-              </button>
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowDonate(false)}
+                  className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[#FFD700]/10 transition-colors"
+                >
+                  <X className="w-5 h-5 text-foreground/70" />
+                </button>
+
+                {/* Header */}
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FFD700] to-[#FF6B35] mb-4">
+                    <Heart className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gradient-gold mb-2">
+                    Support BTCindexer
+                  </h2>
+                  <p className="text-sm text-foreground/70">
+                    Help us maintain and improve our services
+                  </p>
+                </div>
+
+                {/* QR Code */}
+                <div className="flex justify-center mb-6">
+                  <div className="p-4 bg-white rounded-xl">
+                    <QRCodeSVG
+                      value={donateAddress}
+                      size={200}
+                      level="H"
+                      includeMargin={true}
+                      fgColor="#000000"
+                    />
+                  </div>
+                </div>
+
+                {/* Bitcoin Address */}
+                <div className="mb-6">
+                  <p className="text-xs text-foreground/50 mb-2 text-center">Bitcoin Address:</p>
+                  <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/20">
+                    <code className="text-[#FFD700] font-mono text-xs break-all block text-center">
+                      {donateAddress}
+                    </code>
+                  </div>
+                </div>
+
+                {/* Copy Button */}
+                <button
+                  onClick={handleCopy}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl gradient-gold-orange hover:glow-gold transition-all duration-300 text-white font-semibold"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>Address Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-5 h-5" />
+                      <span>Copy Address</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Info */}
+                <div className="mt-6 p-4 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/20">
+                  <p className="text-xs text-foreground/70 text-center">
+                    Every donation helps us provide free API access to the community. Thank you for your support!
+                  </p>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-[#FFD700]/10">
