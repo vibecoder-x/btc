@@ -63,6 +63,7 @@ export default function Header() {
       icon: <Info className="w-4 h-4" />,
       items: [
         { name: 'About', href: '/about' },
+        { name: 'History', href: '/history' },
         { name: 'Status', href: '/status' },
         ...(isConnected ? [{ name: 'Dashboard', href: '/dashboard' }] : []),
       ],

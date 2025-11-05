@@ -57,6 +57,7 @@ export default function Footer() {
     ],
     resources: [
       { name: 'Getting Started', href: '/docs' },
+      { name: 'Bitcoin History', href: '/history' },
       { name: 'Code Examples', href: '/docs' },
       { name: 'FAQ', href: '/about' },
       { name: 'Support', href: '/about' },
