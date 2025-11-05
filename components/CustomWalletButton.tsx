@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { Wallet, ChevronDown, X, Check, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatAddress, getChainIcon } from '@/hooks/useMultiChainPayment';
@@ -17,6 +18,7 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
   const { address, isConnected, chain } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const { open } = useWeb3Modal();
   const [showModal, setShowModal] = useState(false);
 
   const sizeClasses = {
@@ -50,8 +52,15 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
   });
 
   const handleConnect = (connector: typeof connectors[0]) => {
-    connect({ connector });
-    setShowModal(false);
+    // For WalletConnect, use Web3Modal to show QR code
+    if (connector.name.toLowerCase().includes('walletconnect')) {
+      setShowModal(false);
+      open();
+    } else {
+      // For other wallets (MetaMask, Coinbase, etc.), connect directly
+      connect({ connector });
+      setShowModal(false);
+    }
   };
 
   const handleDisconnect = () => {

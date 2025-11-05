@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useConnect, useAccount } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useRouter } from 'next/navigation';
 import { Wallet } from 'lucide-react';
 
@@ -34,6 +35,7 @@ export default function HeroSection() {
 
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const { open } = useWeb3Modal();
   const router = useRouter();
 
   // Get wallet logo based on connector name
@@ -289,8 +291,15 @@ export default function HeroSection() {
                     <button
                       key={connector.id}
                       onClick={() => {
-                        connect({ connector });
-                        setShowWalletModal(false);
+                        // For WalletConnect, use Web3Modal to show QR code
+                        if (connector.name.toLowerCase().includes('walletconnect')) {
+                          setShowWalletModal(false);
+                          open();
+                        } else {
+                          // For other wallets, connect directly
+                          connect({ connector });
+                          setShowWalletModal(false);
+                        }
                       }}
                       className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group"
                     >
