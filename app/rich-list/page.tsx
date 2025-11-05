@@ -153,9 +153,21 @@ export default function RichListPage() {
 
       const daysAgo = Math.floor((now.getTime() - lastActivity.getTime()) / (24 * 60 * 60 * 1000));
 
+      // Generate full address (not truncated) for proper copying
+      let fullAddress: string;
+      if (i < 10) {
+        fullAddress = known.address;
+      } else {
+        // Generate a realistic-looking full address by modifying the base address
+        const addressPrefix = known.address.slice(0, 10);
+        const addressSuffix = known.address.slice(-10);
+        const middlePart = i.toString().padStart(4, '0') + 'x'.repeat(20); // Pad middle
+        fullAddress = `${addressPrefix}${middlePart}${addressSuffix}`;
+      }
+
       mockAddresses.push({
         rank: i + 1,
-        address: i < 10 ? known.address : `${known.address.slice(0, 10)}${i.toString().padStart(4, '0')}...${known.address.slice(-6)}`,
+        address: fullAddress,
         balance,
         balanceUsd: balance * currentBtcPrice,
         percentageOfSupply: (balance / 21000000) * 100,
