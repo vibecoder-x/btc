@@ -41,24 +41,117 @@ export default function RichListPage() {
     const now = new Date();
 
     const knownAddresses = [
-      { address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', tag: 'Satoshi Nakamoto (Genesis)', type: 'whale' as const },
-      { address: 'bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97', tag: 'Binance Cold Wallet', type: 'exchange' as const },
-      { address: '3M219KR5vEneNb47ewrPfWyb5jQ2DjxRP6', tag: 'Bitfinex Cold Storage', type: 'exchange' as const },
-      { address: 'bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6', tag: 'Coinbase Custody', type: 'exchange' as const },
-      { address: '1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF', tag: 'Grayscale Bitcoin Trust', type: 'institution' as const },
-      { address: '3Cbq7aT1tY8kMxWLbitaG7yT6bPbKChq64', tag: 'Kraken Exchange', type: 'exchange' as const },
-      { address: 'bc1qm34lsc65zpw79lxes69zkqmk6ee3ewf0j77s3h', tag: 'Huobi Cold Wallet', type: 'exchange' as const },
-      { address: '1NDyJtNTjmwk5xPNhjgAMu4HDHigtobu1s', tag: 'Mt. Gox Trustee', type: 'exchange' as const },
-      { address: '3LYJfcfHPXYJreMsASk2jkn69LWEYKzexb', tag: 'Unknown Whale #1', type: 'whale' as const },
-      { address: 'bc1qjh0akslml39edfje9f9xpgr72djgx4xv7v3u3h', tag: 'Mining Pool (F2Pool)', type: 'miner' as const },
+      {
+        address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+        tag: 'Satoshi Nakamoto (Genesis)',
+        type: 'whale' as const,
+        lastActivityDate: new Date('2009-01-12') // Genesis block + first transaction
+      },
+      {
+        address: 'bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97',
+        tag: 'Binance Cold Wallet',
+        type: 'exchange' as const,
+        lastActivityDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+      },
+      {
+        address: '3M219KR5vEneNb47ewrPfWyb5jQ2DjxRP6',
+        tag: 'Bitfinex Cold Storage',
+        type: 'exchange' as const,
+        lastActivityDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+      },
+      {
+        address: 'bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6',
+        tag: 'Coinbase Custody',
+        type: 'exchange' as const,
+        lastActivityDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) // Yesterday
+      },
+      {
+        address: '1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF',
+        tag: 'Grayscale Bitcoin Trust',
+        type: 'institution' as const,
+        lastActivityDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // 1 month ago
+      },
+      {
+        address: '3Cbq7aT1tY8kMxWLbitaG7yT6bPbKChq64',
+        tag: 'Kraken Exchange',
+        type: 'exchange' as const,
+        lastActivityDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
+      },
+      {
+        address: 'bc1qm34lsc65zpw79lxes69zkqmk6ee3ewf0j77s3h',
+        tag: 'Huobi Cold Wallet',
+        type: 'exchange' as const,
+        lastActivityDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) // 1 week ago
+      },
+      {
+        address: '1NDyJtNTjmwk5xPNhjgAMu4HDHigtobu1s',
+        tag: 'Mt. Gox Trustee',
+        type: 'exchange' as const,
+        lastActivityDate: new Date('2014-02-24') // Mt. Gox collapse date
+      },
+      {
+        address: '3LYJfcfHPXYJreMsASk2jkn69LWEYKzexb',
+        tag: 'Unknown Whale #1',
+        type: 'whale' as const,
+        lastActivityDate: new Date('2017-12-15') // 2017 bull run peak
+      },
+      {
+        address: 'bc1qjh0akslml39edfje9f9xpgr72djgx4xv7v3u3h',
+        tag: 'Mining Pool (F2Pool)',
+        type: 'miner' as const,
+        lastActivityDate: new Date(now.getTime() - 4 * 60 * 60 * 1000) // 4 hours ago
+      },
     ];
 
     for (let i = 0; i < 100; i++) {
       const known = knownAddresses[i % knownAddresses.length];
       const baseBalance = 200000 - (i * 1500) + Math.random() * 1000;
       const balance = Math.max(1000, baseBalance);
-      const daysAgo = Math.floor(Math.random() * 730); // 0-2 years
-      const lastActivity = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+
+      // Use realistic activity dates based on type
+      let lastActivity: Date;
+      if (i < 10) {
+        // Use known activity dates for top 10
+        lastActivity = known.lastActivityDate;
+      } else {
+        // Generate realistic dates based on type for others
+        switch (known.type) {
+          case 'exchange':
+            // Exchanges are active - within last 14 days
+            const exchangeDays = Math.floor(Math.random() * 14);
+            lastActivity = new Date(now.getTime() - exchangeDays * 24 * 60 * 60 * 1000);
+            break;
+          case 'miner':
+            // Miners are very active - within last 24 hours
+            const minerHours = Math.floor(Math.random() * 24);
+            lastActivity = new Date(now.getTime() - minerHours * 60 * 60 * 1000);
+            break;
+          case 'institution':
+            // Institutions move slowly - within last 3 months
+            const institutionDays = Math.floor(Math.random() * 90);
+            lastActivity = new Date(now.getTime() - institutionDays * 24 * 60 * 60 * 1000);
+            break;
+          case 'whale':
+            // Whales can be dormant or active
+            const isWhaleActive = Math.random() > 0.5;
+            if (isWhaleActive) {
+              // Active whale - within last 6 months
+              const whaleDays = Math.floor(Math.random() * 180);
+              lastActivity = new Date(now.getTime() - whaleDays * 24 * 60 * 60 * 1000);
+            } else {
+              // Dormant whale - 2-10 years ago
+              const whaleYears = 2 + Math.floor(Math.random() * 8);
+              lastActivity = new Date(now.getTime() - whaleYears * 365 * 24 * 60 * 60 * 1000);
+            }
+            break;
+          default:
+            // Unknown - random within 2 years
+            const unknownDays = Math.floor(Math.random() * 730);
+            lastActivity = new Date(now.getTime() - unknownDays * 24 * 60 * 60 * 1000);
+        }
+      }
+
+      const daysAgo = Math.floor((now.getTime() - lastActivity.getTime()) / (24 * 60 * 60 * 1000));
 
       mockAddresses.push({
         rank: i + 1,
