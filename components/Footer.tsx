@@ -52,6 +52,7 @@ export default function Footer() {
       { name: 'API Documentation', href: '/docs' },
       { name: 'Pricing', href: '/pricing' },
       { name: 'Mining Stats', href: '/mining' },
+      { name: 'Rich List', href: '/rich-list' },
       { name: 'Status Page', href: '/status' },
       { name: 'Halving Countdown', href: '/halving' },
     ],

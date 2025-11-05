@@ -46,6 +46,7 @@ export default function Header() {
         { name: 'Stats', href: '/stats' },
         { name: 'Mining', href: '/mining' },
         { name: 'Halving', href: '/halving' },
+        { name: 'Rich List', href: '/rich-list' },
       ],
     },
     {
