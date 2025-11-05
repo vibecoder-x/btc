@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { Wallet, ChevronDown, X, Check, LogOut } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Wallet, ChevronDown, X, Check, LogOut, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatAddress, getChainIcon } from '@/hooks/useMultiChainPayment';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface CustomWalletButtonProps {
   size?: 'sm' | 'md' | 'lg';
@@ -19,6 +21,8 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { open } = useWeb3Modal();
+  const router = useRouter();
+  const pathname = usePathname();
   const [showModal, setShowModal] = useState(false);
 
   const sizeClasses = {
@@ -66,6 +70,12 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
   const handleDisconnect = () => {
     disconnect();
     setShowModal(false);
+
+    // Redirect to home only if currently on dashboard
+    if (pathname === '/dashboard') {
+      router.push('/');
+    }
+    // Otherwise stay on current page
   };
 
   if (isConnected && address) {
@@ -75,12 +85,12 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
           onClick={() => setShowModal(!showModal)}
           className={`flex items-center gap-2 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white ${sizeClasses[size]} ${className}`}
         >
-          <Wallet className="w-4 h-4" />
-          <span className="font-mono">{formatAddress(address)}</span>
+          <Wallet className="w-4 h-4 flex-shrink-0" />
+          <span className="font-mono text-sm truncate max-w-[120px]">{formatAddress(address)}</span>
           {showChain && chain && (
-            <span className="text-xs">{getChainIcon(chain.id)}</span>
+            <span className="text-xs flex-shrink-0">{getChainIcon(chain.id)}</span>
           )}
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-4 h-4 flex-shrink-0" />
         </button>
 
         <AnimatePresence>
@@ -101,7 +111,7 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
               >
                 <div className="mb-3 pb-3 border-b border-[#FFD700]/20">
                   <p className="text-xs text-foreground/50 mb-1">Connected Wallet</p>
-                  <p className="font-mono text-sm text-foreground">{address}</p>
+                  <p className="font-mono text-xs text-foreground break-all">{address}</p>
                   {chain && (
                     <p className="text-xs text-foreground/70 mt-1">
                       {getChainIcon(chain.id)} {chain.name}
@@ -109,6 +119,17 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
                   )}
                 </div>
 
+                {/* Dashboard Link */}
+                <Link
+                  href="/dashboard"
+                  onClick={() => setShowModal(false)}
+                  className="w-full flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20 transition-colors"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+
+                {/* Disconnect Button */}
                 <button
                   onClick={handleDisconnect}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"

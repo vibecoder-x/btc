@@ -51,12 +51,7 @@ export default function HeroSection() {
     return null;
   };
 
-  // Redirect to dashboard if already connected
-  useEffect(() => {
-    if (isConnected) {
-      router.push('/dashboard');
-    }
-  }, [isConnected, router]);
+  // Removed auto-redirect - allow users to visit home page even when connected
 
   useEffect(() => {
     setMounted(true);

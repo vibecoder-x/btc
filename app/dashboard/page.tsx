@@ -12,6 +12,10 @@ import {
   Crown,
   AlertCircle,
   ArrowRight,
+  Eye,
+  Plus,
+  Trash2,
+  ExternalLink,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -43,10 +47,46 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [copiedWallet, setCopiedWallet] = useState(false);
   const [copiedTx, setCopiedTx] = useState(false);
+  const [watchedAddresses, setWatchedAddresses] = useState<string[]>([]);
+  const [newAddress, setNewAddress] = useState('');
+  const [addingAddress, setAddingAddress] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
+    loadWatchedAddresses();
   }, [address, isConnected]);
+
+  const loadWatchedAddresses = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`watched_addresses_${address}`);
+      if (saved) {
+        setWatchedAddresses(JSON.parse(saved));
+      }
+    }
+  };
+
+  const addWatchAddress = () => {
+    if (!newAddress.trim()) return;
+
+    // Basic Bitcoin address validation
+    const isValidBtcAddress = /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}$/.test(newAddress.trim());
+    if (!isValidBtcAddress) {
+      alert('Please enter a valid Bitcoin address');
+      return;
+    }
+
+    const updatedAddresses = [...watchedAddresses, newAddress.trim()];
+    setWatchedAddresses(updatedAddresses);
+    localStorage.setItem(`watched_addresses_${address}`, JSON.stringify(updatedAddresses));
+    setNewAddress('');
+    setAddingAddress(false);
+  };
+
+  const removeWatchAddress = (addressToRemove: string) => {
+    const updatedAddresses = watchedAddresses.filter(addr => addr !== addressToRemove);
+    setWatchedAddresses(updatedAddresses);
+    localStorage.setItem(`watched_addresses_${address}`, JSON.stringify(updatedAddresses));
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -295,6 +335,110 @@ export default function DashboardPage() {
           <p className="text-sm text-foreground/70">Total requests</p>
         </motion.div>
       </div>
+
+      {/* Watch Addresses Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="card-3d rounded-xl p-6 mb-8"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Eye className="w-6 h-6 text-[#FFD700]" />
+            <h2 className="text-2xl font-bold text-gradient-gold">Watched Addresses</h2>
+          </div>
+          <button
+            onClick={() => setAddingAddress(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Address
+          </button>
+        </div>
+
+        <p className="text-foreground/70 mb-4">
+          Monitor your favorite Bitcoin addresses and track their activity
+        </p>
+
+        {/* Add Address Form */}
+        {addingAddress && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-4 p-4 bg-[#0A0A0A] border border-[#FFD700]/30 rounded-lg"
+          >
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newAddress}
+                onChange={(e) => setNewAddress(e.target.value)}
+                placeholder="Enter Bitcoin address (bc1... or 1... or 3...)"
+                className="flex-1 px-4 py-2 rounded-lg bg-[#0F0F0F] border border-[#FFD700]/20 text-foreground focus:border-[#FFD700] focus:outline-none"
+                onKeyPress={(e) => e.key === 'Enter' && addWatchAddress()}
+              />
+              <button
+                onClick={addWatchAddress}
+                className="px-4 py-2 rounded-lg gradient-gold-orange text-white font-semibold hover:glow-gold transition-all"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => {
+                  setAddingAddress(false);
+                  setNewAddress('');
+                }}
+                className="px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Watched Addresses List */}
+        {watchedAddresses.length > 0 ? (
+          <div className="space-y-3">
+            {watchedAddresses.map((addr, index) => (
+              <motion.div
+                key={addr}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-center justify-between p-4 bg-[#0A0A0A] border border-[#FFD700]/20 rounded-lg hover:border-[#FFD700]/50 transition-colors group"
+              >
+                <div className="flex-1 min-w-0">
+                  <code className="text-sm font-mono text-foreground truncate block">
+                    {addr}
+                  </code>
+                </div>
+                <div className="flex items-center gap-2 ml-4">
+                  <Link
+                    href={`/address/${addr}`}
+                    className="p-2 rounded-lg bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20 transition-colors"
+                    title="View Address"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={() => removeWatchAddress(addr)}
+                    className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                    title="Remove Address"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-foreground/50">
+            <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p>No addresses being watched yet</p>
+            <p className="text-sm mt-1">Add addresses to monitor their activity</p>
+          </div>
+        )}
+      </motion.div>
 
       {/* Usage Progress Bar (Free Tier Only) */}
       {!unlimitedStatus.hasUnlimited && (

@@ -66,7 +66,7 @@ export default function Header() {
         { name: 'About', href: '/about' },
         { name: 'History', href: '/history' },
         { name: 'Status', href: '/status' },
-        ...(isConnected ? [{ name: 'Dashboard', href: '/dashboard' }] : []),
+        // Dashboard moved to wallet dropdown menu
       ],
     },
   ];
