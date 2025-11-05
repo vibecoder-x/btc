@@ -33,6 +33,7 @@ export default function HalvingPage() {
   });
   const [showHistory, setShowHistory] = useState(true);
   const [showEducation, setShowEducation] = useState(true);
+  const [initialFetchTime, setInitialFetchTime] = useState<number>(Date.now());
 
   const HALVING_INTERVAL = 210000;
   const BLOCK_TIME = 600; // 10 minutes in seconds
@@ -94,11 +95,13 @@ export default function HalvingPage() {
           const height = data.tipHeight || 920000;
           setCurrentBlock(height);
           setNextHalvingBlock(getNextHalvingBlock(height));
+          setInitialFetchTime(Date.now());
         } else {
           // Fallback to a reasonable default
           const fallbackHeight = 920000;
           setCurrentBlock(fallbackHeight);
           setNextHalvingBlock(getNextHalvingBlock(fallbackHeight));
+          setInitialFetchTime(Date.now());
         }
       } catch (error) {
         console.error('Error fetching current block:', error);
@@ -106,6 +109,7 @@ export default function HalvingPage() {
         const fallbackHeight = 920000;
         setCurrentBlock(fallbackHeight);
         setNextHalvingBlock(getNextHalvingBlock(fallbackHeight));
+        setInitialFetchTime(Date.now());
       }
     };
 
@@ -121,7 +125,13 @@ export default function HalvingPage() {
 
     const calculateTimeRemaining = () => {
       const blocksRemaining = Math.max(0, nextHalvingBlock - currentBlock);
-      const secondsRemaining = Math.max(0, blocksRemaining * BLOCK_TIME);
+      const baseSecondsRemaining = blocksRemaining * BLOCK_TIME;
+
+      // Calculate elapsed time since the initial fetch
+      const elapsedSeconds = Math.floor((Date.now() - initialFetchTime) / 1000);
+
+      // Subtract elapsed time for real-time countdown
+      const secondsRemaining = Math.max(0, baseSecondsRemaining - elapsedSeconds);
 
       const days = Math.max(0, Math.floor(secondsRemaining / 86400));
       const hours = Math.max(0, Math.floor((secondsRemaining % 86400) / 3600));
@@ -135,7 +145,7 @@ export default function HalvingPage() {
     const interval = setInterval(calculateTimeRemaining, 1000);
 
     return () => clearInterval(interval);
-  }, [currentBlock, nextHalvingBlock]);
+  }, [currentBlock, nextHalvingBlock, initialFetchTime]);
 
   const blocksRemaining = Math.max(0, nextHalvingBlock - currentBlock);
   const previousHalvingBlock = nextHalvingBlock - HALVING_INTERVAL;
