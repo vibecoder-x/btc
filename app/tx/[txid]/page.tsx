@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Hash, ArrowRight, CheckCircle, Clock, Copy, Check,
   Share2, QrCode, ExternalLink, ChevronDown, ChevronUp, AlertTriangle,
-  TrendingUp
+  TrendingUp, X
 } from 'lucide-react';
 import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function TransactionPage() {
   const params = useParams();
@@ -193,19 +194,88 @@ export default function TransactionPage() {
           {/* QR Code Modal */}
           <AnimatePresence>
             {showQR && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 p-4 bg-white rounded-lg flex justify-center"
-              >
-                <div className="text-center">
-                  <div className="w-48 h-48 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
-                    <span className="text-gray-600 text-sm">QR Code: {txid.slice(0, 8)}...</span>
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/95 backdrop-blur-md"
+                  onClick={() => setShowQR(false)}
+                />
+
+                {/* Modal */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ type: 'spring', duration: 0.5 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative w-full max-w-md bg-[#0F0F0F] border-2 border-[#FFD700]/30 rounded-2xl p-8 z-10 shadow-2xl"
+                >
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setShowQR(false)}
+                    className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[#FFD700]/10 transition-colors"
+                  >
+                    <X className="w-5 h-5 text-foreground/70" />
+                  </button>
+
+                  {/* Header */}
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FFD700] to-[#FF6B35] mb-4">
+                      <Hash className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gradient-gold mb-2">
+                      Transaction QR Code
+                    </h2>
+                    <p className="text-sm text-foreground/70">
+                      Scan to view transaction details
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-600">Scan to view transaction</p>
-                </div>
-              </motion.div>
+
+                  {/* QR Code */}
+                  <div className="flex justify-center mb-6">
+                    <div className="p-4 bg-white rounded-xl">
+                      <QRCodeSVG
+                        value={txData.txid}
+                        size={200}
+                        level="H"
+                        includeMargin={true}
+                        fgColor="#000000"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Transaction ID */}
+                  <div className="mb-6">
+                    <p className="text-xs text-foreground/50 mb-2 text-center">Transaction ID:</p>
+                    <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/20">
+                      <code className="text-[#FFD700] font-mono text-xs break-all block text-center">
+                        {txData.txid}
+                      </code>
+                    </div>
+                  </div>
+
+                  {/* Copy Button */}
+                  <button
+                    onClick={() => copyToClipboard(txData.txid)}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl gradient-gold-orange hover:glow-gold transition-all duration-300 text-white font-semibold"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-5 h-5" />
+                        <span>Transaction ID Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-5 h-5" />
+                        <span>Copy Transaction ID</span>
+                      </>
+                    )}
+                  </button>
+                </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>
