@@ -284,7 +284,7 @@ export default function RichListPage() {
           </p>
         </div>
         <div className="card-3d p-4 text-center">
-          <p className="text-sm text-foreground/60 mb-1">Dormant (>1yr)</p>
+          <p className="text-sm text-foreground/60 mb-1">Dormant (&gt;1yr)</p>
           <p className="text-2xl font-bold text-orange-400">
             {addresses.filter(a => a.isDormant).length}
           </p>
@@ -518,7 +518,7 @@ export default function RichListPage() {
           </div>
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-orange-400" />
-            <span className="text-sm text-foreground/70">Dormant (>1 year)</span>
+            <span className="text-sm text-foreground/70">Dormant (&gt;1 year)</span>
           </div>
         </div>
       </motion.div>
