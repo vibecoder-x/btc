@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useConnect, useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
 
 interface Block {
   id: number;
@@ -26,6 +28,18 @@ export default function HeroSection() {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+
+  const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const router = useRouter();
+
+  // Redirect to dashboard if already connected
+  useEffect(() => {
+    if (isConnected) {
+      router.push('/dashboard');
+    }
+  }, [isConnected, router]);
 
   useEffect(() => {
     setMounted(true);
@@ -189,11 +203,12 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="flex flex-col sm:flex-row gap-4"
         >
-          <Link href="/login">
-            <button className="px-8 py-4 rounded-2xl font-semibold text-lg gradient-gold-orange glow-gold hover:scale-105 transition-all duration-300 text-white">
-              Connect Wallet & Start
-            </button>
-          </Link>
+          <button
+            onClick={() => setShowWalletModal(true)}
+            className="px-8 py-4 rounded-2xl font-semibold text-lg gradient-gold-orange glow-gold hover:scale-105 transition-all duration-300 text-white"
+          >
+            Connect Wallet & Start
+          </button>
           <Link href="/api">
             <button className="px-8 py-4 rounded-2xl font-semibold text-lg border-2 border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-[#0A0A0A] hover:glow-gold transition-all duration-300">
               View API Docs
@@ -204,6 +219,92 @@ export default function HeroSection() {
 
       {/* Glow effect at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#0A0A0A] to-transparent"></div>
+
+      {/* Wallet Connection Modal */}
+      {showWalletModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/95 backdrop-blur-md"
+            onClick={() => setShowWalletModal(false)}
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', duration: 0.5 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-[#0F0F0F] border-2 border-[#FFD700]/30 rounded-2xl p-6 z-10 shadow-2xl"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowWalletModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[#FFD700]/10 transition-colors"
+            >
+              <span className="text-xl text-foreground/70">✕</span>
+            </button>
+
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gradient-gold mb-2">
+                Connect Your Wallet
+              </h2>
+              <p className="text-sm text-foreground/70">
+                Choose your preferred wallet to get started
+              </p>
+            </div>
+
+            {/* Wallet Options */}
+            <div className="space-y-3 mb-6">
+              {connectors
+                .filter(connector => {
+                  const name = connector.name.toLowerCase();
+                  return !name.includes('social') && !name.includes('email') &&
+                         !name.includes('auth') && !name.includes('magic') &&
+                         !name.includes('injected');
+                })
+                .map((connector) => (
+                  <button
+                    key={connector.id}
+                    onClick={() => {
+                      connect({ connector });
+                      setShowWalletModal(false);
+                    }}
+                    className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FFD700] to-[#FF6B35] flex items-center justify-center">
+                        <span className="text-white font-bold">W</span>
+                      </div>
+                      <span className="font-semibold text-foreground">
+                        {connector.name}
+                      </span>
+                    </div>
+                    <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">
+                      →
+                    </div>
+                  </button>
+                ))}
+            </div>
+
+            {/* Info */}
+            <div className="p-4 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/20">
+              <h3 className="text-sm font-bold text-[#FFD700] mb-2">What You'll Get:</h3>
+              <ul className="text-xs text-foreground/70 space-y-1">
+                <li>✓ 100 free API requests per day</li>
+                <li>✓ Access to your personal dashboard</li>
+                <li>✓ Real-time usage statistics</li>
+                <li>✓ Upgrade to unlimited anytime for $50</li>
+              </ul>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
