@@ -158,10 +158,19 @@ export default function RichListPage() {
       if (i < 10) {
         fullAddress = known.address;
       } else {
-        // Generate a realistic-looking full address by modifying the base address
+        // Generate a realistic-looking full address with random characters
+        const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
         const addressPrefix = known.address.slice(0, 10);
         const addressSuffix = known.address.slice(-10);
-        const middlePart = i.toString().padStart(4, '0') + 'x'.repeat(20); // Pad middle
+
+        // Generate random middle part based on index for consistency
+        const seed = i * 123456; // Use index as seed for consistent addresses
+        let middlePart = '';
+        for (let j = 0; j < 24; j++) {
+          const charIndex = (seed + j * 7) % chars.length;
+          middlePart += chars[charIndex];
+        }
+
         fullAddress = `${addressPrefix}${middlePart}${addressSuffix}`;
       }
 
@@ -503,9 +512,12 @@ export default function RichListPage() {
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
-                        <code className="text-sm text-foreground font-mono">
-                          {truncateAddress(addr.address)}
-                        </code>
+                        <Link
+                          href={`/address/${addr.address}`}
+                          className="text-sm text-foreground font-mono hover:text-[#FFD700] transition-colors cursor-pointer"
+                        >
+                          <code>{truncateAddress(addr.address)}</code>
+                        </Link>
                         <button
                           onClick={() => handleCopy(addr.address)}
                           className="p-1 hover:bg-foreground/10 rounded transition-colors"
