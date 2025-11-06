@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cube, Clock, Hash, Pickaxe, ArrowRight, ArrowLeft, TrendingUp } from 'lucide-react';
+import { Box, Clock, Hash, Pickaxe, ArrowRight, ArrowLeft, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 interface Block {
@@ -143,7 +143,7 @@ export default function LiveBlocksAnimation() {
       <div className="flex items-center justify-between mb-6 px-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl gradient-gold-orange flex items-center justify-center glow-gold">
-            <Cube className="w-6 h-6 text-white" />
+            <Box className="w-6 h-6 text-white" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gradient-gold">Live Blocks</h2>
@@ -195,7 +195,7 @@ export default function LiveBlocksAnimation() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FFD700] to-[#FF6B35] flex items-center justify-center">
-                          <Cube className="w-5 h-5 text-white" />
+                          <Box className="w-5 h-5 text-white" />
                         </div>
                         <div>
                           <p className="text-xs text-foreground/50">Block</p>
