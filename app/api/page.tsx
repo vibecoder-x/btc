@@ -3,15 +3,35 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Code, Zap, Shield, Wallet, Copy, Check, Crown } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
+import { useConnect } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 
 export default function ApiPage() {
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+
+  const { connect, connectors } = useConnect();
+  const { open } = useWeb3Modal();
 
   const handleCopy = (text: string, section: string) => {
     navigator.clipboard.writeText(text);
     setCopiedSection(section);
     setTimeout(() => setCopiedSection(null), 2000);
+  };
+
+  // Get wallet logo based on connector name
+  const getWalletLogo = (connectorName: string): string | null => {
+    const name = connectorName.toLowerCase();
+    if (name.includes('metamask')) return '/MetaMaskLOGO.png';
+    if (name.includes('walletconnect')) return '/WALLETCONNECTlogo.png';
+    if (name.includes('brave')) return '/bravewalletlogo.png';
+    if (name.includes('coinbase')) return '/coinbasewalletlogo.svg';
+    if (name.includes('phantom')) return '/phantomwalletlogo.jpg';
+    if (name.includes('trust')) return '/trustwalletllogo.webp';
+    if (name.includes('leap')) return '/leapwalletlogo.webp';
+    return null;
   };
 
   const features = [
@@ -94,12 +114,12 @@ export default function ApiPage() {
             </div>
             <p className="text-3xl font-bold text-foreground mb-2">100 requests/day</p>
             <p className="text-foreground/70 mb-4">Perfect for testing and small projects</p>
-            <Link
-              href="/login"
+            <button
+              onClick={() => setShowWalletModal(true)}
               className="inline-block px-6 py-3 rounded-lg glassmorphism border border-[#FFD700]/30 hover:bg-[#FFD700]/10 transition-all font-semibold text-foreground text-center w-full"
             >
               Connect Wallet to Start
-            </Link>
+            </button>
           </div>
 
           <div className="card-3d rounded-xl p-6 border-2 border-[#FF6B35]">
@@ -153,13 +173,13 @@ export default function ApiPage() {
             <div>
               <h3 className="text-xl font-bold text-[#FFD700] mb-3">Step 1: Connect Your Wallet</h3>
               <p className="text-foreground/70 mb-3">Connect MetaMask or Phantom wallet to authenticate:</p>
-              <Link
-                href="/login"
+              <button
+                onClick={() => setShowWalletModal(true)}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all font-bold text-white"
               >
                 <Wallet className="w-5 h-5" />
                 Connect Wallet
-              </Link>
+              </button>
             </div>
 
             {/* Step 2 */}
@@ -337,12 +357,12 @@ response = requests.get(
             Connect your wallet and start making API calls today
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/login"
+            <button
+              onClick={() => setShowWalletModal(true)}
               className="px-6 py-3 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white"
             >
               Connect Wallet
-            </Link>
+            </button>
             <Link
               href="/pricing"
               className="px-6 py-3 rounded-lg glassmorphism hover:bg-[#FFD700]/10 transition-all duration-300 font-semibold text-foreground"
@@ -351,6 +371,113 @@ response = requests.get(
             </Link>
           </div>
         </motion.div>
+
+        {/* Wallet Connection Modal */}
+        {showWalletModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/95 backdrop-blur-md"
+              onClick={() => setShowWalletModal(false)}
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-md bg-[#0F0F0F] border-2 border-[#FFD700]/30 rounded-2xl p-6 z-10 shadow-2xl"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowWalletModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[#FFD700]/10 transition-colors"
+              >
+                <span className="text-xl text-foreground/70">✕</span>
+              </button>
+
+              {/* Header */}
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gradient-gold mb-2">
+                  Connect Your Wallet
+                </h2>
+                <p className="text-sm text-foreground/70">
+                  Choose your preferred wallet to get started
+                </p>
+              </div>
+
+              {/* Wallet Options */}
+              <div className="space-y-3 mb-6">
+                {connectors
+                  .filter(connector => {
+                    const name = connector.name.toLowerCase();
+                    return !name.includes('social') && !name.includes('email') &&
+                           !name.includes('auth') && !name.includes('magic') &&
+                           !name.includes('injected');
+                  })
+                  .map((connector) => {
+                    const logo = getWalletLogo(connector.name);
+                    return (
+                      <button
+                        key={connector.id}
+                        onClick={() => {
+                          // For WalletConnect, use Web3Modal to show QR code
+                          if (connector.name.toLowerCase().includes('walletconnect')) {
+                            setShowWalletModal(false);
+                            open();
+                          } else {
+                            // For other wallets, connect directly
+                            connect({ connector });
+                            setShowWalletModal(false);
+                          }
+                        }}
+                        className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Wallet Icon */}
+                          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1.5">
+                            {logo ? (
+                              <Image
+                                src={logo}
+                                alt={connector.name}
+                                width={40}
+                                height={40}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <Wallet className="w-5 h-5 text-[#FFD700]" />
+                            )}
+                          </div>
+                          <span className="font-semibold text-foreground">
+                            {connector.name}
+                          </span>
+                        </div>
+                        <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">
+                          →
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+
+              {/* Info */}
+              <div className="p-4 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/20">
+                <h3 className="text-sm font-bold text-[#FFD700] mb-2">What You'll Get:</h3>
+                <ul className="text-xs text-foreground/70 space-y-1">
+                  <li>✓ 100 free API requests per day</li>
+                  <li>✓ Access to your personal dashboard</li>
+                  <li>✓ Real-time usage statistics</li>
+                  <li>✓ Upgrade to unlimited anytime for $50</li>
+                </ul>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </motion.div>
     </div>
   );

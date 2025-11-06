@@ -5,9 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown, ChevronUp, Search, ThumbsUp, ThumbsDown,
   Zap, Shield, Clock, Code, Mail, Twitter, Github, MessageCircle,
-  ArrowRight
+  ArrowRight, Wallet
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useConnect } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 
 interface FAQ {
   question: string;
@@ -18,6 +21,23 @@ interface FAQ {
 export default function AboutPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+
+  const { connect, connectors } = useConnect();
+  const { open } = useWeb3Modal();
+
+  // Get wallet logo based on connector name
+  const getWalletLogo = (connectorName: string): string | null => {
+    const name = connectorName.toLowerCase();
+    if (name.includes('metamask')) return '/MetaMaskLOGO.png';
+    if (name.includes('walletconnect')) return '/WALLETCONNECTlogo.png';
+    if (name.includes('brave')) return '/bravewalletlogo.png';
+    if (name.includes('coinbase')) return '/coinbasewalletlogo.svg';
+    if (name.includes('phantom')) return '/phantomwalletlogo.jpg';
+    if (name.includes('trust')) return '/trustwalletllogo.webp';
+    if (name.includes('leap')) return '/leapwalletlogo.webp';
+    return null;
+  };
 
   const faqs: FAQ[] = [
     // Getting Started
@@ -432,13 +452,13 @@ export default function AboutPage() {
             Connect your wallet and start exploring the Bitcoin blockchain with our powerful API and explorer tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/login"
+            <button
+              onClick={() => setShowWalletModal(true)}
               className="px-8 py-4 rounded-lg gradient-gold-orange hover:glow-gold text-white font-bold transition-all flex items-center justify-center gap-2"
             >
               Get Started
               <ArrowRight className="w-5 h-5" />
-            </Link>
+            </button>
             <Link
               href="/docs"
               className="px-8 py-4 rounded-lg bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] font-bold transition-all"
@@ -448,6 +468,113 @@ export default function AboutPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Wallet Connection Modal */}
+      {showWalletModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/95 backdrop-blur-md"
+            onClick={() => setShowWalletModal(false)}
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', duration: 0.5 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-[#0F0F0F] border-2 border-[#FFD700]/30 rounded-2xl p-6 z-10 shadow-2xl"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowWalletModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[#FFD700]/10 transition-colors"
+            >
+              <span className="text-xl text-foreground/70">✕</span>
+            </button>
+
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gradient-gold mb-2">
+                Connect Your Wallet
+              </h2>
+              <p className="text-sm text-foreground/70">
+                Choose your preferred wallet to get started
+              </p>
+            </div>
+
+            {/* Wallet Options */}
+            <div className="space-y-3 mb-6">
+              {connectors
+                .filter(connector => {
+                  const name = connector.name.toLowerCase();
+                  return !name.includes('social') && !name.includes('email') &&
+                         !name.includes('auth') && !name.includes('magic') &&
+                         !name.includes('injected');
+                })
+                .map((connector) => {
+                  const logo = getWalletLogo(connector.name);
+                  return (
+                    <button
+                      key={connector.id}
+                      onClick={() => {
+                        // For WalletConnect, use Web3Modal to show QR code
+                        if (connector.name.toLowerCase().includes('walletconnect')) {
+                          setShowWalletModal(false);
+                          open();
+                        } else {
+                          // For other wallets, connect directly
+                          connect({ connector });
+                          setShowWalletModal(false);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Wallet Icon */}
+                        <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-1.5">
+                          {logo ? (
+                            <Image
+                              src={logo}
+                              alt={connector.name}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <Wallet className="w-5 h-5 text-[#FFD700]" />
+                          )}
+                        </div>
+                        <span className="font-semibold text-foreground">
+                          {connector.name}
+                        </span>
+                      </div>
+                      <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">
+                        →
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
+
+            {/* Info */}
+            <div className="p-4 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/20">
+              <h3 className="text-sm font-bold text-[#FFD700] mb-2">What You'll Get:</h3>
+              <ul className="text-xs text-foreground/70 space-y-1">
+                <li>✓ 100 free API requests per day</li>
+                <li>✓ Access to your personal dashboard</li>
+                <li>✓ Real-time usage statistics</li>
+                <li>✓ Upgrade to unlimited anytime for $50</li>
+              </ul>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
