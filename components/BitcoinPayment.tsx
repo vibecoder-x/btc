@@ -13,13 +13,15 @@ interface BitcoinPaymentProps {
 export default function BitcoinPayment({ amount, onPaymentConfirmed }: BitcoinPaymentProps) {
   const [btcAmount, setBtcAmount] = useState(0);
   const [btcPrice, setBtcPrice] = useState(0);
-  const [paymentAddress, setPaymentAddress] = useState('');
   const [copied, setCopied] = useState(false);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'confirming' | 'confirmed'>('pending');
   const [error, setError] = useState<string | null>(null);
 
-  // Generate payment address and fetch BTC price
+  // Fixed payment address
+  const paymentAddress = 'bc1qq0e9ru8gh5amgm7fslf08clr62tkqyw5ptff0f';
+
+  // Fetch BTC price and calculate amount
   useEffect(() => {
     const initializePayment = async () => {
       try {
@@ -35,24 +37,8 @@ export default function BitcoinPayment({ amount, onPaymentConfirmed }: BitcoinPa
           setBtcAmount(btcValue);
         }
 
-        // Generate payment address (you'll need to implement this endpoint)
-        const addressRes = await fetch('/api/payment/generate-btc-address', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount, btcAmount: amount / currentBtcPrice }),
-        });
-
-        if (addressRes.ok) {
-          const addressData = await addressRes.json();
-          setPaymentAddress(addressData.address);
-
-          // Start monitoring for payment
-          if (addressData.address) {
-            startPaymentMonitoring(addressData.address);
-          }
-        } else {
-          setError('Failed to generate payment address');
-        }
+        // Start monitoring for payment
+        startPaymentMonitoring(paymentAddress);
       } catch (err) {
         console.error('Error initializing payment:', err);
         setError('Failed to initialize payment');
@@ -119,11 +105,11 @@ export default function BitcoinPayment({ amount, onPaymentConfirmed }: BitcoinPa
     );
   }
 
-  if (!paymentAddress) {
+  if (!btcPrice || btcAmount === 0) {
     return (
       <div className="flex items-center justify-center p-12">
         <Loader2 className="w-8 h-8 text-[#FFD700] animate-spin" />
-        <span className="ml-3 text-foreground/70">Generating payment address...</span>
+        <span className="ml-3 text-foreground/70">Loading payment details...</span>
       </div>
     );
   }
