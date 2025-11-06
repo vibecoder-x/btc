@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Wallet, ChevronDown, X, Check, LogOut, LayoutDashboard } from 'lucide-react';
+import { Wallet, ChevronDown, X, Check, LogOut, LayoutDashboard, Bitcoin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatAddress, getChainIcon } from '@/hooks/useMultiChainPayment';
+import { useBitcoinWallet } from '@/hooks/useBitcoinWallet';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -24,6 +25,19 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
   const router = useRouter();
   const pathname = usePathname();
   const [showModal, setShowModal] = useState(false);
+  const [walletType, setWalletType] = useState<'evm' | 'bitcoin'>('evm');
+
+  // Bitcoin wallet hooks
+  const {
+    wallet: btcWallet,
+    isConnected: btcIsConnected,
+    isConnecting: btcIsConnecting,
+    connectXverse,
+    connectLeather,
+    connectUnisat,
+    disconnect: btcDisconnect,
+    getAvailableWallets,
+  } = useBitcoinWallet();
 
   const sizeClasses = {
     sm: 'px-3 py-2 text-sm',
@@ -68,7 +82,12 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
   };
 
   const handleDisconnect = () => {
-    disconnect();
+    if (btcIsConnected) {
+      btcDisconnect();
+    }
+    if (isConnected) {
+      disconnect();
+    }
     setShowModal(false);
 
     // Redirect to home only if currently on dashboard
@@ -78,6 +97,83 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
     // Otherwise stay on current page
   };
 
+  const handleBitcoinWalletConnect = async (walletName: string) => {
+    try {
+      if (walletName === 'Xverse') {
+        await connectXverse();
+      } else if (walletName === 'Leather') {
+        await connectLeather();
+      } else if (walletName === 'Unisat') {
+        await connectUnisat();
+      }
+      setShowModal(false);
+    } catch (err: any) {
+      console.error('Failed to connect Bitcoin wallet:', err);
+      alert(err.message || 'Failed to connect wallet');
+    }
+  };
+
+  // Show Bitcoin wallet if connected
+  if (btcIsConnected && btcWallet) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setShowModal(!showModal)}
+          className={`flex items-center gap-2 rounded-lg gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white ${sizeClasses[size]} ${className}`}
+        >
+          <Bitcoin className="w-4 h-4 flex-shrink-0" />
+          <span className="font-mono text-sm truncate max-w-[120px]">{formatAddress(btcWallet.address)}</span>
+          <span className="text-xs flex-shrink-0">₿</span>
+          <ChevronDown className="w-4 h-4 flex-shrink-0" />
+        </button>
+
+        <AnimatePresence>
+          {showModal && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowModal(false)}
+              />
+
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 mt-2 w-64 rounded-xl card-3d p-4 z-50"
+              >
+                <div className="mb-3 pb-3 border-b border-[#FFD700]/20">
+                  <p className="text-xs text-foreground/50 mb-1">Bitcoin Wallet ({btcWallet.name})</p>
+                  <p className="font-mono text-xs text-foreground break-all">{btcWallet.address}</p>
+                  <p className="text-xs text-foreground/70 mt-1">
+                    ₿ {btcWallet.network}
+                  </p>
+                </div>
+
+                <Link
+                  href="/dashboard"
+                  onClick={() => setShowModal(false)}
+                  className="w-full flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20 transition-colors"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Disconnect
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // Show EVM wallet if connected
   if (isConnected && address) {
     return (
       <div className="relative">
@@ -195,8 +291,39 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
                   </p>
                 </div>
 
-                {/* Wallet Options */}
-                <div className="space-y-3">
+                {/* Wallet Type Tabs */}
+                <div className="flex gap-2 mb-4 p-1 rounded-lg bg-[#0A0A0A] border border-[#FFD700]/20">
+                  <button
+                    onClick={() => setWalletType('evm')}
+                    className={`flex-1 py-2 px-3 rounded-lg transition-all font-semibold text-sm ${
+                      walletType === 'evm'
+                        ? 'bg-[#FFD700] text-[#0A0A0A]'
+                        : 'text-foreground/70 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <Wallet className="w-4 h-4" />
+                      EVM
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setWalletType('bitcoin')}
+                    className={`flex-1 py-2 px-3 rounded-lg transition-all font-semibold text-sm ${
+                      walletType === 'bitcoin'
+                        ? 'bg-[#FFD700] text-[#0A0A0A]'
+                        : 'text-foreground/70 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <Bitcoin className="w-4 h-4" />
+                      Bitcoin
+                    </span>
+                  </button>
+                </div>
+
+                {/* EVM Wallet Options */}
+                {walletType === 'evm' && (
+                  <div className="space-y-3">
                   {walletConnectors.map((connector) => {
                     const logo = getWalletLogo(connector.name);
                     return (
@@ -241,7 +368,82 @@ export function CustomWalletButton({ size = 'md', showChain = true, className = 
                       No wallet connectors available
                     </div>
                   )}
-                </div>
+                  </div>
+                )}
+
+                {/* Bitcoin Wallet Options */}
+                {walletType === 'bitcoin' && (
+                  <div className="space-y-3">
+                    {/* Xverse Wallet */}
+                    <button
+                      onClick={() => handleBitcoinWalletConnect('Xverse')}
+                      disabled={btcIsConnecting}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FFD700] flex items-center justify-center">
+                          <Bitcoin className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-foreground block">Xverse</span>
+                          <span className="text-xs text-foreground/50">Bitcoin & Ordinals</span>
+                        </div>
+                      </div>
+                      <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">→</div>
+                    </button>
+
+                    {/* Leather (Hiro) Wallet */}
+                    <button
+                      onClick={() => handleBitcoinWalletConnect('Leather')}
+                      disabled={btcIsConnecting}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#8B4513] to-[#CD853F] flex items-center justify-center">
+                          <Bitcoin className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-foreground block">Leather</span>
+                          <span className="text-xs text-foreground/50">Bitcoin & Stacks</span>
+                        </div>
+                      </div>
+                      <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">→</div>
+                    </button>
+
+                    {/* Unisat Wallet */}
+                    <button
+                      onClick={() => handleBitcoinWalletConnect('Unisat')}
+                      disabled={btcIsConnecting}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF8C00] to-[#FFD700] flex items-center justify-center">
+                          <Bitcoin className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-foreground block">Unisat</span>
+                          <span className="text-xs text-foreground/50">Bitcoin & BRC-20</span>
+                        </div>
+                      </div>
+                      <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">→</div>
+                    </button>
+
+                    {/* Install Wallet Note */}
+                    <div className="mt-4 p-3 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/20">
+                      <p className="text-xs text-foreground/70 text-center">
+                        Don't have a Bitcoin wallet?{' '}
+                        <a
+                          href="https://www.xverse.app/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#FFD700] hover:text-[#FF6B35] font-semibold"
+                        >
+                          Install Xverse
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Footer Note */}
                 <div className="mt-6 pt-4 border-t border-[#FFD700]/20">

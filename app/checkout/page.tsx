@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, Loader2, AlertCircle, Crown, Wallet as WalletIcon } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, AlertCircle, Crown, Wallet as WalletIcon, Bitcoin as BitcoinIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useAccount, useSignMessage } from 'wagmi';
 import { formatAddress, getChainIcon } from '@/hooks/useMultiChainPayment';
+import { useBitcoinWallet } from '@/hooks/useBitcoinWallet';
+import BitcoinPayment from '@/components/BitcoinPayment';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -18,6 +20,10 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'signature' | 'bitcoin'>('signature');
+
+  // Bitcoin wallet
+  const { wallet: btcWallet, isConnected: btcIsConnected } = useBitcoinWallet();
 
   // Check if user already has unlimited access
   useEffect(() => {
@@ -216,25 +222,58 @@ export default function CheckoutPage() {
                   Complete Your Payment
                 </h2>
                 <p className="text-sm text-foreground/70 mb-6">
-                  Connect your wallet and authorize payment with a signature
+                  Choose your preferred payment method
                 </p>
 
-                {/* Wallet Connection Status */}
-                {!isConnected ? (
-                  <div className="mb-6 p-6 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 text-center">
-                    <WalletIcon className="w-12 h-12 text-[#FFD700] mx-auto mb-3" />
-                    <h3 className="font-bold text-foreground mb-2">Connect Your Wallet</h3>
-                    <p className="text-sm text-foreground/70 mb-4">
-                      Connect your crypto wallet to continue with payment
-                    </p>
-                    <button
-                      onClick={() => open()}
-                      className="px-6 py-3 rounded-xl gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white"
-                    >
-                      Connect Wallet
-                    </button>
-                  </div>
-                ) : (
+                {/* Payment Method Selector */}
+                <div className="flex gap-2 mb-6 p-1 rounded-lg bg-[#0A0A0A] border border-[#FFD700]/20">
+                  <button
+                    onClick={() => setPaymentMethod('signature')}
+                    className={`flex-1 py-3 px-4 rounded-lg transition-all font-semibold text-sm ${
+                      paymentMethod === 'signature'
+                        ? 'bg-[#FFD700] text-[#0A0A0A]'
+                        : 'text-foreground/70 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <WalletIcon className="w-4 h-4" />
+                      Wallet Signature
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod('bitcoin')}
+                    className={`flex-1 py-3 px-4 rounded-lg transition-all font-semibold text-sm ${
+                      paymentMethod === 'bitcoin'
+                        ? 'bg-[#FFD700] text-[#0A0A0A]'
+                        : 'text-foreground/70 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <BitcoinIcon className="w-4 h-4" />
+                      Bitcoin
+                    </span>
+                  </button>
+                </div>
+
+                {/* Wallet Signature Payment */}
+                {paymentMethod === 'signature' && (
+                  <>
+                    {/* Wallet Connection Status */}
+                    {!isConnected ? (
+                      <div className="mb-6 p-6 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 text-center">
+                        <WalletIcon className="w-12 h-12 text-[#FFD700] mx-auto mb-3" />
+                        <h3 className="font-bold text-foreground mb-2">Connect Your Wallet</h3>
+                        <p className="text-sm text-foreground/70 mb-4">
+                          Connect your crypto wallet to continue with payment
+                        </p>
+                        <button
+                          onClick={() => open()}
+                          className="px-6 py-3 rounded-xl gradient-gold-orange hover:glow-gold transition-all duration-300 font-bold text-white"
+                        >
+                          Connect Wallet
+                        </button>
+                      </div>
+                    ) : (
                   <div className="mb-6 p-4 rounded-xl bg-[#4CAF50]/20 border border-[#4CAF50]/30">
                     <div className="flex items-center gap-2 text-[#4CAF50] mb-2">
                       <Check className="w-5 h-5" />
@@ -320,22 +359,39 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                <div className="mt-6 pt-6 border-t border-[#FFD700]/20">
-                  <div className="space-y-2 text-xs text-foreground/50">
-                    <p className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#4CAF50]" />
-                      Secure payment via wallet signature
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#4CAF50]" />
-                      No gas fees required
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#4CAF50]" />
-                      Instant activation
-                    </p>
+                    <div className="mt-6 pt-6 border-t border-[#FFD700]/20">
+                      <div className="space-y-2 text-xs text-foreground/50">
+                        <p className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-[#4CAF50]" />
+                          Secure payment via wallet signature
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-[#4CAF50]" />
+                          No gas fees required
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-[#4CAF50]" />
+                          Instant activation
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Bitcoin Payment */}
+                {paymentMethod === 'bitcoin' && (
+                  <div>
+                    <BitcoinPayment
+                      amount={50}
+                      onPaymentConfirmed={() => {
+                        setSuccess(true);
+                        setTimeout(() => {
+                          router.push('/dashboard');
+                        }, 2000);
+                      }}
+                    />
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Supported Chains */}
