@@ -139,11 +139,17 @@ export default function MempoolPanel() {
           <Tooltip
             contentStyle={{
               background: 'rgba(10, 10, 15, 0.9)',
-              border: '1px solid rgba(0, 255, 255, 0.3)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
               borderRadius: '8px',
               color: '#ededed',
             }}
-            cursor={{ fill: 'rgba(0, 255, 255, 0.1)' }}
+            itemStyle={{
+              color: '#FFD700'
+            }}
+            labelStyle={{
+              color: '#FFD700'
+            }}
+            cursor={{ fill: 'rgba(255, 215, 0, 0.1)' }}
           />
           <Bar dataKey="count" radius={[8, 8, 0, 0]}>
             {mempoolData.map((entry, index) => (

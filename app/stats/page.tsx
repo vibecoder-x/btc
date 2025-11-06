@@ -135,8 +135,8 @@ export default function StatsPage() {
 
     fetchNetworkStats();
 
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchNetworkStats, 60000);
+    // Refresh every 30 seconds for more live updates
+    const interval = setInterval(fetchNetworkStats, 30000);
 
     return () => clearInterval(interval);
   }, []);
