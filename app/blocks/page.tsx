@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Box, Clock, Database, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import LiveBlocksAnimation from '@/components/LiveBlocksAnimation';
 
 interface Block {
   height: number;
@@ -153,6 +154,11 @@ export default function BlocksPage() {
           <Box className="mr-3 w-10 h-10 text-[#FFD700]" />
           All Blocks
         </h1>
+
+        {/* Live Blocks Animation */}
+        <div className="mb-12">
+          <LiveBlocksAnimation />
+        </div>
 
         <div className="card-3d rounded-2xl p-6 md:p-8">
           {/* Desktop Table */}
