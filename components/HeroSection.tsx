@@ -7,7 +7,8 @@ import Image from 'next/image';
 import { useConnect, useAccount } from 'wagmi';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useRouter } from 'next/navigation';
-import { Wallet } from 'lucide-react';
+import { useBitcoinWallet } from '@/hooks/useBitcoinWallet';
+import { Wallet, Bitcoin } from 'lucide-react';
 
 interface Block {
   id: number;
@@ -32,11 +33,25 @@ export default function HeroSection() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [mounted, setMounted] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [walletType, setWalletType] = useState<'evm' | 'bitcoin'>('evm');
 
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { open } = useWeb3Modal();
   const router = useRouter();
+
+  const { connectXverse, connectLeather, connectUnisat } = useBitcoinWallet();
+
+  const handleBitcoinWalletConnect = async (walletName: string) => {
+    try {
+      if (walletName === 'Xverse') await connectXverse();
+      else if (walletName === 'Leather') await connectLeather();
+      else if (walletName === 'Unisat') await connectUnisat();
+      setShowWalletModal(false);
+    } catch (err: any) {
+      alert(err.message || 'Failed to connect wallet');
+    }
+  };
 
   // Get wallet logo based on connector name
   const getWalletLogo = (connectorName: string): string | null => {
@@ -271,7 +286,18 @@ export default function HeroSection() {
               </p>
             </div>
 
-            {/* Wallet Options */}
+            {/* Wallet Type Tabs */}
+            <div className="flex gap-2 mb-4 p-1 rounded-lg bg-[#0A0A0A] border border-[#FFD700]/20">
+              <button onClick={() => setWalletType('evm')} className={`flex-1 py-2 px-3 rounded-lg transition-all font-semibold text-sm ${walletType === 'evm' ? 'bg-[#FFD700] text-[#0A0A0A]' : 'text-foreground/70'}`}>
+                <span className="flex items-center justify-center gap-2"><Wallet className="w-4 h-4" />EVM</span>
+              </button>
+              <button onClick={() => setWalletType('bitcoin')} className={`flex-1 py-2 px-3 rounded-lg transition-all font-semibold text-sm ${walletType === 'bitcoin' ? 'bg-[#FFD700] text-[#0A0A0A]' : 'text-foreground/70'}`}>
+                <span className="flex items-center justify-center gap-2"><Bitcoin className="w-4 h-4" />Bitcoin</span>
+              </button>
+            </div>
+
+            {/* EVM Wallet Options */}
+            {walletType === 'evm' && (
             <div className="space-y-3 mb-6">
               {connectors
                 .filter(connector => {
@@ -324,6 +350,37 @@ export default function HeroSection() {
                   );
                 })}
             </div>
+            )}
+
+            {/* Bitcoin Wallet Options */}
+            {walletType === 'bitcoin' && (
+            <div className="space-y-3 mb-6">
+              <button onClick={() => handleBitcoinWalletConnect('Xverse')} className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FFD700] flex items-center justify-center"><Bitcoin className="w-5 h-5 text-white" /></div>
+                  <div className="text-left"><span className="font-semibold text-foreground block">Xverse</span><span className="text-xs text-foreground/50">Bitcoin & Ordinals</span></div>
+                </div>
+                <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">→</div>
+              </button>
+              <button onClick={() => handleBitcoinWalletConnect('Leather')} className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#8B4513] to-[#CD853F] flex items-center justify-center"><Bitcoin className="w-5 h-5 text-white" /></div>
+                  <div className="text-left"><span className="font-semibold text-foreground block">Leather</span><span className="text-xs text-foreground/50">Bitcoin & Stacks</span></div>
+                </div>
+                <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">→</div>
+              </button>
+              <button onClick={() => handleBitcoinWalletConnect('Unisat')} className="w-full flex items-center justify-between p-4 rounded-xl bg-[#0A0A0A] border border-[#FFD700]/30 hover:bg-[#FFD700]/10 hover:border-[#FFD700] transition-all group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF8C00] to-[#FFD700] flex items-center justify-center"><Bitcoin className="w-5 h-5 text-white" /></div>
+                  <div className="text-left"><span className="font-semibold text-foreground block">Unisat</span><span className="text-xs text-foreground/50">Bitcoin & BRC-20</span></div>
+                </div>
+                <div className="text-[#FFD700] group-hover:translate-x-1 transition-transform">→</div>
+              </button>
+              <div className="mt-4 p-3 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/20">
+                <p className="text-xs text-foreground/70 text-center">Don't have a Bitcoin wallet? <a href="https://www.xverse.app/" target="_blank" rel="noopener noreferrer" className="text-[#FFD700] hover:text-[#FF6B35] font-semibold">Install Xverse</a></p>
+              </div>
+            </div>
+            )}
 
             {/* Info */}
             <div className="p-4 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/20">
