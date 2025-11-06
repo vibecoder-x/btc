@@ -55,7 +55,7 @@ export default function MempoolPage() {
           const data: MempoolResponse = await response.json();
 
           setTxCount(data.count || 0);
-          setMempoolSize((data.mempool_size || 0) / 1024 / 1024);
+          setMempoolSize((data.vsize || 0) / 1024 / 1024); // Use vsize (actual size)
           setLastUpdate(new Date());
 
           // Update fee estimates
@@ -118,7 +118,7 @@ export default function MempoolPage() {
 
           // Update mempool history - add new data point and keep last 48
           setMempoolHistory(prev => {
-            const currentSize = (data.mempool_size || 0) / 1024 / 1024;
+            const currentSize = (data.vsize || 0) / 1024 / 1024; // Use vsize (actual size in bytes)
             const now = new Date();
             const newPoint = {
               time: `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`,
@@ -129,7 +129,7 @@ export default function MempoolPage() {
 
             // If this is the first load, fill with realistic varied data (7 days worth)
             if (prev.length === 0) {
-              const baseSize = currentSize || 300; // Default to ~300 MB if no data
+              const baseSize = currentSize > 0 ? currentSize : 300; // Use actual size or default to ~300 MB
               return Array.from({ length: 48 }, (_, i) => {
                 // Create wave pattern with some randomness
                 const dayProgress = i / 48;
@@ -139,7 +139,7 @@ export default function MempoolPage() {
 
                 return {
                   time: `${Math.floor(i / 2)}d ${(i % 2) * 12}h`,
-                  size: Math.max(50, sizeVariation), // Keep minimum 50 MB
+                  size: Math.round(sizeVariation * 10) / 10, // Round to 1 decimal
                 };
               });
             }

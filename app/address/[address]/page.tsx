@@ -32,6 +32,8 @@ export default function AddressPage() {
   const [utxos, setUtxos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const transactionsPerPage = 25;
 
   // Fetch address data from API
   useEffect(() => {
@@ -255,6 +257,29 @@ export default function AddressPage() {
     if (filter === 'received') return tx.amount > 0;
     return true;
   });
+
+  // Pagination logic
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / transactionsPerPage));
+  const startIndex = (currentPage - 1) * transactionsPerPage;
+  const endIndex = startIndex + transactionsPerPage;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
 
   // Loading state
   if (loading) {
@@ -736,7 +761,7 @@ export default function AddressPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTransactions.map((tx, index) => (
+                {paginatedTransactions.map((tx, index) => (
                   <motion.tr
                     key={index}
                     initial={{ opacity: 0, y: 10 }}
@@ -809,15 +834,27 @@ export default function AddressPage() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-8 flex items-center justify-center space-x-4">
-            <button className="px-4 py-2 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-colors duration-300">
-              Previous
-            </button>
-            <span className="text-foreground/70">Page 1 of 7</span>
-            <button className="px-4 py-2 rounded-lg glassmorphism hover:bg-neon-blue/10 transition-colors duration-300">
-              Next
-            </button>
-          </div>
+          {filteredTransactions.length > transactionsPerPage && (
+            <div className="mt-8 flex items-center justify-center space-x-4">
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-lg glassmorphism hover:bg-[#FFD700]/10 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-foreground/70">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-lg glassmorphism hover:bg-[#FFD700]/10 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

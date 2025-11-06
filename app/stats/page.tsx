@@ -94,7 +94,7 @@ export default function StatsPage() {
           }
 
           // Build mempool size data with realistic variation
-          const currentMempoolSize = (mempoolData.mempool_size || 300000000) / 1024 / 1024; // MB
+          const currentMempoolSize = (mempoolData.vsize || 300000000) / 1024 / 1024; // MB (use vsize)
           const mempoolHistory = Array.from({ length: 48 }, (_, i) => {
             // Create wave pattern simulating mempool growth/clearing cycles
             const hourProgress = i / 48;

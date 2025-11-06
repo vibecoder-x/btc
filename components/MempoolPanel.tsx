@@ -73,11 +73,12 @@ export default function MempoolPanel() {
           }
 
           // Update stats
+          const avgFee = data.recommended_fees?.halfHour || data.recommended_fees?.medium || data.recommended_fees?.fastest || 0;
           setStats({
             count: data.count || 0,
             vsize: data.vsize || 0,
             totalFee: data.total_fee || 0,
-            avgFee: data.recommended_fees?.medium || 0,
+            avgFee: avgFee,
             nextBlock: '~10 min',
             mempoolSize: `${((data.mempool_size || 0) / 1024 / 1024).toFixed(2)} MB`
           });
