@@ -333,8 +333,8 @@ export default function StatsPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis dataKey="time" stroke="#666" />
-                  <YAxis stroke="#666" />
+                  <XAxis dataKey="time" stroke="#666" style={{ fontSize: '12px' }} />
+                  <YAxis stroke="#666" label={{ value: 'MB', angle: -90, position: 'insideLeft', style: { fill: '#888' } }} />
                   <Tooltip
                     contentStyle={{
                       background: 'rgba(10, 10, 15, 0.9)',
@@ -342,6 +342,7 @@ export default function StatsPage() {
                       borderRadius: '8px',
                       color: '#ededed',
                     }}
+                    formatter={(value: number) => [`${value.toFixed(1)} MB`, 'Size']}
                   />
                   <Area type="monotone" dataKey="size" stroke="#FF6B35" fillOpacity={1} fill="url(#colorMempool)" />
                 </AreaChart>

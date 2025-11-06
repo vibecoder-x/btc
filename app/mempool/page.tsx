@@ -333,11 +333,12 @@ export default function MempoolPage() {
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={mempoolHistory}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="day" stroke="#888" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#888" style={{ fontSize: '12px' }} />
+              <XAxis dataKey="time" stroke="#888" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#888" style={{ fontSize: '12px' }} label={{ value: 'MB', angle: -90, position: 'insideLeft', style: { fill: '#888' } }} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #FFD700' }}
                 labelStyle={{ color: '#FFD700' }}
+                formatter={(value: number) => [`${value.toFixed(1)} MB`, 'Size']}
               />
               <Bar dataKey="size" fill="#FFD700" />
             </BarChart>
