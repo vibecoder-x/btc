@@ -35,12 +35,12 @@ export default function RichListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Generate mock data for top 100 addresses
+  // Load real verified Bitcoin addresses only - no fake data
   useEffect(() => {
     const mockAddresses: RichAddress[] = [];
     const now = new Date();
 
-    // Using only verified Bitcoin addresses that exist and have transaction history
+    // Real verified Bitcoin addresses that exist on the blockchain
     const knownAddresses = [
       {
         address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
@@ -114,92 +114,22 @@ export default function RichListPage() {
       },
     ];
 
-    for (let i = 0; i < 100; i++) {
-      const known = knownAddresses[i % knownAddresses.length];
-      // Use actual balance for first 20 addresses, then decrease gradually for rest
-      const balance = i < knownAddresses.length
-        ? known.balance
-        : Math.max(1000, 42000 - ((i - knownAddresses.length) * 500) + Math.random() * 200);
-
-      // Use realistic activity dates based on type
-      let lastActivity: Date;
-      if (i < knownAddresses.length) {
-        // Use known activity dates for top addresses
-        lastActivity = known.lastActivityDate;
-      } else {
-        // Generate realistic dates based on type for others
-        switch (known.type) {
-          case 'exchange':
-            // Exchanges are active - within last 14 days
-            const exchangeDays = Math.floor(Math.random() * 14);
-            lastActivity = new Date(now.getTime() - exchangeDays * 24 * 60 * 60 * 1000);
-            break;
-          case 'miner':
-            // Miners are very active - within last 24 hours
-            const minerHours = Math.floor(Math.random() * 24);
-            lastActivity = new Date(now.getTime() - minerHours * 60 * 60 * 1000);
-            break;
-          case 'institution':
-            // Institutions move slowly - within last 3 months
-            const institutionDays = Math.floor(Math.random() * 90);
-            lastActivity = new Date(now.getTime() - institutionDays * 24 * 60 * 60 * 1000);
-            break;
-          case 'whale':
-            // Whales can be dormant or active
-            const isWhaleActive = Math.random() > 0.5;
-            if (isWhaleActive) {
-              // Active whale - within last 6 months
-              const whaleDays = Math.floor(Math.random() * 180);
-              lastActivity = new Date(now.getTime() - whaleDays * 24 * 60 * 60 * 1000);
-            } else {
-              // Dormant whale - 2-10 years ago
-              const whaleYears = 2 + Math.floor(Math.random() * 8);
-              lastActivity = new Date(now.getTime() - whaleYears * 365 * 24 * 60 * 60 * 1000);
-            }
-            break;
-          default:
-            // Unknown - random within 2 years
-            const unknownDays = Math.floor(Math.random() * 730);
-            lastActivity = new Date(now.getTime() - unknownDays * 24 * 60 * 60 * 1000);
-        }
-      }
-
-      const daysAgo = Math.floor((now.getTime() - lastActivity.getTime()) / (24 * 60 * 60 * 1000));
-
-      // Generate full address (not truncated) for proper copying
-      let fullAddress: string;
-      if (i < knownAddresses.length) {
-        // Use real addresses for top addresses
-        fullAddress = known.address;
-      } else {
-        // Generate a realistic-looking full address with random characters for others
-        const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
-        const addressPrefix = known.address.slice(0, 10);
-        const addressSuffix = known.address.slice(-10);
-
-        // Generate random middle part based on index for consistency
-        const seed = i * 123456; // Use index as seed for consistent addresses
-        let middlePart = '';
-        for (let j = 0; j < 24; j++) {
-          const charIndex = (seed + j * 7) % chars.length;
-          middlePart += chars[charIndex];
-        }
-
-        fullAddress = `${addressPrefix}${middlePart}${addressSuffix}`;
-      }
+    // Only use real, verified Bitcoin addresses - no fake data
+    knownAddresses.forEach((known, i) => {
+      const daysAgo = Math.floor((now.getTime() - known.lastActivityDate.getTime()) / (24 * 60 * 60 * 1000));
 
       mockAddresses.push({
         rank: i + 1,
-        address: fullAddress,
-        balance,
-        balanceUsd: balance * currentBtcPrice,
-        percentageOfSupply: (balance / 21000000) * 100,
-        lastActivity: lastActivity.toISOString(),
-        tag: i < knownAddresses.length ? known.tag : (i < 30 ? `${known.tag} #${i - knownAddresses.length + 1}` : undefined),
+        address: known.address,
+        balance: known.balance,
+        balanceUsd: known.balance * currentBtcPrice,
+        percentageOfSupply: (known.balance / 21000000) * 100,
+        lastActivity: known.lastActivityDate.toISOString(),
+        tag: known.tag,
         type: known.type,
         isDormant: daysAgo > 365,
       });
-    }
+    });
 
     setAddresses(mockAddresses);
   }, [currentBtcPrice]);
@@ -390,7 +320,7 @@ export default function RichListPage() {
           <h1 className="text-5xl font-bold text-gradient-gold">Bitcoin Rich List</h1>
         </div>
         <p className="text-foreground/70 text-lg max-w-3xl mx-auto">
-          Top 100 Bitcoin addresses by balance - Track the whales, exchanges, and major holders
+          Top Bitcoin addresses by balance - Track the whales, exchanges, and major holders (Real verified addresses only)
         </p>
       </motion.div>
 
