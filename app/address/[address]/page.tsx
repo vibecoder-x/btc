@@ -51,23 +51,13 @@ export default function AddressPage() {
 
         const data = await response.json();
 
-        // Transform data to match expected format
-        const transformedData = {
-          address: data.address,
-          balance: data.balance / 100000000, // Convert satoshis to BTC
-          totalReceived: data.total_received / 100000000,
-          totalSent: data.total_sent / 100000000,
-          txCount: data.tx_count || 0,
-          firstSeen: new Date().toISOString(), // Blockstream doesn't provide this
-          lastActivity: new Date().toISOString(), // Blockstream doesn't provide this
-          isReused: data.tx_count > 1,
-        };
+        // Process transactions first to calculate dates
+        let processedTxs: any[] = [];
+        let firstSeenDate = new Date();
+        let lastActivityDate = new Date(0); // Epoch start
 
-        setAddressData(transformedData);
-
-        // Process transactions
         if (data.transactions && data.transactions.length > 0) {
-          const processedTxs = data.transactions.map((tx: any) => {
+          processedTxs = data.transactions.map((tx: any) => {
             // Calculate amount for this address (received - sent)
             let amount = 0;
 
@@ -89,9 +79,20 @@ export default function AddressPage() {
 
             amount = (received - sent) / 100000000; // Convert to BTC
 
+            // Get transaction timestamp
+            const txTime = new Date(tx.status?.block_time ? tx.status.block_time * 1000 : Date.now());
+
+            // Track earliest and latest transactions
+            if (txTime < firstSeenDate) {
+              firstSeenDate = txTime;
+            }
+            if (txTime > lastActivityDate) {
+              lastActivityDate = txTime;
+            }
+
             return {
               txid: tx.txid,
-              time: new Date(tx.status?.block_time ? tx.status.block_time * 1000 : Date.now()).toISOString(),
+              time: txTime.toISOString(),
               amount,
               confirmations: tx.status?.confirmed ? tx.status.block_height : 0,
               type: amount > 0 ? 'received' : 'sent',
@@ -110,6 +111,20 @@ export default function AddressPage() {
           }));
           setUtxos(processedUtxos);
         }
+
+        // Transform data to match expected format with calculated dates
+        const transformedData = {
+          address: data.address,
+          balance: data.balance / 100000000, // Convert satoshis to BTC
+          totalReceived: data.total_received / 100000000,
+          totalSent: data.total_sent / 100000000,
+          txCount: data.tx_count || 0,
+          firstSeen: firstSeenDate.toISOString(), // Calculated from earliest transaction
+          lastActivity: lastActivityDate.getTime() > 0 ? lastActivityDate.toISOString() : new Date().toISOString(), // Calculated from latest transaction
+          isReused: data.tx_count > 1,
+        };
+
+        setAddressData(transformedData);
 
       } catch (err: any) {
         console.error('Error fetching address:', err);

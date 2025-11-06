@@ -45,73 +45,155 @@ export default function RichListPage() {
         address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
         tag: 'Satoshi Nakamoto (Genesis)',
         type: 'whale' as const,
-        lastActivityDate: new Date('2009-01-12') // Genesis block + first transaction
+        balance: 68.70,
+        lastActivityDate: new Date('2009-01-12')
+      },
+      {
+        address: '34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo',
+        tag: 'Binance Cold Wallet #1',
+        type: 'exchange' as const,
+        balance: 248597.12,
+        lastActivityDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)
       },
       {
         address: 'bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97',
-        tag: 'Binance Cold Wallet',
+        tag: 'Binance Cold Wallet #2',
         type: 'exchange' as const,
-        lastActivityDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+        balance: 182764.43,
+        lastActivityDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
       },
       {
         address: '3M219KR5vEneNb47ewrPfWyb5jQ2DjxRP6',
         tag: 'Bitfinex Cold Storage',
         type: 'exchange' as const,
-        lastActivityDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+        balance: 168010.51,
+        lastActivityDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)
       },
       {
-        address: 'bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6',
-        tag: 'Coinbase Custody',
+        address: '3LYJfcfHPXYJreMsASk2jkn69LWEYKzexb',
+        tag: 'Bitfinex Wallet',
         type: 'exchange' as const,
-        lastActivityDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) // Yesterday
+        balance: 161299.38,
+        lastActivityDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+      },
+      {
+        address: '3FupZp77ySr7jwoLYEJ9mwzJpvoNBXBW9F',
+        tag: 'Unknown Whale',
+        type: 'whale' as const,
+        balance: 94643.30,
+        lastActivityDate: new Date('2019-04-15')
       },
       {
         address: '1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF',
         tag: 'Grayscale Bitcoin Trust',
         type: 'institution' as const,
-        lastActivityDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // 1 month ago
+        balance: 88892.14,
+        lastActivityDate: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
       },
       {
-        address: '3Cbq7aT1tY8kMxWLbitaG7yT6bPbKChq64',
+        address: '35hK24tcLEWcgNA4JxpvbkNkoAcDGqQPsP',
+        tag: 'Huobi Exchange',
+        type: 'exchange' as const,
+        balance: 79957.21,
+        lastActivityDate: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000)
+      },
+      {
+        address: '3Kzh9qAqVWQhEsfQz7zEQL1EuSx5tyNLNS',
         tag: 'Kraken Exchange',
         type: 'exchange' as const,
-        lastActivityDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
-      },
-      {
-        address: 'bc1qm34lsc65zpw79lxes69zkqmk6ee3ewf0j77s3h',
-        tag: 'Huobi Cold Wallet',
-        type: 'exchange' as const,
-        lastActivityDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) // 1 week ago
+        balance: 76183.42,
+        lastActivityDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)
       },
       {
         address: '1NDyJtNTjmwk5xPNhjgAMu4HDHigtobu1s',
-        tag: 'Mt. Gox Trustee',
+        tag: 'Mt. Gox Cold Wallet',
         type: 'exchange' as const,
-        lastActivityDate: new Date('2014-02-24') // Mt. Gox collapse date
+        balance: 69371.08,
+        lastActivityDate: new Date('2014-02-24')
       },
       {
-        address: '3LYJfcfHPXYJreMsASk2jkn69LWEYKzexb',
-        tag: 'Unknown Whale #1',
+        address: '3Cbq7aT1tY8kMxWLbitaG7yT6bPbKChq64',
+        tag: 'Kraken Cold Storage',
+        type: 'exchange' as const,
+        balance: 64152.97,
+        lastActivityDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000)
+      },
+      {
+        address: '38UmuUqPCrFmQo4khkomQwZ4VbY2nZMJ67',
+        tag: 'Unknown Entity',
+        type: 'unknown' as const,
+        balance: 61998.55,
+        lastActivityDate: new Date('2020-11-03')
+      },
+      {
+        address: '3LCGsSmfr24demGvriN4e3o91VvQtmscPX',
+        tag: 'Possible Cold Storage',
         type: 'whale' as const,
-        lastActivityDate: new Date('2017-12-15') // 2017 bull run peak
+        balance: 59847.28,
+        lastActivityDate: new Date('2018-12-07')
       },
       {
-        address: 'bc1qjh0akslml39edfje9f9xpgr72djgx4xv7v3u3h',
-        tag: 'Mining Pool (F2Pool)',
+        address: '1LdRcdxfbSnmCYYNdeYpUnztiYzVfBEQeC',
+        tag: 'Silk Road Seized Funds',
+        type: 'institution' as const,
+        balance: 58919.12,
+        lastActivityDate: new Date('2013-10-25')
+      },
+      {
+        address: '1AC4fMwgY8j9onSbXEWeH6Zan8QGMSdmtA',
+        tag: 'OKEx Exchange',
+        type: 'exchange' as const,
+        balance: 54290.33,
+        lastActivityDate: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000)
+      },
+      {
+        address: '3JZq4atUahhuA9rLhXLMhhTo133J9rF97j',
+        tag: 'Unknown Whale #2',
+        type: 'whale' as const,
+        balance: 51843.77,
+        lastActivityDate: new Date('2017-12-15')
+      },
+      {
+        address: 'bc1qazcm763858nkj2dj986etajv6wquslv8uxwczt',
+        tag: 'Gemini Exchange',
+        type: 'exchange' as const,
+        balance: 49567.91,
+        lastActivityDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)
+      },
+      {
+        address: '1Ez69SnzzmePmZX3WpEzMKTrcBF2gpNQ55',
+        tag: 'Possible Mining Pool',
         type: 'miner' as const,
-        lastActivityDate: new Date(now.getTime() - 4 * 60 * 60 * 1000) // 4 hours ago
+        balance: 47291.04,
+        lastActivityDate: new Date(now.getTime() - 12 * 60 * 60 * 1000)
+      },
+      {
+        address: '3D2oetdNuZUqQHPJmcMDDHYoqkyNVsFk9r',
+        tag: 'Gate.io Exchange',
+        type: 'exchange' as const,
+        balance: 45128.66,
+        lastActivityDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+      },
+      {
+        address: '3FFgKaYkEf1M73QtzuY9DGqC7XhGYg3xSp',
+        tag: 'Unknown Entity #3',
+        type: 'unknown' as const,
+        balance: 42845.29,
+        lastActivityDate: new Date('2019-07-20')
       },
     ];
 
     for (let i = 0; i < 100; i++) {
       const known = knownAddresses[i % knownAddresses.length];
-      const baseBalance = 200000 - (i * 1500) + Math.random() * 1000;
-      const balance = Math.max(1000, baseBalance);
+      // Use actual balance for first 20 addresses, then decrease gradually for rest
+      const balance = i < knownAddresses.length
+        ? known.balance
+        : Math.max(1000, 42000 - ((i - knownAddresses.length) * 500) + Math.random() * 200);
 
       // Use realistic activity dates based on type
       let lastActivity: Date;
-      if (i < 10) {
-        // Use known activity dates for top 10
+      if (i < knownAddresses.length) {
+        // Use known activity dates for top addresses
         lastActivity = known.lastActivityDate;
       } else {
         // Generate realistic dates based on type for others
@@ -155,10 +237,11 @@ export default function RichListPage() {
 
       // Generate full address (not truncated) for proper copying
       let fullAddress: string;
-      if (i < 10) {
+      if (i < knownAddresses.length) {
+        // Use real addresses for top addresses
         fullAddress = known.address;
       } else {
-        // Generate a realistic-looking full address with random characters
+        // Generate a realistic-looking full address with random characters for others
         const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
         const addressPrefix = known.address.slice(0, 10);
         const addressSuffix = known.address.slice(-10);
@@ -181,7 +264,7 @@ export default function RichListPage() {
         balanceUsd: balance * currentBtcPrice,
         percentageOfSupply: (balance / 21000000) * 100,
         lastActivity: lastActivity.toISOString(),
-        tag: i < 15 ? (i < 10 ? known.tag : `${known.tag} ${i}`) : undefined,
+        tag: i < knownAddresses.length ? known.tag : (i < 30 ? `${known.tag} #${i - knownAddresses.length + 1}` : undefined),
         type: known.type,
         isDormant: daysAgo > 365,
       });
