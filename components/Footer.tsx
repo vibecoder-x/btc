@@ -165,33 +165,31 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a
-                  href="https://github.com/vibecoder-x/btc"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground/70 hover:text-[#FFD700] transition-colors text-sm flex items-center gap-2"
-                >
+                <div className="text-foreground/50 text-sm flex items-center gap-2">
                   <Github className="w-4 h-4" />
-                  GitHub
-                </a>
+                  <span>GitHub</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30">
+                    Coming Soon
+                  </span>
+                </div>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="text-foreground/70 hover:text-[#FFD700] transition-colors text-sm flex items-center gap-2"
-                >
+                <div className="text-foreground/50 text-sm flex items-center gap-2">
                   <MessageCircle className="w-4 h-4" />
-                  Discord
-                </a>
+                  <span>Discord</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30">
+                    Coming Soon
+                  </span>
+                </div>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="text-foreground/70 hover:text-[#FFD700] transition-colors text-sm flex items-center gap-2"
-                >
+                <div className="text-foreground/50 text-sm flex items-center gap-2">
                   <Send className="w-4 h-4" />
-                  Telegram
-                </a>
+                  <span>Telegram</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30">
+                    Coming Soon
+                  </span>
+                </div>
               </li>
             </ul>
           </div>

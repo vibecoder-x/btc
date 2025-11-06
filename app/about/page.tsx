@@ -413,29 +413,25 @@ export default function AboutPage() {
             <span className="text-foreground/70 text-sm">@btcindexer</span>
           </a>
 
-          <a
-            href="https://github.com/btcindexer"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center gap-3 p-6 glassmorphism rounded-xl hover:border-[#FFD700]/40 transition-all group"
-          >
-            <div className="w-12 h-12 rounded-lg bg-[#FFD700]/10 flex items-center justify-center group-hover:bg-[#FFD700]/20 transition-colors">
-              <Github className="w-6 h-6 text-[#FFD700]" />
+          <div className="flex flex-col items-center gap-3 p-6 glassmorphism rounded-xl border-[#FFD700]/20">
+            <div className="w-12 h-12 rounded-lg bg-[#FFD700]/10 flex items-center justify-center">
+              <Github className="w-6 h-6 text-[#FFD700]/50" />
             </div>
-            <span className="text-foreground/70 text-sm">GitHub</span>
-          </a>
+            <span className="text-foreground/50 text-sm">GitHub</span>
+            <span className="text-xs px-2 py-1 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30">
+              Coming Soon
+            </span>
+          </div>
 
-          <a
-            href="https://discord.gg/btcindexer"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center gap-3 p-6 glassmorphism rounded-xl hover:border-[#FFD700]/40 transition-all group"
-          >
-            <div className="w-12 h-12 rounded-lg bg-[#FFD700]/10 flex items-center justify-center group-hover:bg-[#FFD700]/20 transition-colors">
-              <MessageCircle className="w-6 h-6 text-[#FFD700]" />
+          <div className="flex flex-col items-center gap-3 p-6 glassmorphism rounded-xl border-[#FFD700]/20">
+            <div className="w-12 h-12 rounded-lg bg-[#FFD700]/10 flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-[#FFD700]/50" />
             </div>
-            <span className="text-foreground/70 text-sm">Discord</span>
-          </a>
+            <span className="text-foreground/50 text-sm">Discord</span>
+            <span className="text-xs px-2 py-1 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30">
+              Coming Soon
+            </span>
+          </div>
         </div>
       </motion.div>
 
